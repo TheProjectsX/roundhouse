@@ -1,0 +1,140 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mongodb"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    email    String @unique
+    password String
+
+    name   String
+    avatar String?
+
+    status UserStatus @default(ACTIVE)
+
+    apiKeys ApiKey[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("users")
+}
+
+model ApiKey {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    key    String  @unique
+    active Boolean @default(true)
+
+    userLLMs UserLLMs[]
+
+    user   User?   @relation(fields: [userId], references: [id])
+    userId String? @db.ObjectId
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("api_keys")
+}
+
+model UserLLMs {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    llmId String @db.ObjectId
+    llm   LLM    @relation(fields: [llmId], references: [id])
+
+    apiKeyId String @db.ObjectId
+    apiKey   ApiKey @relation(fields: [apiKeyId], references: [id])
+
+    userLLMModels UserLLMModel[]
+
+    active Boolean @default(true)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("user_llms")
+}
+
+model UserLLMModel {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    userLLMId String   @db.ObjectId
+    userLLM   UserLLMs @relation(fields: [userLLMId], references: [id])
+
+    llmModelId String   @db.ObjectId
+    llmModel   LLMModel @relation(fields: [llmModelId], references: [id])
+
+    usedTokens Int     @default(0)
+    active     Boolean @default(true)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("user_llm_models")
+}
+
+// Admin Dashboard Models
+model LLM {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    name        String
+    description String?
+
+    status ModelStatus @default(ACTIVE)
+
+    provider String
+    models   String[]
+
+    llmModels LLMModel[]
+    userLLMs  UserLLMs[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("llms")
+}
+
+model LLMModel {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    llmId         String         @db.ObjectId
+    llm           LLM            @relation(fields: [llmId], references: [id])
+    userLLMModels UserLLMModel[]
+
+    name               String
+    code               String
+    maxTokens          Int?
+    tokenResetInterval Int? // In Minutes
+
+    efficiencyScore Float? // 0.0 - 1.0, where 1.0 is most efficient
+
+    status ModelStatus @default(ACTIVE)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("llm_models")
+}
+
+// ENUMs
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+    BANNED
+    PENDING
+}
+
+enum ModelStatus {
+    ACTIVE
+    INACTIVE
+    DEPRECATED
+    TESTING
+    UPCOMING
+}
