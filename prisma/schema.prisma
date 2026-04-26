@@ -35,6 +35,7 @@ model ApiKey {
     active Boolean @default(true)
 
     providerSelections ProviderSelection[]
+    lastErrors         LastError[]
 
     user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String? @db.ObjectId
@@ -43,6 +44,21 @@ model ApiKey {
     updatedAt DateTime @updatedAt
 
     @@map("api_keys")
+}
+
+model LastError {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    apiKeyId String @db.ObjectId
+    apiKey   ApiKey @relation(fields: [apiKeyId], references: [id])
+
+    modelId String         @db.ObjectId
+    model   ModelSelection @relation(fields: [modelId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("last_errors")
 }
 
 model Provider {
@@ -90,7 +106,7 @@ model Model {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@map("llm_models")
+    @@map("models")
 }
 
 model UserProvider {
@@ -169,6 +185,8 @@ model ModelSelection {
 
     userModelIds String[]    @db.ObjectId
     userModels   UserModel[] @relation("ModelSelectionUserModels", fields: [userModelIds], references: [id])
+
+    lastErrors LastError[]
 
     usedTokens Int     @default(0)
     active     Boolean @default(true)

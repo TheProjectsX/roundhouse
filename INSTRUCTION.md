@@ -1,39 +1,35 @@
-## 🎯 Goal
+## GOAL
 
-Build an API wrapper that is **fully compatible with OpenAI’s API surface**, while internally supporting multiple providers (OpenAI, Anthropic, Gemini, custom).
+Build an API Wrapper layer **fully compatible with OpenAI’s API surface**, while internally supporting multiple providers (OpenAI, Anthropic, Gemini, custom).
 
-The wrapper MUST:
+Targets:
+- OpenAI API
+- Gemini API
+- Anthropic API
+- Custom OAuth API
 
-* Accept OpenAI-style requests
-* Return OpenAI-style responses
-* Transparently route + adapt to different providers
-* Never break OpenAI contract
+Context:
+- Code already has OpenAI, Anthropic, Gemini providers created with Custom provider
+- Under the hood, there will be multiple Providers which can independently support any of those target providers
+- Input, Output, API Route, Headers all will reflect OpenAI API
 
----
 
-## 📡 API Surface (DO NOT CHANGE)
-
-### Endpoints
-
-Implement exactly:
-
+#### Endpoints
+We will need implementations of these API Paths:
 * `POST /v1/chat/completions`
-* `POST /v1/responses` (optional but recommended)
+* `POST /v1/responses`
 * `GET /v1/models`
+Just make the call services. Routes will be defined later. But the structure will match exactly.
 
-No renaming. No restructuring.
-
----
-
-## 📦 Request Contract (STRICT)
+## Request Contract (STRICT)
 
 Accept OpenAI-compatible body:
 
 ```json
 {
   "model": "string",
-  "messages": [],
-  "tools": [],
+  "messages": [...],
+  "tools": [...],
   "tool_choice": "auto",
   "temperature": number,
   "top_p": number,
@@ -47,9 +43,8 @@ Rules:
 * DO NOT require provider-specific fields
 * Preserve request shape internally
 
----
 
-## 📤 Response Contract (STRICT)
+## Response Contract (STRICT)
 
 Always return:
 
@@ -62,7 +57,7 @@ Always return:
       "message": {
         "role": "assistant",
         "content": "string",
-        "tool_calls": []
+        "tool_calls": [...]
       }
     }
   ]
@@ -75,8 +70,6 @@ Rules:
 * Tool calls MUST follow OpenAI schema
 * No provider-specific response leakage
 
----
-
 ## 🔑 Headers
 
 Support:
@@ -86,65 +79,15 @@ Authorization: Bearer <API_KEY>
 Content-Type: application/json
 ```
 
-Optional custom headers:
+Optional custom headers (Just take, don't implement yet):
 
 ```
-X-Provider: <provider_name>   // force provider
-X-Strict-Mode: true|false    // fail on unsupported features
-X-Debug: true|false          // include translated payloads
+X-Provider: <provider_name>
+X-Strict-Mode: true|false
+X-Debug: true|false
 ```
 
----
-
-## 🧠 Core Architecture
-
-### 1. Provider Registry
-
-Map model → provider:
-
-```ts
-type Provider = "openai" | "anthropic" | "gemini" | "custom";
-
-const MODEL_PROVIDER_MAP = {
-  "gpt-*": "openai",
-  "claude-*": "anthropic",
-  "gemini-*": "gemini"
-};
-```
-
----
-
-### 2. Capability Definition
-
-Each provider declares capabilities:
-
-```ts
-type Capabilities = {
-  tools: boolean;
-  tool_choice: boolean;
-  streaming: boolean;
-  system_messages: boolean;
-  json_mode: boolean;
-};
-```
-
----
-
-### 3. Provider Adapter Interface
-
-Each provider MUST implement:
-
-```ts
-interface ProviderAdapter {
-  sendRequest(req: NormalizedRequest): Promise<NormalizedResponse>;
-  streamRequest?(req: NormalizedRequest): AsyncIterable<StreamChunk>;
-  capabilities: Capabilities;
-}
-```
-
----
-
-## 🔄 Normalization Layer
+## Normalization Layer
 
 ### Input Normalization
 
@@ -160,7 +103,6 @@ type NormalizedRequest = {
 };
 ```
 
----
 
 ### Output Normalization
 
@@ -170,37 +112,6 @@ Convert provider response → OpenAI format:
 * Extract tool calls
 * Map roles
 * Merge into `choices[]`
-
----
-
-## 🔧 Feature Handling Rules
-
-### Tools
-
-If provider supports tools:
-
-* Map OpenAI tools → provider format
-
-If NOT supported:
-
-* Default: emulate via prompt injection
-* Strict mode: throw error
-
----
-
-### Tool Choice
-
-If supported:
-
-* Pass through
-
-If NOT supported:
-
-* `"auto"` → ignore
-* `"required"` → enforce via prompt
-* specific tool → bias prompt
-
----
 
 ### Streaming
 
@@ -212,48 +123,8 @@ data: { "choices": [ { "delta": { "content": "..." } } ] }
 
 Adapter must translate provider stream → this format
 
----
 
-## ⚠️ Strict Mode Behavior
-
-If `X-Strict-Mode: true`:
-
-* Throw error when:
-
-  * tools unsupported
-  * tool_choice unsupported
-  * streaming unsupported
-
-Else:
-
-* Fallback to emulation or ignore
-
----
-
-## 🧩 Model Strategy
-
-Support BOTH:
-
-### Pass-through models
-
-```
-gpt-4o
-claude-3-opus
-gemini-1.5
-```
-
-### Virtual models (optional)
-
-```
-smart-small
-smart-large
-```
-
-Mapped internally to real providers
-
----
-
-## 🔁 Execution Flow
+## Execution Flow
 
 ```
 Incoming Request
@@ -277,9 +148,7 @@ Normalize Response
 Return OpenAI Format
 ```
 
----
-
-## 🚫 Hard Rules
+## Hard Rules
 
 * NEVER expose provider-specific formats
 * NEVER break OpenAI schema
@@ -287,9 +156,7 @@ Return OpenAI Format
 * ALWAYS normalize responses
 * ALWAYS support tools field (even if emulated)
 
----
-
-## ✅ Success Criteria
+## Success Criteria
 
 Wrapper is correct if:
 
@@ -298,4 +165,8 @@ Wrapper is correct if:
 * Tools work consistently across providers
 * Responses are indistinguishable from OpenAI format
 
----
+## Final Message
+The main concept is that, there will be an universal wrapper which will _Take_ and _Spit_ OpenAI Api request and response model. In the layer the request and response will be normalized for all providers to work.
+- Plan before Executing.
+- There shouldn't be much internal structure changes in the models call functions.
+- Make sure the models are up to date structure with the official docs.

@@ -1,6 +1,21 @@
+export type GeminiPart =
+    | { text?: string }
+    | {
+          functionCall?: {
+              name?: string;
+              args?: Record<string, unknown>;
+          };
+      }
+    | {
+          functionResponse?: {
+              name?: string;
+              response?: Record<string, unknown>;
+          };
+      };
+
 export type RequestPayload = {
     role: "user" | "model";
-    parts: Record<"text", string>[];
+    parts: GeminiPart[];
 };
 
 export type GeminiResponse = {
@@ -8,7 +23,7 @@ export type GeminiResponse = {
     modelVersion?: string;
     candidates?: Array<{
         content?: {
-            parts?: Array<{ text?: string }>;
+            parts?: GeminiPart[];
         };
         finishReason?: string;
     }>;

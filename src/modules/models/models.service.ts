@@ -4,7 +4,7 @@ import {
     completionBodySchema,
     type CompletionBodyInput,
 } from "@modules/models/models.validation";
-import { callProviderModel } from "@/models";
+import { createChatCompletion } from "@/core/api-wrapper/service";
 
 type CompletionBody = z.infer<typeof completionBodySchema>;
 
@@ -12,27 +12,20 @@ export const completion = async (
     req: Request<Record<string, never>, unknown, CompletionBody>,
     res: Response,
 ) => {
-    const headers = req.headers;
-    const auth = headers.authorization || "";
-    const apiKey = auth.replace("Bearer ", "");
-
     const body: CompletionBodyInput = req.body;
-
-    const {
-        provider,
-        baseApi,
-        model,
-        messages,
-        config = { temperature: 0.7, max_tokens: 250 },
-    } = body;
-
-    const response = await callProviderModel(provider, {
-        baseApi,
-        model,
-        apiKey,
-        payload: messages,
-        config,
-    });
+    const { provider, baseApi, model, messages, config } = body;
+    const response = await createChatCompletion(
+        {
+            model,
+            messages,
+            ...(config || {}),
+        },
+        {
+            provider,
+            baseApi,
+            headers: req.headers,
+        },
+    );
 
     return res.json(response);
 };
