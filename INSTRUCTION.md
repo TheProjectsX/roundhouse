@@ -1,5 +1,3 @@
-# OpenAI-Compatible Multi-Provider Wrapper — Implementation Spec
-
 ## 🎯 Goal
 
 Build an API wrapper that is **fully compatible with OpenAI’s API surface**, while internally supporting multiple providers (OpenAI, Anthropic, Gemini, custom).
