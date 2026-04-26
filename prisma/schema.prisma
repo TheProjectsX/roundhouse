@@ -29,12 +29,14 @@ model User {
 model ApiKey {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
+    name String
+
     key    String  @unique
     active Boolean @default(true)
 
-    userLLMs UserLLMs[]
+    providerSelections ProviderSelection[]
 
-    user   User?   @relation(fields: [userId], references: [id])
+    user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId String? @db.ObjectId
 
     createdAt DateTime @default(now())
@@ -43,70 +45,35 @@ model ApiKey {
     @@map("api_keys")
 }
 
-model UserLLMs {
-    id String @id @default(auto()) @map("_id") @db.ObjectId
-
-    llmId String @db.ObjectId
-    llm   LLM    @relation(fields: [llmId], references: [id])
-
-    apiKeyId String @db.ObjectId
-    apiKey   ApiKey @relation(fields: [apiKeyId], references: [id])
-
-    userLLMModels UserLLMModel[]
-
-    active Boolean @default(true)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@map("user_llms")
-}
-
-model UserLLMModel {
-    id String @id @default(auto()) @map("_id") @db.ObjectId
-
-    userLLMId String   @db.ObjectId
-    userLLM   UserLLMs @relation(fields: [userLLMId], references: [id])
-
-    llmModelId String   @db.ObjectId
-    llmModel   LLMModel @relation(fields: [llmModelId], references: [id])
-
-    usedTokens Int     @default(0)
-    active     Boolean @default(true)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@map("user_llm_models")
-}
-
-// Admin Dashboard Models
-model LLM {
+model Provider {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
     name        String
     description String?
 
+    baseApi String
+
+    free Boolean   @default(false)
+    type ModelType @default(OPENAI)
+
     status ModelStatus @default(ACTIVE)
 
-    provider String
-    models   String[]
+    model Model?
 
-    llmModels LLMModel[]
-    userLLMs  UserLLMs[]
+    providerSelectionIds String[]            @db.ObjectId
+    providerSelections   ProviderSelection[] @relation("ProviderSelectionProviders", fields: [providerSelectionIds], references: [id])
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@map("llms")
+    @@map("providers")
 }
 
-model LLMModel {
+model Model {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
-    llmId         String         @db.ObjectId
-    llm           LLM            @relation(fields: [llmId], references: [id])
-    userLLMModels UserLLMModel[]
+    providerId String   @unique @db.ObjectId
+    provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
     name               String
     code               String
@@ -117,10 +84,99 @@ model LLMModel {
 
     status ModelStatus @default(ACTIVE)
 
+    modelSelectionIds String[]         @db.ObjectId
+    modelSelections   ModelSelection[] @relation("ModelSelectionModels", fields: [modelSelectionIds], references: [id])
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     @@map("llm_models")
+}
+
+model UserProvider {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    name        String
+    description String?
+
+    baseApi String
+
+    free Boolean   @default(false)
+    type ModelType
+
+    status ModelStatus @default(ACTIVE)
+
+    model UserModel?
+
+    providerSelectionIds String[]            @db.ObjectId
+    providerSelections   ProviderSelection[] @relation("ProviderSelectionUserProviders", fields: [providerSelectionIds], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("user__providers")
+}
+
+model UserModel {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    providerId String       @unique @db.ObjectId
+    provider   UserProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+    usedTokens Int     @default(0)
+    active     Boolean @default(true)
+
+    modelSelectionIds String[]         @db.ObjectId
+    modelSelections   ModelSelection[] @relation("ModelSelectionUserModels", fields: [modelSelectionIds], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("user__models")
+}
+
+model ProviderSelection {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    apiKeyId String @db.ObjectId
+    apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+    providerIds String[]   @db.ObjectId
+    providers   Provider[] @relation("ProviderSelectionProviders", fields: [providerIds], references: [id])
+
+    userProviderIds String[]       @db.ObjectId
+    userProviders   UserProvider[] @relation("ProviderSelectionUserProviders", fields: [userProviderIds], references: [id])
+
+    modelSelectionIds String[]         @db.ObjectId
+    modelSelections   ModelSelection[] @relation("ProviderSelectionModelSelections", fields: [modelSelectionIds], references: [id])
+
+    active Boolean @default(true)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("user__provider_selections")
+}
+
+model ModelSelection {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    providerSelectionIds String[]            @db.ObjectId
+    providerSelections   ProviderSelection[] @relation("ProviderSelectionModelSelections", fields: [providerSelectionIds], references: [id])
+
+    modelIds String[] @db.ObjectId
+    models   Model[]  @relation("ModelSelectionModels", fields: [modelIds], references: [id])
+
+    userModelIds String[]    @db.ObjectId
+    userModels   UserModel[] @relation("ModelSelectionUserModels", fields: [userModelIds], references: [id])
+
+    usedTokens Int     @default(0)
+    active     Boolean @default(true)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("user__model_selections")
 }
 
 // ENUMs
@@ -137,4 +193,11 @@ enum ModelStatus {
     DEPRECATED
     TESTING
     UPCOMING
+}
+
+enum ModelType {
+    OPENAI
+    ANTHROPIC
+    GEMINI
+    CUSTOM
 }

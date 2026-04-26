@@ -4,7 +4,7 @@ import {
     completionBodySchema,
     type CompletionBodyInput,
 } from "@modules/models/models.validation";
-import { callGemini } from "@/models/gemini";
+import { callProviderModel } from "@/models";
 
 type CompletionBody = z.infer<typeof completionBodySchema>;
 
@@ -19,14 +19,19 @@ export const completion = async (
     const body: CompletionBodyInput = req.body;
 
     const {
+        provider,
+        baseApi,
         model,
         messages,
         config = { temperature: 0.7, max_tokens: 250 },
     } = body;
 
-    const response = await callGemini(apiKey, model, messages, {
-        temperature: config.temperature,
-        max_tokens: config.max_tokens,
+    const response = await callProviderModel(provider, {
+        baseApi,
+        model,
+        apiKey,
+        payload: messages,
+        config,
     });
 
     return res.json(response);
