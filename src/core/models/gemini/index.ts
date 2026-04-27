@@ -1,4 +1,4 @@
-import { getMessageText } from "@/core/api-wrapper/normalize";
+import { getMessageText } from "../../api-wrapper/normalize";
 import type {
     NormalizedAssistantResponse,
     OpenAIChatMessage,

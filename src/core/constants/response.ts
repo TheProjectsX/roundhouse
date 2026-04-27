@@ -9,6 +9,16 @@ export const InternalResponses = {
         status_code: 400,
         message: "API Key is inactive!",
     },
+    NO_AVAILABLE_MODELS: {
+        code: "RH201",
+        status_code: 400,
+        message: "No available models found for this API Key.",
+    },
+    MAX_ITERATIONS: {
+        code: "RH301",
+        status_code: 409,
+        message: "Maximum roundhouse iterations reached.",
+    },
 };
 
 export type InternalResponseCodes = keyof typeof InternalResponses;

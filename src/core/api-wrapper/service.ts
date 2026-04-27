@@ -5,11 +5,11 @@ import type {
     OpenAIModelListResponse,
     OpenAIResponsesRequest,
     OpenAIResponsesResponse,
-} from "@/core/models/types";
+} from "../models/types";
 import {
     callProviderChatCompletion,
     listProviderModels,
-} from "@/core/models";
+} from "../models";
 import {
     normalizeOpenAIRequest,
     toOpenAIChatCompletion,

@@ -9,7 +9,7 @@ import type {
     OpenAIResponsesRequest,
     OpenAIResponsesResponse,
     ProviderModelRecord,
-} from "@/core/models/types";
+} from "../models/types";
 
 const REQUEST_RESERVED_KEYS = new Set([
     "model",

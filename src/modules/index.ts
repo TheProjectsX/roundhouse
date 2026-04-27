@@ -1,9 +1,14 @@
 import { Router } from "express";
 import { modelsRouter } from "./models/models.routes";
+import { openaiRouter } from "./openai/openai.routes";
 
 const routes = Router();
 
 const modules = [
+    {
+        path: "/",
+        router: openaiRouter,
+    },
     {
         path: "/chat",
         router: modelsRouter,
