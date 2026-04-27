@@ -33,7 +33,8 @@ export const responsesBodySchema = z
     .refine(
         (data) => {
             const hasInput = data.input !== undefined;
-            const hasMessages = Array.isArray(data.messages) && data.messages.length > 0;
+            const hasMessages =
+                Array.isArray(data.messages) && data.messages.length > 0;
 
             return hasInput || hasMessages;
         },
