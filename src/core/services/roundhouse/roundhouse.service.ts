@@ -1,5 +1,6 @@
-import { checkApiKeyError } from "../../utils/errorChecker.util";
-import { InternalResponses } from "../../constants/response";
+import { prisma } from "@/lib/prisma";
+import { checkApiKeyError } from "@/core/utils/errorChecker.util";
+import { InternalResponses } from "@/core/constants/response";
 
 export type SelectProviderError = {
     success: false;
@@ -25,50 +26,6 @@ type RoundhouseModel = {
     provider: RoundhouseProvider;
 };
 
-type RoundhouseModelSelection = {
-    id: string;
-    active: boolean;
-    usedTokens: number;
-    models: RoundhouseModel[];
-    userModels: RoundhouseModel[];
-};
-
-type RoundhouseProviderSelection = {
-    active: boolean;
-    modelSelections: RoundhouseModelSelection[];
-};
-
-type RoundhouseApiKeyRecord = {
-    id: string;
-    active: boolean;
-    lastErrors: Array<{ modelId: string }>;
-    providerSelections: RoundhouseProviderSelection[];
-};
-
-export type RoundhouseDataSource = {
-    getApiKeyWithSelections: (
-        apiKey: string,
-    ) => Promise<RoundhouseApiKeyRecord | null>;
-    clearLastErrors: (apiKeyId: string) => Promise<void>;
-    addLastError: (apiKeyId: string, modelSelectionId: string) => Promise<void>;
-};
-
-export type RoundhouseService = {
-    listRoundhouseCandidates: (
-        apiKey: string,
-        filters?: RoundhouseFilters,
-    ) => Promise<
-        | SelectProviderError
-        | { success: true; candidates: RoundhouseCandidate[] }
-    >;
-    executor: <T>(
-        apiKey: string,
-        execute: RoundhouseExecute<T>,
-        maxIterations?: number,
-        filters?: RoundhouseFilters,
-    ) => Promise<SelectProviderResponse<T>>;
-};
-
 export type RoundhouseCandidate = {
     modelSelectionId: string;
     model: RoundhouseModel;
@@ -88,7 +45,7 @@ type RoundhouseExecutionResult<T> =
     | RoundhouseFailureResult
     | RoundhouseSuccessResult<T>;
 
-export type RoundhouseExecute<T> = (
+type RoundhouseExecute<T> = (
     candidate: RoundhouseCandidate,
 ) => Promise<RoundhouseExecutionResult<T>>;
 
@@ -119,7 +76,16 @@ const pickModel = (candidate: {
 };
 
 const buildCandidates = (
-    providerSelections: RoundhouseProviderSelection[],
+    providerSelections: Array<{
+        active: boolean;
+        modelSelections: Array<{
+            id: string;
+            active: boolean;
+            usedTokens: number;
+            models: RoundhouseModel[];
+            userModels: RoundhouseModel[];
+        }>;
+    }>,
     filters?: RoundhouseFilters,
 ): RoundhouseCandidate[] => {
     const candidates: RoundhouseCandidate[] = [];
@@ -145,7 +111,8 @@ const buildCandidates = (
             }
 
             if (allowedModelKeys) {
-                const normalizedKey = `${model.provider.type.toLowerCase()}/${model.code.toLowerCase()}`;
+                const normalizedKey =
+                    `${model.provider.type.toLowerCase()}/${model.code.toLowerCase()}`;
 
                 if (!allowedModelKeys.has(normalizedKey)) {
                     continue;
@@ -172,6 +139,39 @@ const buildCandidates = (
     return candidates;
 };
 
+const getApiKeyWithSelections = async (apiKey: string) => {
+    return prisma.apiKey.findUnique({
+        where: { key: apiKey },
+        include: {
+            lastErrors: true,
+            providerSelections: {
+                where: { active: true },
+                include: {
+                    providers: true,
+                    userProviders: true,
+                    modelSelections: {
+                        where: {
+                            active: true,
+                        },
+                        include: {
+                            models: {
+                                include: {
+                                    provider: true,
+                                },
+                            },
+                            userModels: {
+                                include: {
+                                    provider: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    });
+};
+
 type CandidatePoolResult =
     | {
           success: true;
@@ -184,141 +184,140 @@ type CandidatePoolResult =
           error: SelectProviderError;
       };
 
-export const createRoundhouseService = (
-    dataSource: RoundhouseDataSource,
-): RoundhouseService => {
-    const getCandidatePool = async (
-        apiKey: string,
-        filters?: RoundhouseFilters,
-    ): Promise<CandidatePoolResult> => {
-        const apiKeyData = await dataSource.getApiKeyWithSelections(apiKey);
+const getCandidatePool = async (
+    apiKey: string,
+    filters?: RoundhouseFilters,
+): Promise<CandidatePoolResult> => {
+    const apiKeyData = await getApiKeyWithSelections(apiKey);
 
-        const apiKeyError = checkApiKeyError(apiKeyData);
-        if (apiKeyError) {
-            return {
-                success: false,
-                error: { success: false, ...apiKeyError },
-            };
-        }
-
-        const safeApiKeyData = apiKeyData;
-        if (!safeApiKeyData) {
-            return {
-                success: false,
-                error: {
-                    success: false,
-                    ...InternalResponses.API_KEY_NOTFOUND,
-                },
-            };
-        }
-
-        const candidates = buildCandidates(
-            safeApiKeyData.providerSelections,
-            filters,
-        );
-
-        if (candidates.length === 0) {
-            return {
-                success: false,
-                error: {
-                    success: false,
-                    ...InternalResponses.NO_AVAILABLE_MODELS,
-                },
-            };
-        }
-
-        const excluded = new Set(
-            safeApiKeyData.lastErrors.map((lastError) => lastError.modelId),
-        );
-
-        return {
-            success: true,
-            apiKeyId: safeApiKeyData.id,
-            candidates,
-            excluded,
-        };
-    };
-
-    const listRoundhouseCandidates = async (
-        apiKey: string,
-        filters?: RoundhouseFilters,
-    ): Promise<
-        | SelectProviderError
-        | { success: true; candidates: RoundhouseCandidate[] }
-    > => {
-        const candidatePool = await getCandidatePool(apiKey, filters);
-
-        if (!candidatePool.success) {
-            return candidatePool.error;
-        }
-
-        return {
-            success: true,
-            candidates: candidatePool.candidates,
-        };
-    };
-
-    const executor = async <T>(
-        apiKey: string,
-        execute: RoundhouseExecute<T>,
-        maxIterations = DEFAULT_MAX_ITERATIONS,
-        filters?: RoundhouseFilters,
-    ): Promise<SelectProviderResponse<T>> => {
-        const candidatePool = await getCandidatePool(apiKey, filters);
-
-        if (!candidatePool.success) {
-            return candidatePool.error;
-        }
-
-        const { apiKeyId, candidates, excluded } = candidatePool;
-        let iteration = 0;
-
-        while (iteration < maxIterations) {
-            iteration += 1;
-
-            let available = candidates.filter(
-                (candidate) => !excluded.has(candidate.modelSelectionId),
-            );
-
-            if (available.length === 0) {
-                excluded.clear();
-                await dataSource.clearLastErrors(apiKeyId);
-                available = [...candidates];
-
-                if (available.length === 0) {
-                    return {
-                        success: false,
-                        ...InternalResponses.NO_AVAILABLE_MODELS,
-                    };
-                }
-            }
-
-            const candidate = available[0];
-            const result = await execute(candidate);
-
-            if (result.success) {
-                await dataSource.clearLastErrors(apiKeyId);
-
-                return {
-                    success: true,
-                    data: result.data,
-                    candidate,
-                    iteration,
-                };
-            }
-
-            excluded.add(candidate.modelSelectionId);
-            await dataSource.addLastError(apiKeyId, candidate.modelSelectionId);
-        }
-
+    const apiKeyError = checkApiKeyError(apiKeyData);
+    if (apiKeyError) {
         return {
             success: false,
-            ...InternalResponses.MAX_ITERATIONS,
+            error: { success: false, ...apiKeyError },
         };
-    };
+    }
+
+    const safeApiKeyData = apiKeyData;
+    if (!safeApiKeyData) {
+        return {
+            success: false,
+            error: {
+                success: false,
+                ...InternalResponses.API_KEY_NOTFOUND,
+            },
+        };
+    }
+
+    const candidates = buildCandidates(safeApiKeyData.providerSelections, filters);
+
+    if (candidates.length === 0) {
+        return {
+            success: false,
+            error: {
+                success: false,
+                ...InternalResponses.NO_AVAILABLE_MODELS,
+            },
+        };
+    }
+
+    const excluded = new Set(
+        safeApiKeyData.lastErrors.map(
+            (lastError: { modelId: string }) => lastError.modelId,
+        ),
+    );
 
     return {
-        listRoundhouseCandidates,
-        executor,
+        success: true,
+        apiKeyId: safeApiKeyData.id,
+        candidates,
+        excluded,
+    };
+};
+
+export const listRoundhouseCandidates = async (
+    apiKey: string,
+    filters?: RoundhouseFilters,
+): Promise<SelectProviderError | { success: true; candidates: RoundhouseCandidate[] }> => {
+    const candidatePool = await getCandidatePool(apiKey, filters);
+
+    if (!candidatePool.success) {
+        return candidatePool.error;
+    }
+
+    return {
+        success: true,
+        candidates: candidatePool.candidates,
+    };
+};
+
+export const selectProvider = async <T>(
+    apiKey: string,
+    execute: RoundhouseExecute<T>,
+    maxIterations = DEFAULT_MAX_ITERATIONS,
+    filters?: RoundhouseFilters,
+): Promise<SelectProviderResponse<T>> => {
+    const candidatePool = await getCandidatePool(apiKey, filters);
+
+    if (!candidatePool.success) {
+        return candidatePool.error;
+    }
+
+    const { apiKeyId, candidates, excluded } = candidatePool;
+    let iteration = 0;
+
+    while (iteration < maxIterations) {
+        iteration += 1;
+
+        let available = candidates.filter(
+            (candidate) => !excluded.has(candidate.modelSelectionId),
+        );
+
+        if (available.length === 0) {
+            excluded.clear();
+
+            await prisma.lastError.deleteMany({
+                where: { apiKeyId },
+            });
+
+            available = [...candidates];
+
+            if (available.length === 0) {
+                return {
+                    success: false,
+                    ...InternalResponses.NO_AVAILABLE_MODELS,
+                };
+            }
+        }
+
+        const candidate = available[0];
+        const result = await execute(candidate);
+
+        if (result.success) {
+            await prisma.lastError.deleteMany({
+                where: { apiKeyId },
+            });
+
+            return {
+                success: true,
+                data: result.data,
+                candidate,
+                iteration,
+            };
+        }
+
+        excluded.add(candidate.modelSelectionId);
+
+        await prisma.lastError.create({
+            data: {
+                apiKeyId,
+                modelId: candidate.modelSelectionId,
+            },
+        });
+    }
+
+    return {
+        success: false,
+        ...InternalResponses.MAX_ITERATIONS,
     };
 };

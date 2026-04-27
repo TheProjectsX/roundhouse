@@ -3,7 +3,6 @@ export * from "./api-wrapper/normalize";
 export * from "./models";
 export * from "./models/types";
 export * from "./services/roundhouse/roundhouse.service";
-export * from "./services/roundhouse/prisma.adapter";
 export * from "./utils/errorChecker.util";
 export * from "./utils/openaiError.util";
 export * from "./utils/roundhouseRequest.util";

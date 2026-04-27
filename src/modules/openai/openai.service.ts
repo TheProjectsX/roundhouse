@@ -6,21 +6,19 @@ import {
     createResponse,
 } from "@/core/api-wrapper/service";
 import {
-    createPrismaRoundhouseService,
-} from "@/core/services/roundhouse/prisma.adapter";
+    listRoundhouseCandidates,
+    selectProvider,
+} from "@/core/services/roundhouse/roundhouse.service";
 import { toOpenAIError } from "@/core/utils/openaiError.util";
 import {
     resolveApiKey,
     resolveRoundhouseFilters,
 } from "@/core/utils/roundhouseRequest.util";
-import { prisma } from "@/lib/prisma";
 import {
     chatCompletionBodySchema,
     listModelsQuerySchema,
     responsesBodySchema,
 } from "./openai.validation";
-
-const roundhouse = createPrismaRoundhouseService(prisma);
 
 const sendRoundhouseError = (
     res: Response,
@@ -70,7 +68,7 @@ export const chatCompletions = async (req: Request, res: Response) => {
         );
 
         if (body.stream) {
-            const streamedResult = await roundhouse.selectProvider<string[]>(
+            const streamedResult = await selectProvider<string[]>(
                 apiKey,
                 async (candidate) => {
                     try {
@@ -121,7 +119,7 @@ export const chatCompletions = async (req: Request, res: Response) => {
             return res.end();
         }
 
-        const result = await roundhouse.selectProvider(
+        const result = await selectProvider(
             apiKey,
             async (candidate) => {
                 try {
@@ -196,7 +194,7 @@ export const responses = async (req: Request, res: Response) => {
             req.headers,
         );
 
-        const result = await roundhouse.selectProvider(
+        const result = await selectProvider(
             apiKey,
             async (candidate) => {
                 try {
@@ -277,7 +275,7 @@ export const models = async (req: Request, res: Response) => {
     }
 
     const { provider, modelKeys } = resolveRoundhouseFilters(req.headers);
-    const result = await roundhouse.listRoundhouseCandidates(apiKey, {
+    const result = await listRoundhouseCandidates(apiKey, {
         provider,
         modelKeys,
     });
