@@ -1,9 +1,9 @@
-import { AuthModule } from "@/modules/auth/auth.module";
+import { AuthModule } from "@/modules/iv1/auth/auth.module";
 import { OpenaiModule } from "@/modules/openai/openai.module";
-import { MeModule } from "@/modules/me/me.module";
-import { ProvidersModule } from "@/modules/providers/providers.module";
-import { ApikeysModule } from "@/modules/apikeys/apikeys.module";
-import { AdminModule } from "@/modules/admin/admin.module";
+import { MeModule } from "@/modules/iv1/me/me.module";
+import { ProvidersModule } from "@/modules/iv1/providers/providers.module";
+import { ApikeysModule } from "@/modules/iv1/apikeys/apikeys.module";
+import { AdminModule } from "@/modules/iv1/admin/admin.module";
 import { GlobalExceptionFilter } from "@/common/filters/global_exception";
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, RouterModule } from "@nestjs/core";

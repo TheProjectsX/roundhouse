@@ -11,7 +11,7 @@ import {
     UpdateProviderModelDto,
     UpdateProviderModelStatusDto,
     UpdateProviderStatusDto,
-} from "@/modules/providers/dto/body.dto";
+} from "@/modules/iv1/providers/dto/body.dto";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
