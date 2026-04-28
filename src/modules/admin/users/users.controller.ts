@@ -14,7 +14,7 @@ import { UpdateUserDto, UpdateUserStatusDto } from "./dto/body.dto";
 import { AdminUsersService } from "./users.service";
 
 @ApiTags("Admin - Users")
-@Controller("admin/users")
+@Controller("users")
 export class AdminUsersController {
     constructor(private svc: AdminUsersService) {}
 

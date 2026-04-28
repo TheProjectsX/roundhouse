@@ -26,7 +26,7 @@ import {
 import { AdminProvidersService } from "./providers.service";
 
 @ApiTags("Admin - Providers")
-@Controller("admin/providers")
+@Controller("providers")
 @UseGuards()
 export class ProvidersController {
     constructor(private svc: AdminProvidersService) {}

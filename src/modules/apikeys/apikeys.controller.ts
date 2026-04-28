@@ -21,7 +21,7 @@ import {
 import { ApikeysService } from "./apikeys.service";
 
 @ApiTags("ApiKeys")
-@Controller("apikeys")
+@Controller("")
 export class ApikeysController {
     constructor(private apikeysService: ApikeysService) {}
 

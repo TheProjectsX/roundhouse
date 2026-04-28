@@ -5,7 +5,7 @@ import { AdminLoginDto } from "./dto/body.dto";
 import { AdminAuthService } from "./auth.service";
 
 @ApiTags("Admin - Auth")
-@Controller("admin")
+@Controller("auth")
 export class AdminAuthController {
     constructor(private svc: AdminAuthService) {}
 

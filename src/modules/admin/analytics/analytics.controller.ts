@@ -4,7 +4,7 @@ import { ResponseService } from "@/common/interceptors/response";
 import { AdminAnalyticsService } from "./analytics.service";
 
 @ApiTags("Admin - Analytics")
-@Controller("admin/analytics")
+@Controller("analytics")
 export class AdminAnalyticsController {
     constructor(private svc: AdminAnalyticsService) {}
 

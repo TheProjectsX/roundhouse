@@ -17,7 +17,7 @@ import { Request } from "express";
 import { UserPayload } from "@/common/guards/auth.guard";
 import { ApiOperation } from "@nestjs/swagger";
 
-@Controller("me")
+@Controller("")
 export class MeController {
     constructor(private meService: MeService) {}
 

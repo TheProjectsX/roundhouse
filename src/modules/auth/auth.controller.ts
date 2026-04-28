@@ -26,7 +26,7 @@ import {
 import { UserPayload } from "@/common/guards/auth.guard";
 
 @ApiTags("Auth")
-@Controller("auth")
+@Controller("")
 export class AuthController {
     constructor(private authService: AuthService) {}
 

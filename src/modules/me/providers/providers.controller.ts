@@ -24,7 +24,7 @@ import {
 import { MeProvidersService } from "./providers.service";
 
 @ApiTags("Me - Custom Providers")
-@Controller("me/providers")
+@Controller("providers")
 export class MeProvidersController {
     constructor(private meProvidersService: MeProvidersService) {}
 
