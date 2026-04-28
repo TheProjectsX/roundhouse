@@ -3,10 +3,7 @@ import type {
     ProviderCallParams,
     ProviderModelRecord,
 } from "../types";
-import {
-    callAnthropicModel,
-    listModelsFromAnthropic,
-} from "./model";
+import { callAnthropicModel, listModelsFromAnthropic } from "./model";
 
 export const callAnthropicChatCompletion = async (
     params: ProviderCallParams,

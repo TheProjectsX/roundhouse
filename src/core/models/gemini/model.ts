@@ -60,7 +60,9 @@ const buildToolConfig = (params: ProviderCallParams) => {
         return {
             functionCallingConfig: {
                 mode: "ANY",
-                allowedFunctionNames: [params.request.tool_choice.function.name],
+                allowedFunctionNames: [
+                    params.request.tool_choice.function.name,
+                ],
             },
         };
     }

@@ -7,7 +7,7 @@ export type ApiKeyError = {
 };
 
 export const checkApiKeyError = (
-    data: (Record<string, any> & { active: boolean }) | null,
+    data: (Record<string, unknown> & { active: boolean }) | null,
 ): ApiKeyError | undefined => {
     if (!data) {
         return InternalResponses.API_KEY_NOTFOUND;

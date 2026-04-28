@@ -14,7 +14,9 @@ const hasText = (part: GeminiPart): part is { text?: string } => {
 
 const hasFunctionCall = (
     part: GeminiPart,
-): part is { functionCall?: { name?: string; args?: Record<string, unknown> } } => {
+): part is {
+    functionCall?: { name?: string; args?: Record<string, unknown> };
+} => {
     return "functionCall" in part;
 };
 
@@ -55,9 +57,7 @@ const transformPayload = (
     payload: ProviderCallParams["request"]["messages"],
 ): RequestPayload[] => {
     return payload
-        .filter(
-            (item) => item.role !== "system" && item.role !== "developer",
-        )
+        .filter((item) => item.role !== "system" && item.role !== "developer")
         .map((item) => ({
             role: item.role === "assistant" ? "model" : "user",
             parts: transformMessageToParts(item),
@@ -85,7 +85,10 @@ const mapFinishReason = (finishReason?: string): string | null => {
         return "length";
     }
 
-    if (finishReason === "STOP" || finishReason === "FINISH_REASON_UNSPECIFIED") {
+    if (
+        finishReason === "STOP" ||
+        finishReason === "FINISH_REASON_UNSPECIFIED"
+    ) {
         return "stop";
     }
 
@@ -103,7 +106,7 @@ const toOpenAIResponse = (
     const firstCandidate = data.candidates?.[0];
     const parts = firstCandidate?.content?.parts || [];
     const assistantContent = parts
-        .map((part) => (hasText(part) ? part.text ?? "" : ""))
+        .map((part) => (hasText(part) ? (part.text ?? "") : ""))
         .filter(Boolean)
         .join("\n")
         .trim();

@@ -1,5 +1,6 @@
 import { checkApiKeyError } from "@/core/utils/errorChecker.util";
 import { InternalResponses } from "@/core/constants/response";
+import { PrismaClient } from "@prisma/client";
 
 export type SelectProviderError = {
     success: false;
@@ -72,17 +73,9 @@ type BoundRoundhouseExecutor = <T>(
 type BoundRoundhouseCandidateLister = (
     apiKey: string,
     filters?: RoundhouseFilters,
-) => Promise<SelectProviderError | { success: true; candidates: RoundhouseCandidate[] }>;
-
-type RoundhousePrismaClient = {
-    apiKey: {
-        findUnique(args: unknown): Promise<any>;
-    };
-    lastError: {
-        deleteMany(args: unknown): Promise<unknown>;
-        create(args: unknown): Promise<unknown>;
-    };
-};
+) => Promise<
+    SelectProviderError | { success: true; candidates: RoundhouseCandidate[] }
+>;
 
 const DEFAULT_SCORE = 0.5;
 const DEFAULT_MAX_ITERATIONS = 5;
@@ -132,8 +125,7 @@ const buildCandidates = (
             }
 
             if (allowedModelKeys) {
-                const normalizedKey =
-                    `${model.provider.type.toLowerCase()}/${model.code.toLowerCase()}`;
+                const normalizedKey = `${model.provider.type.toLowerCase()}/${model.code.toLowerCase()}`;
 
                 if (!allowedModelKeys.has(normalizedKey)) {
                     continue;
@@ -161,7 +153,7 @@ const buildCandidates = (
 };
 
 const getApiKeyWithSelections = async (
-    prisma: RoundhousePrismaClient,
+    prisma: PrismaClient,
     apiKey: string,
 ) => {
     return prisma.apiKey.findUnique({
@@ -209,7 +201,7 @@ type CandidatePoolResult =
       };
 
 const getCandidatePool = async (
-    prisma: RoundhousePrismaClient,
+    prisma: PrismaClient,
     apiKey: string,
     filters?: RoundhouseFilters,
 ): Promise<CandidatePoolResult> => {
@@ -234,7 +226,10 @@ const getCandidatePool = async (
         };
     }
 
-    const candidates = buildCandidates(safeApiKeyData.providerSelections, filters);
+    const candidates = buildCandidates(
+        safeApiKeyData.providerSelections,
+        filters,
+    );
 
     if (candidates.length === 0) {
         return {
@@ -260,14 +255,13 @@ const getCandidatePool = async (
     };
 };
 
-export const createListRoundhouseCandidates = (
-    prisma: RoundhousePrismaClient,
-) => {
+export const createListRoundhouseCandidates = (prisma: PrismaClient) => {
     return async (
         apiKey: string,
         filters?: RoundhouseFilters,
     ): Promise<
-        SelectProviderError | { success: true; candidates: RoundhouseCandidate[] }
+        | SelectProviderError
+        | { success: true; candidates: RoundhouseCandidate[] }
     > => {
         const candidatePool = await getCandidatePool(prisma, apiKey, filters);
 
@@ -282,7 +276,7 @@ export const createListRoundhouseCandidates = (
     };
 };
 
-export const createRoundhouseExecutor = (prisma: RoundhousePrismaClient) => {
+export const createRoundhouseExecutor = (prisma: PrismaClient) => {
     return (async <T>(
         apiKey: string,
         execute: RoundhouseExecute<T>,

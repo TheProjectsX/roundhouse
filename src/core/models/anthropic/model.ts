@@ -107,9 +107,7 @@ const buildAnthropicMessages = (
         )
         .map((message) => ({
             role:
-                message.role === "assistant"
-                    ? "assistant"
-                    : ("user" as const),
+                message.role === "assistant" ? "assistant" : ("user" as const),
             content: buildAnthropicContent(message),
         }));
 };
@@ -224,7 +222,8 @@ export const callAnthropicModel = async (
         body: JSON.stringify({
             model: params.request.model,
             max_tokens:
-                (params.request.params.max_tokens as number | undefined) ?? 1024,
+                (params.request.params.max_tokens as number | undefined) ??
+                1024,
             system: buildSystemPrompt(params.request.messages),
             messages: buildAnthropicMessages(params.request.messages),
             tools: toAnthropicTools(params.request.tools),

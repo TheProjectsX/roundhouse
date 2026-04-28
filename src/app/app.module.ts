@@ -1,6 +1,9 @@
 import { AuthModule } from "@/modules/auth/auth.module";
 import { OpenaiModule } from "@/modules/openai/openai.module";
 import { ProfileModule } from "@/modules/profile/profile.module";
+import { ProvidersModule } from "@/modules/providers/providers.module";
+import { ApikeysModule } from "@/modules/apikeys/apikeys.module";
+import { AdminModule } from "@/modules/admin/admin.module";
 import { GlobalExceptionFilter } from "@/common/filters/global_exception";
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
@@ -39,6 +42,9 @@ import { CommonModule } from "@/common/common.module";
         AuthModule,
         ProfileModule,
         OpenaiModule,
+        ProvidersModule,
+        ApikeysModule,
+        AdminModule,
         CommonModule,
     ],
     controllers: [AppController],

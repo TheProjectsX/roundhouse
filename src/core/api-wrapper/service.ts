@@ -6,10 +6,7 @@ import type {
     OpenAIResponsesRequest,
     OpenAIResponsesResponse,
 } from "../models/types";
-import {
-    callProviderChatCompletion,
-    listProviderModels,
-} from "../models";
+import { callProviderChatCompletion, listProviderModels } from "../models";
 import {
     normalizeOpenAIRequest,
     toOpenAIChatCompletion,
@@ -73,7 +70,9 @@ const resolveProvider = (
     model: string,
     context: OpenAIWrapperContext,
 ): ModelProvider => {
-    const providerHeader = normalizeHeaderValue(context.headers?.["x-provider"]);
+    const providerHeader = normalizeHeaderValue(
+        context.headers?.["x-provider"],
+    );
 
     if (context.provider) {
         return context.provider;
@@ -95,10 +94,7 @@ const resolveProvider = (
     return resolveProviderFromModel(model);
 };
 
-const resolveBaseApi = (
-    provider: ModelProvider,
-    baseApi?: string,
-): string => {
+const resolveBaseApi = (provider: ModelProvider, baseApi?: string): string => {
     if (baseApi) {
         return baseApi;
     }

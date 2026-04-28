@@ -3,13 +3,8 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ApiError } from "@/common/errors/api_error";
 import { BcryptService } from "@/common/utils/bcrypt.service";
-import { generateOTP } from "./auth.utils";
 import config from "@/config";
-import {
-    generateForgetPasswordTemplate,
-    generateForgotPasswordOTPTemplate,
-    generateVerifyOTPTemplate,
-} from "./auth.template";
+import { generateForgetPasswordTemplate } from "./auth.template";
 import {
     ChangePasswordDto,
     ForgotPasswordDto,
@@ -34,8 +29,7 @@ export class AuthService {
     ) {}
 
     async register(payload: RegisterUserDto) {
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findFirst({
+        const userData = await this.prisma.user.findFirst({
             where: { email: payload.email },
         });
 
@@ -50,7 +44,7 @@ export class AuthService {
             payload.password,
             config.password.salt,
         );
-        const response = await prisma.user.create({
+        const response = await this.prisma.user.create({
             data: {
                 email: payload.email,
                 password: hashedPassword,
@@ -65,8 +59,7 @@ export class AuthService {
     }
 
     async loginWithEmail(payload: LoginUserDto) {
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findFirst({
+        const userData = await this.prisma.user.findFirst({
             where: {
                 email: payload.email,
             },
@@ -117,8 +110,7 @@ export class AuthService {
     }
 
     async sendOTP(payload: ResendOtpDto) {
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findFirst({
+        const userData = await this.prisma.user.findFirst({
             where: {
                 email: payload.email,
             },
@@ -142,8 +134,7 @@ export class AuthService {
     }
 
     async sendForgotPasswordOtp(payload: SendForgotPasswordOtpDto) {
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findFirst({
+        const userData = await this.prisma.user.findFirst({
             where: {
                 email: payload.email,
             },
@@ -154,13 +145,13 @@ export class AuthService {
         }
 
         return {
-            message: "Forgot-password OTP flow is not available with the migrated schema",
+            message:
+                "Forgot-password OTP flow is not available with the migrated schema",
         };
     }
 
     async verifyForgotPasswordOTP(payload: VerifyForgotPasswordOtpDto) {
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findFirst({
+        const userData = await this.prisma.user.findFirst({
             where: {
                 email: payload.email,
             },
@@ -188,8 +179,7 @@ export class AuthService {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Invalid Body Provided");
         }
 
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findUnique({
+        const userData = await this.prisma.user.findUnique({
             where: { id: user.id },
         });
 
@@ -218,7 +208,7 @@ export class AuthService {
             config.password.salt,
         );
 
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: {
                 id: user.id,
             },
@@ -230,8 +220,7 @@ export class AuthService {
     }
 
     async forgotPassword(payload: ForgotPasswordDto) {
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findFirst({
+        const userData = await this.prisma.user.findFirst({
             where: {
                 email: payload.email,
             },
@@ -282,8 +271,7 @@ export class AuthService {
             );
         }
 
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findUnique({
+        const userData = await this.prisma.user.findUnique({
             where: { id: decrypted.id },
         });
 
@@ -321,8 +309,7 @@ export class AuthService {
             throw new ApiError(HttpStatus.BAD_REQUEST, "Invalid Token");
         }
 
-        const prisma = this.prisma as any;
-        const userData = await prisma.user.findFirst({
+        const userData = await this.prisma.user.findFirst({
             where: {
                 email: decrypted.email,
             },
@@ -337,7 +324,7 @@ export class AuthService {
             config.password.salt,
         );
 
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: {
                 id: userData.id,
             },

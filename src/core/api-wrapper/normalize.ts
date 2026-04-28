@@ -70,9 +70,13 @@ const toMessagesFromInput = (input: unknown): OpenAIChatMessage[] => {
             if (isRecord(item)) {
                 if (
                     typeof item.role === "string" &&
-                    ["developer", "system", "user", "assistant", "tool"].includes(
-                        item.role,
-                    )
+                    [
+                        "developer",
+                        "system",
+                        "user",
+                        "assistant",
+                        "tool",
+                    ].includes(item.role)
                 ) {
                     return item as OpenAIChatMessage;
                 }
@@ -131,7 +135,9 @@ export const normalizeOpenAIRequest = (
         : toMessagesFromInput(rawBody.input);
 
     if (messages.length === 0) {
-        throw new Error("`messages` or `input` must contain at least one item.");
+        throw new Error(
+            "`messages` or `input` must contain at least one item.",
+        );
     }
 
     const params = Object.entries(rawBody).reduce<Record<string, unknown>>(

@@ -15,6 +15,19 @@
 
 import { GetResult, OperationPayload } from "@prisma/client/runtime/library";
 
+export interface NestedFilter {
+    field: string;
+    filterField: string;
+    queryKey: string;
+}
+
+export interface rangeFilteringPrams {
+    field: string;
+    maxQueryKey: string;
+    minQueryKey: string;
+    dataType: "date" | "number" | "string";
+}
+
 // Helper to check if a type is an enum
 type IsEnum<T> = T extends string | number
     ? string extends T
@@ -70,6 +83,7 @@ class QueryBuilder<
     private model: any;
     private query: Record<string, unknown>;
     private prismaQuery: Partial<TFindManyArgs> | any = {};
+    private _logQuery: boolean = false;
 
     /**
      * @template Model (optional) - Type of the Model you are passing (e.g., `typeof prisma.user`) - Only pass if passing TPayload
@@ -165,6 +179,8 @@ class QueryBuilder<
         const formattedFilters: Record<string, any> = {};
 
         for (const [field, value] of Object.entries(queryObj)) {
+            if (value === "") continue;
+
             if (value === "null") {
                 formattedFilters[field] = null;
             } else if (value === "notnull") {
@@ -207,6 +223,44 @@ class QueryBuilder<
         };
 
         return this;
+    }
+
+    /**
+     * Applies nested filters.
+     */
+    nestedFilter(filters: NestedFilter[]) {
+        filters.forEach(({ field, filterField, queryKey }) => {
+            const value = this.query[queryKey];
+            if (value === undefined || value === null) return;
+
+            const parts = field.split(".");
+            const nested = parts.reduceRight<any>((acc, key, index) => {
+                if (index === parts.length - 1) {
+                    return { [key]: { [filterField]: value } };
+                }
+                return { [key]: acc };
+            }, {});
+
+            this.prismaQuery.where = {
+                ...this.prismaQuery.where,
+                ...nested,
+            };
+        });
+        return this;
+    }
+
+    /**
+     * Applies range filters (legacy wrapper for range method).
+     */
+    filterByRange(filters: rangeFilteringPrams[]) {
+        return this.range(
+            filters.map((f) => ({
+                field: f.field as any,
+                startKey: f.minQueryKey,
+                endKey: f.maxQueryKey,
+                type: f.dataType,
+            })),
+        );
     }
 
     /**
@@ -396,12 +450,23 @@ class QueryBuilder<
      */
     sort() {
         const sort = (this.query.order as string)?.split(",") || ["-createdAt"];
-        const orderBy = sort.map((field) => {
-            if (field.startsWith("-")) {
-                return { [field.slice(1)]: "desc" };
-            }
-            return { [field]: "asc" };
-        });
+        if (this.query.sort) {
+            sort.push(
+                this.query.sort === "newest" ? "-createdAt" : "createdAt",
+            );
+        }
+
+        const orderBy = sort.reduce<Record<string, "asc" | "desc">>(
+            (acc, field) => {
+                if (field.startsWith("-")) {
+                    acc[field.slice(1)] = "desc";
+                } else {
+                    acc[field] = "asc";
+                }
+                return acc;
+            },
+            {},
+        );
 
         this.prismaQuery.orderBy = orderBy;
         return this;
@@ -409,20 +474,28 @@ class QueryBuilder<
 
     /**
      * Applies custom sort fields.
-     * Accepts single object or array of Prisma orderBy objects.
+     * Merges the provided orderBy object into the current sort state.
      */
     sortBy(
         fields: TFindManyArgs extends { orderBy?: infer T }
             ? T
             : Record<string, "asc" | "desc"> | Record<string, "asc" | "desc">[],
     ) {
-        const existing = Array.isArray(this.prismaQuery.orderBy)
-            ? this.prismaQuery.orderBy
-            : this.prismaQuery.orderBy
-              ? [this.prismaQuery.orderBy]
-              : [];
-        const newFields = Array.isArray(fields) ? fields : [fields];
-        this.prismaQuery.orderBy = [...existing, ...newFields];
+        const existing =
+            this.prismaQuery.orderBy && !Array.isArray(this.prismaQuery.orderBy)
+                ? this.prismaQuery.orderBy
+                : {};
+        const nextFields = Array.isArray(fields)
+            ? fields.reduce<Record<string, "asc" | "desc">>(
+                  (acc, field) => ({ ...acc, ...field }),
+                  {},
+              )
+            : fields;
+
+        this.prismaQuery.orderBy = {
+            ...(existing as Record<string, "asc" | "desc">),
+            ...(nextFields as Record<string, "asc" | "desc">),
+        };
         return this;
     }
 
@@ -560,6 +633,10 @@ class QueryBuilder<
     }> {
         const query = this.cleanQuery(this.prismaQuery);
 
+        if (this._logQuery) {
+            console.log(JSON.stringify(query, null, 4));
+        }
+
         const total = await this.model.count({ where: query.where });
         const page = Number(this.query.page) || 1;
         const limit = Number(this.query.limit) || 10;
@@ -571,6 +648,16 @@ class QueryBuilder<
             total,
             totalPage,
         };
+    }
+
+    logQuery() {
+        this._logQuery = true;
+
+        return this;
+    }
+
+    getQuery() {
+        return this.cleanQuery(this.prismaQuery);
     }
 
     // Utility Functions

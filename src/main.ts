@@ -24,7 +24,7 @@ async function bootstrap() {
     // --- Middlewares & Config ---
     app.use(cookieParser());
     app.use("/api/v1/webhook", express.raw({ type: "application/json" }));
-    app.setGlobalPrefix("api/v1");
+    app.setGlobalPrefix("api/iv-1");
 
     // --- CORS ---
     app.enableCors({
@@ -83,7 +83,7 @@ async function bootstrap() {
 
         const document = SwaggerModule.createDocument(app, swaggerConfig);
         document.security = [{ accessToken: [] }];
-        SwaggerModule.setup("api/v1", app, document);
+        SwaggerModule.setup("api/iv-1", app, document);
     }
 
     // --- Server Listen ---

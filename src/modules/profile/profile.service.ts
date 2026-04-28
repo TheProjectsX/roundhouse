@@ -9,8 +9,7 @@ export class ProfileService {
     constructor(private prisma: PrismaService) {}
 
     async getProfile(user: UserPayload) {
-        const prisma = this.prisma as any;
-        const profile = await prisma.user.findUnique({
+        const profile = await this.prisma.user.findUnique({
             where: {
                 id: user.id,
             },
@@ -30,12 +29,11 @@ export class ProfileService {
     }
 
     async updateProfile(payload: UpdateProfileDto, user: UserPayload) {
-        const prisma = this.prisma as any;
-        const currentUser = await prisma.user.findUnique({
+        const currentUser = await this.prisma.user.findUnique({
             where: { id: user.id },
         });
 
-        await prisma.user.update({
+        await this.prisma.user.update({
             where: { id: user.id },
             data: {
                 name: payload.name,

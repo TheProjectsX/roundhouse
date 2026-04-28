@@ -3,10 +3,7 @@ import type {
     ProviderCallParams,
     ProviderModelRecord,
 } from "../types";
-import {
-    callOpenAIModel,
-    listModelsFromOpenAI,
-} from "./model";
+import { callOpenAIModel, listModelsFromOpenAI } from "./model";
 
 export const callOpenAIChatCompletion = async (
     params: ProviderCallParams,

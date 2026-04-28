@@ -43,7 +43,8 @@ export class OpenaiService {
     private toValidationMessage(error: ZodError) {
         return error.issues
             .map((issue) => {
-                const path = issue.path.length > 0 ? issue.path.join(".") : "body";
+                const path =
+                    issue.path.length > 0 ? issue.path.join(".") : "body";
                 return `${path}: ${issue.message}`;
             })
             .join("; ");
@@ -79,9 +80,8 @@ export class OpenaiService {
             const body = chatCompletionBodySchema.parse(
                 req.body,
             ) as OpenAIChatCompletionRequest;
-            const { provider, modelKeys, maxIterations } = resolveRoundhouseFilters(
-                req.headers,
-            );
+            const { provider, modelKeys, maxIterations } =
+                resolveRoundhouseFilters(req.headers);
 
             if (body.stream) {
                 const streamedResult = await this.executor<string[]>(
@@ -215,9 +215,8 @@ export class OpenaiService {
             const body = responsesBodySchema.parse(
                 req.body,
             ) as OpenAIResponsesRequest;
-            const { provider, modelKeys, maxIterations } = resolveRoundhouseFilters(
-                req.headers,
-            );
+            const { provider, modelKeys, maxIterations } =
+                resolveRoundhouseFilters(req.headers);
 
             const result = await this.executor(
                 apiKey,
