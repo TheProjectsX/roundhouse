@@ -20,6 +20,8 @@ model User {
 
     apiKeys ApiKey[]
 
+    role UserRole @default(USER)
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -65,15 +67,15 @@ model Provider {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
     name        String
-    key         String @unique
+    key         String  @unique
     description String?
 
     baseApi String
 
     free Boolean   @default(false)
-    type ModelType @default(OPENAI)
+    type ProviderType @default(OPENAI)
 
-    status ModelStatus @default(ACTIVE)
+    status ContentStatus @default(ACTIVE)
 
     model Model?
 
@@ -100,7 +102,7 @@ model Model {
     efficiencyScore Float? // 0.0 - 1.0, where 1.0 is most efficient
     bestFor         String[]
 
-    status ModelStatus @default(ACTIVE)
+    status ContentStatus @default(ACTIVE)
 
     modelSelectionIds String[]         @db.ObjectId
     modelSelections   ModelSelection[] @relation("ModelSelectionModels", fields: [modelSelectionIds], references: [id])
@@ -120,9 +122,9 @@ model UserProvider {
     baseApi String
 
     free Boolean   @default(false)
-    type ModelType
+    type ProviderType
 
-    status ModelStatus @default(ACTIVE)
+    status ContentStatus @default(ACTIVE)
 
     models UserModel[]
 
@@ -149,7 +151,7 @@ model UserModel {
     efficiencyScore Float? // 0.0 - 1.0, where 1.0 is most efficient
     bestFor         String[]
 
-    status ModelStatus @default(ACTIVE)
+    status ContentStatus @default(ACTIVE)
 
     modelSelectionIds String[]         @db.ObjectId
     modelSelections   ModelSelection[] @relation("ModelSelectionUserModels", fields: [modelSelectionIds], references: [id])
@@ -214,7 +216,12 @@ enum UserStatus {
     PENDING
 }
 
-enum ModelStatus {
+enum UserRole {
+    USER
+    ADMIN
+}
+
+enum ContentStatus {
     ACTIVE
     INACTIVE
     DEPRECATED
@@ -222,7 +229,7 @@ enum ModelStatus {
     UPCOMING
 }
 
-enum ModelType {
+enum ProviderType {
     OPENAI
     ANTHROPIC
     GEMINI

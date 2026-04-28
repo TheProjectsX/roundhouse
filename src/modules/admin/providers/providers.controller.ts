@@ -8,11 +8,13 @@ import {
     Patch,
     Post,
     Query,
+    UseGuards,
 } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ResponseService } from "@/common/interceptors/response";
 import { ReqField } from "@/common/decorators/request.decorator";
 import { UserPayload } from "@/common/guards/auth.guard";
+import { Roles } from "@/common/decorators/roles.decorator";
 import {
     CreateProviderDto,
     CreateProviderModelDto,
@@ -21,13 +23,15 @@ import {
     UpdateProviderModelStatusDto,
     UpdateProviderStatusDto,
 } from "./dto/body.dto";
-import { AdminProvidersService } from "./admin-providers.service";
+import { AdminProvidersService } from "./providers.service";
 
 @ApiTags("Admin - Providers")
 @Controller("admin/providers")
-export class AdminProvidersController {
+@UseGuards()
+export class ProvidersController {
     constructor(private svc: AdminProvidersService) {}
 
+    @Roles("ADMIN")
     @Get()
     @ApiOperation({ summary: "List providers (admin)" })
     async fetchAllProviders(@Query() query: Record<string, string>) {
@@ -40,6 +44,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Get(":id")
     @ApiOperation({ summary: "Get provider details (admin)" })
     async fetchSingleProvider(@Param("id") id: string) {
@@ -51,6 +56,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Post()
     @ApiOperation({ summary: "Create provider (admin)" })
     async createProvider(
@@ -65,6 +71,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Patch(":id")
     @ApiOperation({ summary: "Update provider (admin)" })
     async updateProvider(
@@ -80,6 +87,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Patch(":id/status")
     @ApiOperation({ summary: "Update provider status (admin)" })
     async updateProviderStatus(
@@ -98,6 +106,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Delete(":id")
     @ApiOperation({ summary: "Delete provider (admin)" })
     async deleteProvider(
@@ -111,6 +120,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Get(":id/models")
     @ApiOperation({ summary: "List models of provider (admin)" })
     async fetchAllProviderModels(
@@ -126,6 +136,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Post(":id/models")
     @ApiOperation({ summary: "Create model for provider (admin)" })
     async createProviderModel(
@@ -141,6 +152,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Patch(":id/models/:modelId")
     @ApiOperation({ summary: "Update model (admin)" })
     async updateProviderModel(
@@ -162,6 +174,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Patch(":id/models/:modelId/status")
     @ApiOperation({ summary: "Update model status (admin)" })
     async updateProviderModelStatus(
@@ -183,6 +196,7 @@ export class AdminProvidersController {
         });
     }
 
+    @Roles("ADMIN")
     @Delete(":id/models/:modelId")
     @ApiOperation({ summary: "Delete model (admin)" })
     async deleteProviderModel(

@@ -1,7 +1,7 @@
 import { Controller, Get, HttpStatus } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ResponseService } from "@/common/interceptors/response";
-import { AdminAnalyticsService } from "./admin-analytics.service";
+import { AdminAnalyticsService } from "./analytics.service";
 
 @ApiTags("Admin - Analytics")
 @Controller("admin/analytics")

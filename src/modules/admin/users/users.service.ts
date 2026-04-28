@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import QueryBuilder from "@/common/utils/queryBuilder";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UpdateUserDto, UpdateUserStatusDto } from "./dto/body.dto";
 
 type AdminUserDetails = Prisma.UserGetPayload<{ include: { apiKeys: true } }>;
@@ -12,7 +14,10 @@ export class AdminUsersService {
     constructor(private prisma: PrismaService) {}
 
     async fetchAllUsers(query: Record<string, string>) {
-        const queryBuilder = new QueryBuilder(this.prisma.user, query);
+        const queryBuilder = new QueryBuilder<
+            typeof this.prisma.user,
+            Prisma.$UserPayload
+        >(this.prisma.user, query);
 
         const data = await queryBuilder
             .search(["name", "email"])
@@ -24,7 +29,17 @@ export class AdminUsersService {
 
         const pagination = await queryBuilder.countTotal();
 
-        return { message: "Users fetched", data, pagination };
+        const formatted = (data as any[]).map((u) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            status: u.status,
+            apiKeyCount: (u.apiKeys ?? []).length,
+            createdAt: u.createdAt,
+            updatedAt: u.updatedAt,
+        }));
+
+        return { message: "Users fetched", data: formatted, pagination };
     }
 
     async fetchSingleUser(id: string) {
@@ -56,7 +71,7 @@ export class AdminUsersService {
             },
         });
 
-        return { message: "User updated", data: updated };
+        return { message: "User updated", data: { id: updated.id } };
     }
 
     async updateUserStatus(payload: UpdateUserStatusDto) {
@@ -67,13 +82,15 @@ export class AdminUsersService {
             data: { status: payload.status },
         });
 
-        return { message: "User status updated", data: updated };
+        return { message: "User status updated", data: { id: updated.id } };
     }
 
     async deleteUser(id: string) {
         const current = await this.ensureUser(id);
-        await this.prisma.user.delete({ where: { id: current.id } });
-        return { message: "User deleted" };
+        const deleted = await this.prisma.user.delete({
+            where: { id: current.id },
+        });
+        return { message: "User deleted", data: { id: deleted.id } };
     }
 
     private async ensureUser(id: string) {

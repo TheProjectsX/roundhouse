@@ -11,7 +11,7 @@ import {
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ResponseService } from "@/common/interceptors/response";
 import { UpdateUserDto, UpdateUserStatusDto } from "./dto/body.dto";
-import { AdminUsersService } from "./admin-users.service";
+import { AdminUsersService } from "./users.service";
 
 @ApiTags("Admin - Users")
 @Controller("admin/users")

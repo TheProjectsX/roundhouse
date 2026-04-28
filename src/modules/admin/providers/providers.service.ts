@@ -13,6 +13,8 @@ import {
     UpdateProviderStatusDto,
 } from "./dto/body.dto";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 type GlobalProvider = Prisma.ProviderGetPayload<{ include: { model: true } }>;
 type CustomProvider = Prisma.UserProviderGetPayload<{
     include: { models: true };
@@ -30,21 +32,117 @@ export class AdminProvidersService {
                 builder.countTotal(),
             ]);
 
-            return { message: "Providers fetched", data, pagination };
-        }
+            const formatted = await Promise.all(
+                (data as any[]).map(async (p) => {
+                    const modelsCount = (p.models ?? []).length;
+                    const activeModelsCount = (p.models ?? []).filter(
+                        (m: any) => m.status === "ACTIVE",
+                    ).length;
+                    const connectedApiCount =
+                        await this.prisma.providerSelection.count({
+                            where: {
+                                OR: [
+                                    { providerIds: { has: p.id } },
+                                    { userProviderIds: { has: p.id } },
+                                ],
+                            },
+                        });
 
+                    return {
+                        id: p.id,
+                        name: p.name,
+                        description: p.description,
+                        free: p.free,
+                        type: p.type,
+                        status: p.status,
+                        modelsCount,
+                        activeModelsCount,
+                        connectedApiCount,
+                        createdAt: p.createdAt,
+                        updatedAt: p.updatedAt,
+                    };
+                }),
+            );
+
+            return {
+                message: "Providers fetched",
+                data: formatted,
+                pagination,
+            };
+        }
         const builder = this.buildGlobalProviderQuery(query);
         const [data, pagination] = await Promise.all([
             builder.execute(),
             builder.countTotal(),
         ]);
 
-        return { message: "Providers fetched", data, pagination };
+        const formatted = await Promise.all(
+            (data as any[]).map(async (p) => {
+                const modelsCount = p.model ? 1 : 0;
+                const activeModelsCount =
+                    p.model && p.model.status === "ACTIVE" ? 1 : 0;
+                const connectedApiCount =
+                    await this.prisma.providerSelection.count({
+                        where: {
+                            OR: [
+                                { providerIds: { has: p.id } },
+                                { userProviderIds: { has: p.id } },
+                            ],
+                        },
+                    });
+
+                return {
+                    id: p.id,
+                    name: p.name,
+                    description: p.description,
+                    free: p.free,
+                    type: p.type,
+                    status: p.status,
+                    modelsCount,
+                    activeModelsCount,
+                    connectedApiCount,
+                    createdAt: p.createdAt,
+                    updatedAt: p.updatedAt,
+                };
+            }),
+        );
+
+        return { message: "Providers fetched", data: formatted, pagination };
     }
 
     async fetchSingleProvider(id: string) {
         const provider = await this.resolveProviderEntity(id);
-        return { message: "Provider fetched", data: provider.record };
+        const p = provider.record as any;
+
+        const models =
+            provider.kind === "global"
+                ? p.model
+                    ? [p.model]
+                    : []
+                : (p.models ?? []);
+
+        const formatted = {
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            free: p.free,
+            type: p.type,
+            status: p.status,
+            models: models.map((m: any) => ({
+                id: m.id,
+                name: m.name,
+                code: m.code,
+                maxTokens: m.maxTokens,
+                tokenResetInterval: m.tokenResetInterval,
+                efficiencyScore: m.efficiencyScore,
+                bestFor: m.bestFor,
+                status: m.status,
+            })),
+            createdAt: p.createdAt,
+            updatedAt: p.updatedAt,
+        };
+
+        return { message: "Provider fetched", data: formatted };
     }
 
     async createProvider(payload: CreateProviderDto, user: UserPayload) {
@@ -80,7 +178,7 @@ export class AdminProvidersService {
                 include: { models: true },
             });
 
-            return { message: "Provider created", data: created };
+            return { message: "Provider created", data: { id: created.id } };
         }
 
         const created = await this.prisma.provider.create({
@@ -111,7 +209,7 @@ export class AdminProvidersService {
             include: { model: true },
         });
 
-        return { message: "Provider created", data: created };
+        return { message: "Provider created", data: { id: created.id } };
     }
 
     async updateProvider(payload: UpdateProviderDto, user: UserPayload) {
@@ -144,7 +242,7 @@ export class AdminProvidersService {
                 include: { model: true },
             });
 
-            return { message: "Provider updated", data: updated };
+            return { message: "Provider updated", data: { id: updated.id } };
         }
 
         const updated = await this.prisma.userProvider.update({
@@ -166,7 +264,7 @@ export class AdminProvidersService {
             include: { models: true },
         });
 
-        return { message: "Provider updated", data: updated };
+        return { message: "Provider updated", data: { id: updated.id } };
     }
 
     async updateProviderStatus(
@@ -182,7 +280,10 @@ export class AdminProvidersService {
                 data: { status: payload.status },
                 include: { model: true },
             });
-            return { message: "Provider status updated", data: updated };
+            return {
+                message: "Provider status updated",
+                data: { id: updated.id },
+            };
         }
 
         const updated = await this.prisma.userProvider.update({
@@ -191,7 +292,7 @@ export class AdminProvidersService {
             include: { models: true },
         });
 
-        return { message: "Provider status updated", data: updated };
+        return { message: "Provider status updated", data: { id: updated.id } };
     }
 
     async deleteProvider(id: string, user: UserPayload) {
@@ -199,12 +300,16 @@ export class AdminProvidersService {
         const provider = await this.resolveProviderEntity(id);
 
         if (provider.kind === "global") {
-            await this.prisma.provider.delete({ where: { id } });
-            return { message: "Provider deleted" };
+            const deleted = await this.prisma.provider.delete({
+                where: { id },
+            });
+            return { message: "Provider deleted", data: { id: deleted.id } };
         }
 
-        await this.prisma.userProvider.delete({ where: { id } });
-        return { message: "Provider deleted" };
+        const deleted = await this.prisma.userProvider.delete({
+            where: { id },
+        });
+        return { message: "Provider deleted", data: { id: deleted.id } };
     }
 
     async fetchAllProviderModels(
@@ -214,7 +319,10 @@ export class AdminProvidersService {
         const provider = await this.resolveProviderEntity(providerId);
 
         if (provider.kind === "global") {
-            const builder = new QueryBuilder(this.prisma.model, query)
+            const builder = new QueryBuilder<
+                typeof this.prisma.model,
+                Prisma.$ModelPayload
+            >(this.prisma.model, query)
                 .search(["name", "code"])
                 .filter({ exacts: ["status"] })
                 .rawFilter({ providerId })
@@ -229,7 +337,10 @@ export class AdminProvidersService {
             return { message: "Models fetched", data, pagination };
         }
 
-        const builder = new QueryBuilder(this.prisma.userModel, query)
+        const builder = new QueryBuilder<
+            typeof this.prisma.userModel,
+            Prisma.$UserModelPayload
+        >(this.prisma.userModel, query)
             .search(["name", "code"])
             .filter({ exacts: ["status"] })
             .rawFilter({ providerId })
@@ -271,7 +382,7 @@ export class AdminProvidersService {
                 },
             });
 
-            return { message: "Model created", data: created };
+            return { message: "Model created", data: { id: created.id } };
         }
 
         const created = await this.prisma.userModel.upsert({
@@ -292,7 +403,7 @@ export class AdminProvidersService {
             },
         });
 
-        return { message: "Model created", data: created };
+        return { message: "Model created", data: { id: created.id } };
     }
 
     async updateProviderModel(
@@ -317,7 +428,7 @@ export class AdminProvidersService {
                 data: this.buildModelUpdateData(payload),
             });
 
-            return { message: "Model updated", data: updated };
+            return { message: "Model updated", data: { id: updated.id } };
         }
 
         const current = await this.prisma.userModel.findUnique({
@@ -332,7 +443,7 @@ export class AdminProvidersService {
             data: this.buildModelUpdateData(payload),
         });
 
-        return { message: "Model updated", data: updated };
+        return { message: "Model updated", data: { id: updated.id } };
     }
 
     async updateProviderModelStatus(
@@ -356,7 +467,10 @@ export class AdminProvidersService {
                 data: { status: payload.status },
             });
 
-            return { message: "Model status updated", data: updated };
+            return {
+                message: "Model status updated",
+                data: { id: updated.id },
+            };
         }
 
         const current = await this.prisma.userModel.findUnique({
@@ -371,7 +485,7 @@ export class AdminProvidersService {
             data: { status: payload.status },
         });
 
-        return { message: "Model status updated", data: updated };
+        return { message: "Model status updated", data: { id: updated.id } };
     }
 
     async deleteProviderModel(
@@ -390,8 +504,10 @@ export class AdminProvidersService {
                 throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
             }
 
-            await this.prisma.model.delete({ where: { id: modelId } });
-            return { message: "Model deleted" };
+            const deleted = await this.prisma.model.delete({
+                where: { id: modelId },
+            });
+            return { message: "Model deleted", data: { id: deleted.id } };
         }
 
         const current = await this.prisma.userModel.findUnique({
@@ -401,12 +517,17 @@ export class AdminProvidersService {
             throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
         }
 
-        await this.prisma.userModel.delete({ where: { id: modelId } });
-        return { message: "Model deleted" };
+        const deleted = await this.prisma.userModel.delete({
+            where: { id: modelId },
+        });
+        return { message: "Model deleted", data: { id: deleted.id } };
     }
 
     private buildGlobalProviderQuery(query: Record<string, string>) {
-        return new QueryBuilder(this.prisma.provider, query)
+        return new QueryBuilder<
+            typeof this.prisma.provider,
+            Prisma.$ProviderPayload
+        >(this.prisma.provider, query)
             .search(["name", "description"])
             .filter({ exacts: ["status", "type"], booleans: ["free"] })
             .sort()
@@ -415,7 +536,10 @@ export class AdminProvidersService {
     }
 
     private buildCustomProviderQuery(query: Record<string, string>) {
-        return new QueryBuilder(this.prisma.userProvider, query)
+        return new QueryBuilder<
+            typeof this.prisma.userProvider,
+            Prisma.$UserProviderPayload
+        >(this.prisma.userProvider, query)
             .search(["name", "description"])
             .filter({ exacts: ["status", "type"], booleans: ["free"] })
             .sort()

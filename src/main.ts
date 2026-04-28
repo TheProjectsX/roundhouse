@@ -4,7 +4,6 @@ import cookieParser from "cookie-parser";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "@/app/app.module";
 import type { Request, Response } from "express";
-import * as express from "express";
 import config from "./config";
 
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -13,7 +12,7 @@ import { getLocalIP } from "./common/utils/localIp";
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, {
         logger: new ConsoleLogger({
-            prefix: "nestjs_starter_pack",
+            prefix: "roundhouse",
             logLevels: ["error", "warn", "fatal"],
             timestamp: true,
             json: true,
@@ -23,8 +22,6 @@ async function bootstrap() {
 
     // --- Middlewares & Config ---
     app.use(cookieParser());
-    app.use("/api/v1/webhook", express.raw({ type: "application/json" }));
-    app.setGlobalPrefix("api/iv-1");
 
     // --- CORS ---
     app.enableCors({
@@ -43,8 +40,8 @@ async function bootstrap() {
     nativeApp.get("/", (req: Request, res: Response) => {
         res.send({
             success: true,
-            message: "El Psy Congroo!",
-            server_name: "nestjs_starter_pack",
+            message: "Roundhouse Backend is running!",
+            server_name: "roundhouse-backend",
             server_type: "WEB",
         });
     });
@@ -63,9 +60,9 @@ async function bootstrap() {
     // --- Swagger Doc - Dev server only ---
     if (config.env !== "production") {
         const swaggerConfig = new DocumentBuilder()
-            .setTitle("NestJS Starter Pack")
+            .setTitle("Roundhouse Backend")
             .setDescription(
-                "The API Description for NestJS Backend Starter Pack",
+                "The API Description for Roundhouse Backend - A platform for managing AI providers and API keys.",
             )
             .setVersion("1.0")
             .addBearerAuth(
@@ -83,7 +80,7 @@ async function bootstrap() {
 
         const document = SwaggerModule.createDocument(app, swaggerConfig);
         document.security = [{ accessToken: [] }];
-        SwaggerModule.setup("api/iv-1", app, document);
+        SwaggerModule.setup("api/v1", app, document);
     }
 
     // --- Server Listen ---

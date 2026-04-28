@@ -1,12 +1,12 @@
 import { AuthModule } from "@/modules/auth/auth.module";
 import { OpenaiModule } from "@/modules/openai/openai.module";
-import { ProfileModule } from "@/modules/profile/profile.module";
+import { MeModule } from "@/modules/me/me.module";
 import { ProvidersModule } from "@/modules/providers/providers.module";
 import { ApikeysModule } from "@/modules/apikeys/apikeys.module";
 import { AdminModule } from "@/modules/admin/admin.module";
 import { GlobalExceptionFilter } from "@/common/filters/global_exception";
 import { Module } from "@nestjs/common";
-import { APP_FILTER, APP_GUARD } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD, RouterModule } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "./app.controller";
 import { ServeStaticModule } from "@nestjs/serve-static";
@@ -40,12 +40,44 @@ import { CommonModule } from "@/common/common.module";
             ],
         }),
         AuthModule,
-        ProfileModule,
+        MeModule,
         OpenaiModule,
         ProvidersModule,
         ApikeysModule,
         AdminModule,
         CommonModule,
+        RouterModule.register([
+            {
+                path: "api",
+                children: [
+                    {
+                        path: "iv1",
+                        children: [
+                            {
+                                path: "auth",
+                                module: AuthModule,
+                            },
+                            {
+                                path: "me",
+                                module: MeModule,
+                            },
+                            {
+                                path: "admin",
+                                module: AdminModule,
+                            },
+                            {
+                                path: "providers",
+                                module: ProvidersModule,
+                            },
+                            {
+                                path: "apikeys",
+                                module: ApikeysModule,
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]),
     ],
     controllers: [AppController],
     providers: [

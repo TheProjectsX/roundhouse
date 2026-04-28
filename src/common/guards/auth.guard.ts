@@ -10,6 +10,8 @@ import { Reflector } from "@nestjs/core";
 import { IS_PUBLIC_KEY } from "@/common/decorators/auth.decorator";
 import config from "@/config";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
+import { ROLES_KEY } from "../decorators/roles.decorator";
+import { UserRole } from "@prisma/client";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -24,6 +26,11 @@ export class AuthGuard implements CanActivate {
             IS_PUBLIC_KEY,
             [context.getHandler(), context.getClass()],
         );
+
+        const roles = this.reflector.getAllAndOverride<UserRole>(ROLES_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
 
         if (isPublic) {
             return true;
@@ -48,6 +55,7 @@ export class AuthGuard implements CanActivate {
                     id: true,
                     email: true,
                     status: true,
+                    role: true,
                 },
             });
 
@@ -55,8 +63,12 @@ export class AuthGuard implements CanActivate {
                 throw new UnauthorizedException("Unauthorized Request");
             }
 
-            if (user.status === "INACTIVE") {
+            if (user.status !== "ACTIVE") {
                 throw new UnauthorizedException("User is inactive");
+            }
+
+            if (roles && !roles.includes(user.role)) {
+                throw new UnauthorizedException("Insufficient permissions");
             }
 
             request["user"] = {

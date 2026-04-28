@@ -1,16 +1,16 @@
 import { Module } from "@nestjs/common";
-import { AdminProvidersController } from "./providers/admin-providers.controller";
-import { AdminProvidersService } from "./providers/admin-providers.service";
-import { AdminUsersController } from "./users/admin-users.controller";
-import { AdminUsersService } from "./users/admin-users.service";
-import { AdminAuthController } from "./auth/admin-auth.controller";
-import { AdminAuthService } from "./auth/admin-auth.service";
-import { AdminAnalyticsController } from "./analytics/admin-analytics.controller";
-import { AdminAnalyticsService } from "./analytics/admin-analytics.service";
+import { ProvidersController } from "./providers/providers.controller";
+import { AdminProvidersService } from "./providers/providers.service";
+import { AdminUsersController } from "./users/users.controller";
+import { AdminUsersService } from "./users/users.service";
+import { AdminAuthController } from "./auth/auth.controller";
+import { AdminAuthService } from "./auth/auth.service";
+import { AdminAnalyticsController } from "./analytics/analytics.controller";
+import { AdminAnalyticsService } from "./analytics/analytics.service";
 
 @Module({
     controllers: [
-        AdminProvidersController,
+        ProvidersController,
         AdminUsersController,
         AdminAuthController,
         AdminAnalyticsController,

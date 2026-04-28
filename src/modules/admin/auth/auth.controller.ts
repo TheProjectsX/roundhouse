@@ -2,7 +2,7 @@ import { Body, Controller, HttpStatus, Post } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ResponseService } from "@/common/interceptors/response";
 import { AdminLoginDto } from "./dto/body.dto";
-import { AdminAuthService } from "./admin-auth.service";
+import { AdminAuthService } from "./auth.service";
 
 @ApiTags("Admin - Auth")
 @Controller("admin")

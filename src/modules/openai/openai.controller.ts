@@ -4,7 +4,7 @@ import type { Request, Response } from "express";
 import { OpenaiService } from "./openai.service";
 
 @ApiTags("OpenAI")
-@Controller("openai")
+@Controller("v1")
 export class OpenaiController {
     constructor(private readonly openaiService: OpenaiService) {}
 

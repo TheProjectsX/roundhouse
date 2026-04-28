@@ -4,6 +4,8 @@ import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { nanoid } from "nanoid";
 import {
     CreateApiKeyDto,
@@ -41,11 +43,43 @@ export class ApikeysService {
             .rawFilter({ userId: user.id })
             .sort()
             .paginate()
-            .include({ providerSelections: true })
+            .include({
+                providerSelections: { include: { modelSelections: true } },
+            })
             .execute();
         const pagination = await queryBuilder.countTotal();
 
-        return { message: "API keys fetched", data, pagination };
+        const formatted = (data as any[]).map((k) => {
+            const providerSelections = k.providerSelections ?? [];
+            const providerCount = providerSelections.length;
+
+            let modelCount = 0;
+            let usedTokens = 0;
+
+            providerSelections.forEach((ps: any) => {
+                const modelSelections = ps.modelSelections ?? [];
+                modelSelections.forEach((ms: any) => {
+                    modelCount +=
+                        (ms.models?.length ?? 0) + (ms.userModels?.length ?? 0);
+                    usedTokens += ms.usedTokens ?? 0;
+                });
+            });
+
+            return {
+                id: k.id,
+                name: k.name,
+                active: k.active,
+                createdAt: k.createdAt,
+                updatedAt: k.updatedAt,
+                stats: {
+                    providerCount,
+                    modelCount,
+                    usedTokens,
+                },
+            };
+        });
+
+        return { message: "API keys fetched", data: formatted, pagination };
     }
 
     async fetchSingleApiKey(id: string, user: UserPayload) {
@@ -80,7 +114,7 @@ export class ApikeysService {
             },
         });
 
-        return { message: "API key created", data: created };
+        return { message: "API key created", data: { id: created.id } };
     }
 
     async updateApiKey(payload: UpdateApiKeyDto, user: UserPayload) {
@@ -96,7 +130,7 @@ export class ApikeysService {
             },
         });
 
-        return { message: "API key updated", data: updated };
+        return { message: "API key updated", data: { id: updated.id } };
     }
 
     async updateApiKeyStatus(
@@ -110,13 +144,15 @@ export class ApikeysService {
             data: { active: payload.active },
         });
 
-        return { message: "API key status updated", data: updated };
+        return { message: "API key status updated", data: { id: updated.id } };
     }
 
     async deleteApiKey(id: string, user: UserPayload) {
         const apiKey = await this.ensureOwnedApiKey(id, user.id);
-        await this.prisma.apiKey.delete({ where: { id: apiKey.id } });
-        return { message: "API key deleted" };
+        const deleted = await this.prisma.apiKey.delete({
+            where: { id: apiKey.id },
+        });
+        return { message: "API key deleted", data: { id: deleted.id } };
     }
 
     async createApiKeyProvider(
@@ -157,7 +193,10 @@ export class ApikeysService {
             data: { modelSelectionIds: [modelSelection.id] },
         });
 
-        return { message: "Provider selected", data: providerSelection };
+        return {
+            message: "Provider selected",
+            data: { id: providerSelection.id },
+        };
     }
 
     async deleteApiKeyProvider(
@@ -191,11 +230,11 @@ export class ApikeysService {
             });
         }
 
-        await this.prisma.providerSelection.delete({
+        const deleted = await this.prisma.providerSelection.delete({
             where: { id: providerSelection.id },
         });
 
-        return { message: "Provider deselected" };
+        return { message: "Provider deselected", data: { id: deleted.id } };
     }
 
     async updateApiKeyProviderStatus(
@@ -228,7 +267,7 @@ export class ApikeysService {
             data: { active: !providerSelection.active },
         });
 
-        return { message: "Provider status updated", data: updated };
+        return { message: "Provider status updated", data: { id: updated.id } };
     }
 
     async updateApiKeyModelStatus(
@@ -269,7 +308,7 @@ export class ApikeysService {
             data: { active: !modelSelection.active },
         });
 
-        return { message: "Model status updated", data: updated };
+        return { message: "Model status updated", data: { id: updated.id } };
     }
 
     private async ensureOwnedApiKey(id: string, userId: string) {
