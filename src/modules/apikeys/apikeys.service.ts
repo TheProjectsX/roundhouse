@@ -30,7 +30,10 @@ export class ApikeysService {
     constructor(private prisma: PrismaService) {}
 
     async fetchAllApiKeys(query: Record<string, string>, user: UserPayload) {
-        const queryBuilder = new QueryBuilder(this.prisma.apiKey, query);
+        const queryBuilder = new QueryBuilder<
+            typeof this.prisma.apiKey,
+            Prisma.$ApiKeyPayload
+        >(this.prisma.apiKey, query);
 
         const data = await queryBuilder
             .search(["name"])
@@ -38,7 +41,8 @@ export class ApikeysService {
             .rawFilter({ userId: user.id })
             .sort()
             .paginate()
-            .include({ providerSelections: true });
+            .include({ providerSelections: true })
+            .execute();
         const pagination = await queryBuilder.countTotal();
 
         return { message: "API keys fetched", data, pagination };
