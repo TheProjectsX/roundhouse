@@ -39,3 +39,4 @@ lerna-debug.log*
 dbml
 uploads
 .vercel
+tsconfig.build.tsbuildinfo

@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { ModelStatus, ModelType, Prisma } from "@prisma/client";
+import { ContentStatus, ProviderType, Prisma } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import QueryBuilder from "@/common/utils/queryBuilder";
@@ -148,15 +148,15 @@ export class AdminProvidersService {
     async createProvider(payload: CreateProviderDto, user: UserPayload) {
         void user;
 
-        if (payload.type === ModelType.CUSTOM) {
+        if (payload.type === ProviderType.CUSTOM) {
             const created = await this.prisma.userProvider.create({
                 data: {
                     name: payload.name,
                     description: payload.description,
                     baseApi: payload.baseApi,
                     free: payload.free ?? false,
-                    type: ModelType.CUSTOM,
-                    status: payload.status ?? ModelStatus.ACTIVE,
+                    type: ProviderType.CUSTOM,
+                    status: payload.status ?? ContentStatus.ACTIVE,
                     models: payload.model
                         ? {
                               create: {
@@ -170,7 +170,7 @@ export class AdminProvidersService {
                                   bestFor: payload.model.bestFor ?? [],
                                   status:
                                       payload.model.status ??
-                                      ModelStatus.ACTIVE,
+                                      ContentStatus.ACTIVE,
                               },
                           }
                         : undefined,
@@ -188,8 +188,8 @@ export class AdminProvidersService {
                 description: payload.description,
                 baseApi: payload.baseApi ?? "",
                 free: payload.free ?? false,
-                type: payload.type ?? ModelType.OPENAI,
-                status: payload.status ?? ModelStatus.ACTIVE,
+                type: payload.type ?? ProviderType.OPENAI,
+                status: payload.status ?? ContentStatus.ACTIVE,
                 model: payload.model
                     ? {
                           create: {
@@ -201,7 +201,7 @@ export class AdminProvidersService {
                               efficiencyScore: payload.model.efficiencyScore,
                               bestFor: payload.model.bestFor ?? [],
                               status:
-                                  payload.model.status ?? ModelStatus.ACTIVE,
+                                  payload.model.status ?? ContentStatus.ACTIVE,
                           },
                       }
                     : undefined,
@@ -377,7 +377,7 @@ export class AdminProvidersService {
                     tokenResetInterval: payload.tokenResetInterval,
                     efficiencyScore: payload.efficiencyScore,
                     bestFor: payload.bestFor ?? [],
-                    status: payload.status ?? ModelStatus.ACTIVE,
+                    status: payload.status ?? ContentStatus.ACTIVE,
                     provider: { connect: { id: providerId } },
                 },
             });
@@ -398,7 +398,7 @@ export class AdminProvidersService {
                 tokenResetInterval: payload.tokenResetInterval,
                 efficiencyScore: payload.efficiencyScore,
                 bestFor: payload.bestFor ?? [],
-                status: payload.status ?? ModelStatus.ACTIVE,
+                status: payload.status ?? ContentStatus.ACTIVE,
                 provider: { connect: { id: providerId } },
             },
         });

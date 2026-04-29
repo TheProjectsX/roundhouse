@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Prisma, ModelStatus, ModelType } from "@prisma/client";
+import { Prisma, ContentStatus, ProviderType } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
@@ -171,8 +171,8 @@ export class ProvidersService {
                 description: payload.description,
                 baseApi: payload.baseApi,
                 free: payload.free ?? false,
-                type: payload.type ?? ModelType.CUSTOM,
-                status: payload.status ?? ModelStatus.ACTIVE,
+                type: payload.type ?? ProviderType.CUSTOM,
+                status: payload.status ?? ContentStatus.ACTIVE,
                 models: payload.model
                     ? {
                           create: {
@@ -184,7 +184,7 @@ export class ProvidersService {
                               efficiencyScore: payload.model.efficiencyScore,
                               bestFor: payload.model.bestFor ?? [],
                               status:
-                                  payload.model.status ?? ModelStatus.ACTIVE,
+                                  payload.model.status ?? ContentStatus.ACTIVE,
                           },
                       }
                     : undefined,
@@ -322,7 +322,7 @@ export class ProvidersService {
                     tokenResetInterval: payload.tokenResetInterval,
                     efficiencyScore: payload.efficiencyScore,
                     bestFor: payload.bestFor ?? [],
-                    status: payload.status ?? ModelStatus.ACTIVE,
+                    status: payload.status ?? ContentStatus.ACTIVE,
                     provider: { connect: { id: providerId } },
                 },
             });
@@ -342,7 +342,7 @@ export class ProvidersService {
                 tokenResetInterval: payload.tokenResetInterval,
                 efficiencyScore: payload.efficiencyScore,
                 bestFor: payload.bestFor ?? [],
-                status: payload.status ?? ModelStatus.ACTIVE,
+                status: payload.status ?? ContentStatus.ACTIVE,
                 provider: { connect: { id: providerId } },
             },
         });

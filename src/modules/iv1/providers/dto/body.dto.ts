@@ -1,4 +1,4 @@
-import { ModelStatus, ModelType } from "@prisma/client";
+import { ContentStatus, ProviderType } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
     IsArray,
@@ -52,8 +52,8 @@ export class ProviderModelBodyDto {
     bestFor?: string[];
 
     @IsOptional()
-    @IsEnum(ModelStatus)
-    status?: ModelStatus;
+    @IsEnum(ContentStatus)
+    status?: ContentStatus;
 }
 
 export class CreateProviderDto {
@@ -73,12 +73,12 @@ export class CreateProviderDto {
     free?: boolean;
 
     @IsOptional()
-    @IsEnum(ModelType)
-    type?: ModelType;
+    @IsEnum(ProviderType)
+    type?: ProviderType;
 
     @IsOptional()
-    @IsEnum(ModelStatus)
-    status?: ModelStatus;
+    @IsEnum(ContentStatus)
+    status?: ContentStatus;
 
     @IsOptional()
     @Type(() => ProviderModelBodyDto)
@@ -107,20 +107,20 @@ export class UpdateProviderDto {
     free?: boolean;
 
     @IsOptional()
-    @IsEnum(ModelType)
-    type?: ModelType;
+    @IsEnum(ProviderType)
+    type?: ProviderType;
 
     @IsOptional()
-    @IsEnum(ModelStatus)
-    status?: ModelStatus;
+    @IsEnum(ContentStatus)
+    status?: ContentStatus;
 }
 
 export class UpdateProviderStatusDto {
     @IsString()
     id: string;
 
-    @IsEnum(ModelStatus)
-    status: ModelStatus;
+    @IsEnum(ContentStatus)
+    status: ContentStatus;
 }
 
 export class UpdateProviderModelDto extends ProviderModelBodyDto {
@@ -132,8 +132,8 @@ export class UpdateProviderModelStatusDto {
     @IsString()
     modelId: string;
 
-    @IsEnum(ModelStatus)
-    status: ModelStatus;
+    @IsEnum(ContentStatus)
+    status: ContentStatus;
 }
 
 export class CreateProviderModelDto extends ProviderModelBodyDto {}
