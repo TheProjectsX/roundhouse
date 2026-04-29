@@ -12,7 +12,7 @@ const openAIChatMessageSchema = z
 
 export const chatCompletionBodySchema = z
     .object({
-        model: z.string().min(1),
+        model: z.string().min(1).optional(),
         messages: z.array(openAIChatMessageSchema).min(1),
         stream: z.boolean().optional(),
         tools: z.array(z.any()).optional(),
@@ -22,7 +22,7 @@ export const chatCompletionBodySchema = z
 
 export const responsesBodySchema = z
     .object({
-        model: z.string().min(1),
+        model: z.string().min(1).optional(),
         input: z.any().optional(),
         messages: z.array(openAIChatMessageSchema).optional(),
         stream: z.boolean().optional(),

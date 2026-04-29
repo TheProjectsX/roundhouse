@@ -6,12 +6,12 @@ import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { nanoid } from "nanoid";
 import {
     CreateApiKeyDto,
     UpdateApiKeyDto,
     UpdateApiKeyStatusDto,
 } from "./dto/body.dto";
+import { generateRandomApiKey } from "./apikeys.util";
 
 type ApiKeyDetails = Prisma.ApiKeyGetPayload<{
     include: {
@@ -19,6 +19,7 @@ type ApiKeyDetails = Prisma.ApiKeyGetPayload<{
             include: {
                 providers: true;
                 userProviders: { include: { models: true } };
+                providerApiKeys: true;
                 modelSelections: {
                     include: { models: true; userModels: true };
                 };
@@ -44,7 +45,17 @@ export class ApikeysService {
             .sort()
             .paginate()
             .include({
-                providerSelections: { include: { modelSelections: true } },
+                providerSelections: {
+                    include: {
+                        modelSelections: {
+                            include: {
+                                models: true,
+                                userModels: true,
+                            },
+                        },
+                        providerApiKeys: true,
+                    },
+                },
             })
             .execute();
         const pagination = await queryBuilder.countTotal();
@@ -52,11 +63,21 @@ export class ApikeysService {
         const formatted = (data as any[]).map((k) => {
             const providerSelections = k.providerSelections ?? [];
             const providerCount = providerSelections.length;
+            let providerApiKeyCount = 0;
+            let successfulRequests = 0;
 
             let modelCount = 0;
             let usedTokens = 0;
 
             providerSelections.forEach((ps: any) => {
+                const providerApiKeys = ps.providerApiKeys ?? [];
+                providerApiKeyCount += providerApiKeys.length;
+                successfulRequests += providerApiKeys.reduce(
+                    (sum: number, providerApiKey: any) =>
+                        sum + (providerApiKey.successCount ?? 0),
+                    0,
+                );
+
                 const modelSelections = ps.modelSelections ?? [];
                 modelSelections.forEach((ms: any) => {
                     modelCount +=
@@ -73,7 +94,9 @@ export class ApikeysService {
                 updatedAt: k.updatedAt,
                 stats: {
                     providerCount,
+                    providerApiKeyCount,
                     modelCount,
+                    successfulRequests,
                     usedTokens,
                 },
             };
@@ -90,6 +113,7 @@ export class ApikeysService {
                     include: {
                         providers: true,
                         userProviders: { include: { models: true } },
+                        providerApiKeys: true,
                         modelSelections: {
                             include: { models: true, userModels: true },
                         },
@@ -102,14 +126,17 @@ export class ApikeysService {
             throw new ApiError(HttpStatus.NOT_FOUND, "ApiKey not found");
         }
 
-        return { message: "API key fetched", data: apiKey as ApiKeyDetails };
+        return {
+            message: "API key fetched",
+            data: this.formatApiKeyDetails(apiKey as ApiKeyDetails),
+        };
     }
 
     async createApiKey(payload: CreateApiKeyDto, user: UserPayload) {
         const created = await this.prisma.apiKey.create({
             data: {
                 name: payload.name,
-                key: nanoid(32),
+                key: generateRandomApiKey(),
                 user: { connect: { id: user.id } },
             },
         });
@@ -117,8 +144,12 @@ export class ApikeysService {
         return { message: "API key created", data: { id: created.id } };
     }
 
-    async updateApiKey(payload: UpdateApiKeyDto, user: UserPayload) {
-        const apiKey = await this.ensureOwnedApiKey(payload.id, user.id);
+    async updateApiKey(
+        id: string,
+        payload: UpdateApiKeyDto,
+        user: UserPayload,
+    ) {
+        const apiKey = await this.ensureOwnedApiKey(id, user.id);
 
         const updated = await this.prisma.apiKey.update({
             where: { id: apiKey.id },
@@ -134,10 +165,11 @@ export class ApikeysService {
     }
 
     async updateApiKeyStatus(
+        id: string,
         payload: UpdateApiKeyStatusDto,
         user: UserPayload,
     ) {
-        const apiKey = await this.ensureOwnedApiKey(payload.id, user.id);
+        const apiKey = await this.ensureOwnedApiKey(id, user.id);
 
         const updated = await this.prisma.apiKey.update({
             where: { id: apiKey.id },
@@ -162,6 +194,25 @@ export class ApikeysService {
     ) {
         const apiKey = await this.ensureOwnedApiKey(apiKeyId, user.id);
         const providerEntity = await this.resolveProviderEntity(providerId);
+        const existingSelection = await this.prisma.providerSelection.findFirst(
+            {
+                where: {
+                    apiKeyId: apiKey.id,
+                    OR: [
+                        { providerIds: { has: providerId } },
+                        { userProviderIds: { has: providerId } },
+                    ],
+                },
+                select: { id: true },
+            },
+        );
+
+        if (existingSelection) {
+            throw new ApiError(
+                HttpStatus.CONFLICT,
+                "Provider already selected for this API key",
+            );
+        }
 
         const providerSelection = await this.prisma.providerSelection.create({
             data: {
@@ -199,118 +250,6 @@ export class ApikeysService {
         };
     }
 
-    async deleteApiKeyProvider(
-        apiKeyId: string,
-        providerId: string,
-        user: UserPayload,
-    ) {
-        const apiKey = await this.ensureOwnedApiKey(apiKeyId, user.id);
-        const providerSelection = await this.prisma.providerSelection.findFirst(
-            {
-                where: {
-                    apiKeyId: apiKey.id,
-                    OR: [
-                        { providerIds: { has: providerId } },
-                        { userProviderIds: { has: providerId } },
-                    ],
-                },
-            },
-        );
-
-        if (!providerSelection) {
-            throw new ApiError(
-                HttpStatus.NOT_FOUND,
-                "Provider selection not found",
-            );
-        }
-
-        if (providerSelection.modelSelectionIds.length) {
-            await this.prisma.modelSelection.deleteMany({
-                where: { id: { in: providerSelection.modelSelectionIds } },
-            });
-        }
-
-        const deleted = await this.prisma.providerSelection.delete({
-            where: { id: providerSelection.id },
-        });
-
-        return { message: "Provider deselected", data: { id: deleted.id } };
-    }
-
-    async updateApiKeyProviderStatus(
-        apiKeyId: string,
-        providerId: string,
-        user: UserPayload,
-    ) {
-        const apiKey = await this.ensureOwnedApiKey(apiKeyId, user.id);
-        const providerSelection = await this.prisma.providerSelection.findFirst(
-            {
-                where: {
-                    apiKeyId: apiKey.id,
-                    OR: [
-                        { providerIds: { has: providerId } },
-                        { userProviderIds: { has: providerId } },
-                    ],
-                },
-            },
-        );
-
-        if (!providerSelection) {
-            throw new ApiError(
-                HttpStatus.NOT_FOUND,
-                "Provider selection not found",
-            );
-        }
-
-        const updated = await this.prisma.providerSelection.update({
-            where: { id: providerSelection.id },
-            data: { active: !providerSelection.active },
-        });
-
-        return { message: "Provider status updated", data: { id: updated.id } };
-    }
-
-    async updateApiKeyModelStatus(
-        apiKeyId: string,
-        modelId: string,
-        user: UserPayload,
-    ) {
-        const apiKey = await this.ensureOwnedApiKey(apiKeyId, user.id);
-        const providerSelections = await this.prisma.providerSelection.findMany(
-            {
-                where: { apiKeyId: apiKey.id },
-                select: { id: true },
-            },
-        );
-
-        const providerSelectionIds = providerSelections.map(
-            (selection) => selection.id,
-        );
-        const modelSelection = await this.prisma.modelSelection.findFirst({
-            where: {
-                providerSelectionIds: { hasSome: providerSelectionIds },
-                OR: [
-                    { modelIds: { has: modelId } },
-                    { userModelIds: { has: modelId } },
-                ],
-            },
-        });
-
-        if (!modelSelection) {
-            throw new ApiError(
-                HttpStatus.NOT_FOUND,
-                "Model selection not found",
-            );
-        }
-
-        const updated = await this.prisma.modelSelection.update({
-            where: { id: modelSelection.id },
-            data: { active: !modelSelection.active },
-        });
-
-        return { message: "Model status updated", data: { id: updated.id } };
-    }
-
     private async ensureOwnedApiKey(id: string, userId: string) {
         const apiKey = await this.prisma.apiKey.findFirst({
             where: { id, userId },
@@ -321,6 +260,45 @@ export class ApikeysService {
         }
 
         return apiKey;
+    }
+
+    private formatApiKeyDetails(apiKey: ApiKeyDetails) {
+        return {
+            ...apiKey,
+            providerSelections: apiKey.providerSelections.map((selection) => ({
+                ...selection,
+                providerApiKeys: selection.providerApiKeys.map(
+                    (providerApiKey) =>
+                        this.formatProviderApiKey(providerApiKey),
+                ),
+            })),
+        };
+    }
+
+    private formatProviderApiKey(providerApiKey: {
+        id: string;
+        key: string;
+        active: boolean;
+        successCount: number;
+        createdAt: Date;
+        updatedAt: Date;
+    }) {
+        return {
+            id: providerApiKey.id,
+            maskedKey: this.maskProviderApiKey(providerApiKey.key),
+            active: providerApiKey.active,
+            successCount: providerApiKey.successCount,
+            createdAt: providerApiKey.createdAt,
+            updatedAt: providerApiKey.updatedAt,
+        };
+    }
+
+    private maskProviderApiKey(key: string) {
+        if (key.length <= 8) {
+            return `${key.slice(0, 2)}***${key.slice(-2)}`;
+        }
+
+        return `${key.slice(0, 4)}***${key.slice(-4)}`;
     }
 
     private async resolveProviderEntity(providerId: string) {

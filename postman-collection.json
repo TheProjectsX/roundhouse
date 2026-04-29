@@ -17,7 +17,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "92a7bf80-09dc-4754-a487-e1c5a61953e3",
+                                            "id": "1730382f-bbf4-4cd8-b6a8-3811cbf09a41",
                                             "name": "Register User",
                                             "request": {
                                                 "name": "Register User",
@@ -67,7 +67,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "3edf880b-a2e7-4fb8-b019-2af2857b7e87",
+                                            "id": "014373f3-a0c2-4afa-bdf7-aa83ceeecbb6",
                                             "name": "Login User",
                                             "request": {
                                                 "name": "Login User",
@@ -113,213 +113,11 @@
                                     ]
                                 },
                                 {
-                                    "name": "send-otp",
-                                    "description": "",
-                                    "item": [
-                                        {
-                                            "id": "d74c7af9-c7ec-49f5-bc84-eb0420823884",
-                                            "name": "Resend OTP",
-                                            "request": {
-                                                "name": "Resend OTP",
-                                                "description": {},
-                                                "url": {
-                                                    "path": [
-                                                        "api",
-                                                        "iv1",
-                                                        "auth",
-                                                        "send-otp"
-                                                    ],
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "query": [],
-                                                    "variable": []
-                                                },
-                                                "header": [
-                                                    {
-                                                        "key": "Content-Type",
-                                                        "value": "application/json"
-                                                    }
-                                                ],
-                                                "method": "POST",
-                                                "body": {
-                                                    "mode": "raw",
-                                                    "raw": "{\n  \"email\": \"<email>\"\n}",
-                                                    "options": {
-                                                        "raw": {
-                                                            "headerFamily": "json",
-                                                            "language": "json"
-                                                        }
-                                                    }
-                                                },
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        },
-                                        {
-                                            "name": "password-reset",
-                                            "description": "",
-                                            "item": [
-                                                {
-                                                    "id": "b17b8ace-a500-4b74-8695-fea4bfc662c3",
-                                                    "name": "Send Forgot Password OTP",
-                                                    "request": {
-                                                        "name": "Send Forgot Password OTP",
-                                                        "description": {},
-                                                        "url": {
-                                                            "path": [
-                                                                "api",
-                                                                "iv1",
-                                                                "auth",
-                                                                "send-otp",
-                                                                "password-reset"
-                                                            ],
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
-                                                            "query": [],
-                                                            "variable": []
-                                                        },
-                                                        "header": [
-                                                            {
-                                                                "key": "Content-Type",
-                                                                "value": "application/json"
-                                                            }
-                                                        ],
-                                                        "method": "POST",
-                                                        "body": {
-                                                            "mode": "raw",
-                                                            "raw": "{\n  \"email\": \"<email>\"\n}",
-                                                            "options": {
-                                                                "raw": {
-                                                                    "headerFamily": "json",
-                                                                    "language": "json"
-                                                                }
-                                                            }
-                                                        },
-                                                        "auth": null
-                                                    },
-                                                    "response": [],
-                                                    "event": [],
-                                                    "protocolProfileBehavior": {
-                                                        "disableBodyPruning": true
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "verify-otp",
-                                    "description": "",
-                                    "item": [
-                                        {
-                                            "id": "7c0c70dc-254d-4d8a-bef3-d23ae2c6d67a",
-                                            "name": "Verify OTP",
-                                            "request": {
-                                                "name": "Verify OTP",
-                                                "description": {},
-                                                "url": {
-                                                    "path": [
-                                                        "api",
-                                                        "iv1",
-                                                        "auth",
-                                                        "verify-otp"
-                                                    ],
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "query": [],
-                                                    "variable": []
-                                                },
-                                                "header": [
-                                                    {
-                                                        "key": "Content-Type",
-                                                        "value": "application/json"
-                                                    }
-                                                ],
-                                                "method": "POST",
-                                                "body": {
-                                                    "mode": "raw",
-                                                    "raw": "{\n  \"otp\": \"<string>\",\n  \"email\": \"<email>\"\n}",
-                                                    "options": {
-                                                        "raw": {
-                                                            "headerFamily": "json",
-                                                            "language": "json"
-                                                        }
-                                                    }
-                                                },
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        },
-                                        {
-                                            "name": "password-reset",
-                                            "description": "",
-                                            "item": [
-                                                {
-                                                    "id": "892dd631-c093-49bb-8afa-e60875fccc70",
-                                                    "name": "Verify Forgot Password OTP",
-                                                    "request": {
-                                                        "name": "Verify Forgot Password OTP",
-                                                        "description": {},
-                                                        "url": {
-                                                            "path": [
-                                                                "api",
-                                                                "iv1",
-                                                                "auth",
-                                                                "verify-otp",
-                                                                "password-reset"
-                                                            ],
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
-                                                            "query": [],
-                                                            "variable": []
-                                                        },
-                                                        "header": [
-                                                            {
-                                                                "key": "Content-Type",
-                                                                "value": "application/json"
-                                                            }
-                                                        ],
-                                                        "method": "POST",
-                                                        "body": {
-                                                            "mode": "raw",
-                                                            "raw": "{\n  \"otp\": \"<string>\",\n  \"email\": \"<email>\"\n}",
-                                                            "options": {
-                                                                "raw": {
-                                                                    "headerFamily": "json",
-                                                                    "language": "json"
-                                                                }
-                                                            }
-                                                        },
-                                                        "auth": null
-                                                    },
-                                                    "response": [],
-                                                    "event": [],
-                                                    "protocolProfileBehavior": {
-                                                        "disableBodyPruning": true
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
                                     "name": "change-password",
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "6718517f-d96e-4f54-a87e-eeb5f4a3c8ef",
+                                            "id": "e5382514-d52d-4c07-80ec-20ebf1b719ba",
                                             "name": "Change Password",
                                             "request": {
                                                 "name": "Change Password",
@@ -363,156 +161,6 @@
                                             }
                                         }
                                     ]
-                                },
-                                {
-                                    "name": "forgot-password",
-                                    "description": "",
-                                    "item": [
-                                        {
-                                            "id": "2675b250-d3c2-4ec2-9117-db596e5a7c46",
-                                            "name": "Forgot Password",
-                                            "request": {
-                                                "name": "Forgot Password",
-                                                "description": {},
-                                                "url": {
-                                                    "path": [
-                                                        "api",
-                                                        "iv1",
-                                                        "auth",
-                                                        "forgot-password"
-                                                    ],
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "query": [],
-                                                    "variable": []
-                                                },
-                                                "header": [
-                                                    {
-                                                        "key": "Content-Type",
-                                                        "value": "application/json"
-                                                    }
-                                                ],
-                                                "method": "POST",
-                                                "body": {
-                                                    "mode": "raw",
-                                                    "raw": "{\n  \"email\": \"<email>\"\n}",
-                                                    "options": {
-                                                        "raw": {
-                                                            "headerFamily": "json",
-                                                            "language": "json"
-                                                        }
-                                                    }
-                                                },
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "reset-password",
-                                    "description": "",
-                                    "item": [
-                                        {
-                                            "id": "7f93a769-a5f8-47ab-95d5-81caa8db3071",
-                                            "name": "Reset Password",
-                                            "request": {
-                                                "name": "Reset Password",
-                                                "description": {},
-                                                "url": {
-                                                    "path": [
-                                                        "api",
-                                                        "iv1",
-                                                        "auth",
-                                                        "reset-password"
-                                                    ],
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "query": [],
-                                                    "variable": []
-                                                },
-                                                "header": [
-                                                    {
-                                                        "key": "Content-Type",
-                                                        "value": "application/json"
-                                                    }
-                                                ],
-                                                "method": "POST",
-                                                "body": {
-                                                    "mode": "raw",
-                                                    "raw": "{\n  \"token\": \"<string>\",\n  \"password\": \"<string>\"\n}",
-                                                    "options": {
-                                                        "raw": {
-                                                            "headerFamily": "json",
-                                                            "language": "json"
-                                                        }
-                                                    }
-                                                },
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "refresh-token",
-                                    "description": "",
-                                    "item": [
-                                        {
-                                            "id": "52deda37-26b2-4b57-9493-77ba5f873b79",
-                                            "name": "Refresh Access Token",
-                                            "request": {
-                                                "name": "Refresh Access Token",
-                                                "description": {},
-                                                "url": {
-                                                    "path": [
-                                                        "api",
-                                                        "iv1",
-                                                        "auth",
-                                                        "refresh-token"
-                                                    ],
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "query": [],
-                                                    "variable": []
-                                                },
-                                                "header": [
-                                                    {
-                                                        "key": "Content-Type",
-                                                        "value": "application/json"
-                                                    }
-                                                ],
-                                                "method": "POST",
-                                                "body": {
-                                                    "mode": "raw",
-                                                    "raw": "{\n  \"refreshToken\": \"<string>\"\n}",
-                                                    "options": {
-                                                        "raw": {
-                                                            "headerFamily": "json",
-                                                            "language": "json"
-                                                        }
-                                                    }
-                                                },
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        }
-                                    ]
                                 }
                             ]
                         },
@@ -521,7 +169,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "71699d78-7509-4fb0-a1c7-c1cf0ea1d0fa",
+                                    "id": "724e9bbe-976f-43fe-838f-e0b4906e609d",
                                     "name": "Get user profile",
                                     "request": {
                                         "name": "Get user profile",
@@ -549,7 +197,7 @@
                                     }
                                 },
                                 {
-                                    "id": "14c3ab43-e5f9-41c1-8dfe-d42b70c3e1b1",
+                                    "id": "802caa95-2f3d-419c-831e-0e2ed3160fa5",
                                     "name": "Update user profile",
                                     "request": {
                                         "name": "Update user profile",
@@ -596,7 +244,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "4a41bd71-dd0d-4a59-b846-92e161489d8a",
+                                            "id": "6f41bb5a-0a30-4cc1-b92d-6ad7fba5eb04",
                                             "name": "List user's custom providers",
                                             "request": {
                                                 "name": "List user's custom providers",
@@ -625,7 +273,7 @@
                                             }
                                         },
                                         {
-                                            "id": "51663a6a-9e7a-4b27-9b60-8de99ca0069b",
+                                            "id": "19bf72e3-f333-4577-b167-be0f2ff303aa",
                                             "name": "Create custom provider",
                                             "request": {
                                                 "name": "Create custom provider",
@@ -673,7 +321,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "c69b9fd1-036f-49b1-902b-65f83efb7fa3",
+                                                    "id": "707eb0c2-9b97-42bb-bac2-d14467e738ce",
                                                     "name": "Get user's custom provider details",
                                                     "request": {
                                                         "name": "Get user's custom provider details",
@@ -714,7 +362,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "3f11a919-86d1-47fe-94bd-e004d527e5cd",
+                                                    "id": "9afb9272-e91e-4402-97d9-bf600f3ed5e7",
                                                     "name": "Update custom provider",
                                                     "request": {
                                                         "name": "Update custom provider",
@@ -770,7 +418,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "13153b3f-46d2-4a57-be43-8793820d75f6",
+                                                    "id": "9e37cd34-71c2-424c-8449-95426ff6cdcb",
                                                     "name": "Delete custom provider",
                                                     "request": {
                                                         "name": "Delete custom provider",
@@ -815,7 +463,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "dc729895-8ead-4bc2-9b09-7bb45279da2f",
+                                                            "id": "51ecabc8-126f-44b9-9e22-2ec83dc7bb4c",
                                                             "name": "Update custom provider status",
                                                             "request": {
                                                                 "name": "Update custom provider status",
@@ -878,7 +526,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "987d1661-3db6-4405-b73a-3f4fc721e67d",
+                                                            "id": "e3c239de-e99f-479f-80d2-6579084901ff",
                                                             "name": "List models for custom provider",
                                                             "request": {
                                                                 "name": "List models for custom provider",
@@ -920,7 +568,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "3a4ab144-6891-4a1d-9b50-5fd2b9421ab9",
+                                                            "id": "c88008b3-320b-4a7a-b0a1-aadc26d24460",
                                                             "name": "Add model to custom provider",
                                                             "request": {
                                                                 "name": "Add model to custom provider",
@@ -981,7 +629,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "1b8ff2b7-0b45-4a12-abf3-26c56023ec6f",
+                                                                    "id": "edd93a46-7827-4c9c-bbf1-5fb40b04c8a1",
                                                                     "name": "Update custom provider model",
                                                                     "request": {
                                                                         "name": "Update custom provider model",
@@ -1049,7 +697,7 @@
                                                                     }
                                                                 },
                                                                 {
-                                                                    "id": "0c06ac21-d1ff-4234-9187-4eb60d88d131",
+                                                                    "id": "cf2905c6-0f32-4bdd-aaa6-ada98f248378",
                                                                     "name": "Delete custom provider model",
                                                                     "request": {
                                                                         "name": "Delete custom provider model",
@@ -1106,7 +754,7 @@
                                                                     "description": "",
                                                                     "item": [
                                                                         {
-                                                                            "id": "ca1cf128-1e8c-4cc6-a147-f2c6377110f9",
+                                                                            "id": "0443337b-5933-4284-8a31-bf95ae0a91b9",
                                                                             "name": "Update custom provider model status",
                                                                             "request": {
                                                                                 "name": "Update custom provider model status",
@@ -1191,7 +839,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "5e1f3d41-c53d-4cff-821c-f415a195350d",
+                                    "id": "d6215787-d206-4d29-911c-b8579312a076",
                                     "name": "List providers (with filters)",
                                     "request": {
                                         "name": "List providers (with filters)",
@@ -1223,7 +871,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "5beb75ad-ab06-4808-a414-fe4ba2651613",
+                                            "id": "fb4c8286-98f0-4e45-851e-ab97749cef91",
                                             "name": "Get provider details",
                                             "request": {
                                                 "name": "Get provider details",
@@ -1263,7 +911,7 @@
                                             }
                                         },
                                         {
-                                            "id": "e15efd0e-a5a5-4a56-ba4f-182ad678d83c",
+                                            "id": "99b034c0-6604-47b1-b5f7-bfab806a4d0c",
                                             "name": "Update custom provider",
                                             "request": {
                                                 "name": "Update custom provider",
@@ -1318,7 +966,7 @@
                                             }
                                         },
                                         {
-                                            "id": "ff09ecd3-d8fc-46a1-b402-1fcd4fb406f4",
+                                            "id": "98b5939e-c139-4174-b9a1-9d2bee673b18",
                                             "name": "Delete provider (custom only)",
                                             "request": {
                                                 "name": "Delete provider (custom only)",
@@ -1362,7 +1010,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "84ce2515-53d8-44d3-95f2-e99ca7e273d7",
+                                                    "id": "e89cfee0-ce4b-4680-90c0-8a3953e0e2f6",
                                                     "name": "Update custom provider status",
                                                     "request": {
                                                         "name": "Update custom provider status",
@@ -1424,7 +1072,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "0e631a54-df2a-4c3d-95f0-6ccb1b5539f1",
+                                                    "id": "80b649d8-c5b6-44f8-9d7f-c3d9207c014b",
                                                     "name": "List models for a provider",
                                                     "request": {
                                                         "name": "List models for a provider",
@@ -1465,7 +1113,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "4cf93adc-50b3-4513-bf74-f8cc4bd383eb",
+                                                    "id": "85312157-3ee3-4490-901c-a295fef093bd",
                                                     "name": "Add model to provider (custom only)",
                                                     "request": {
                                                         "name": "Add model to provider (custom only)",
@@ -1525,7 +1173,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "29572a05-24b4-41d4-8d4f-29e625977ebc",
+                                                            "id": "fd33df0b-91de-464a-a565-276c57a1464c",
                                                             "name": "Update provider model",
                                                             "request": {
                                                                 "name": "Update provider model",
@@ -1592,7 +1240,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "1bbe72d9-622f-4733-8f3a-cfd75dad6eac",
+                                                            "id": "a4e26833-61e5-4dd8-a81e-48bb39ff7468",
                                                             "name": "Delete provider model",
                                                             "request": {
                                                                 "name": "Delete provider model",
@@ -1648,7 +1296,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "65650d6a-7ea6-4dd7-b6f7-2b672bbbf4ea",
+                                                                    "id": "724f8fe1-f325-493a-856a-6e38dfd5b1e1",
                                                                     "name": "Update provider model status",
                                                                     "request": {
                                                                         "name": "Update provider model status",
@@ -1728,7 +1376,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "3c77209a-fada-4398-8af7-396c72356e21",
+                                            "id": "2cb005b8-6ce0-4584-bcec-fc39f0d58e4c",
                                             "name": "Create custom provider for user",
                                             "request": {
                                                 "name": "Create custom provider for user",
@@ -1780,7 +1428,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "6d7fcd25-68ad-474d-bfe2-5a17d496f40c",
+                                    "id": "b4c605b9-31f3-495b-81ac-2446ead3b430",
                                     "name": "List API keys",
                                     "request": {
                                         "name": "List API keys",
@@ -1808,7 +1456,7 @@
                                     }
                                 },
                                 {
-                                    "id": "6e387b4a-f740-42ee-a978-24489678455a",
+                                    "id": "1d50d610-8db0-4adc-8e2c-5c55426f4c70",
                                     "name": "Create API key",
                                     "request": {
                                         "name": "Create API key",
@@ -1851,7 +1499,7 @@
                                     }
                                 },
                                 {
-                                    "id": "3391af3b-ef83-4f4b-9b8c-f5a8638601f7",
+                                    "id": "e174312b-e56b-48e8-ba52-f5891fdcc98c",
                                     "name": "Update API key",
                                     "request": {
                                         "name": "Update API key",
@@ -1898,7 +1546,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "bc27f701-5bdd-4dd4-9543-01a7b94a0fe3",
+                                            "id": "2c016838-7f18-4c7b-a0f3-4e4df08af208",
                                             "name": "Get API key details",
                                             "request": {
                                                 "name": "Get API key details",
@@ -1938,7 +1586,7 @@
                                             }
                                         },
                                         {
-                                            "id": "81657164-a21a-4013-9639-fa8966b00b42",
+                                            "id": "4715087b-2e7b-48c0-84a3-c35425a12936",
                                             "name": "Delete API key",
                                             "request": {
                                                 "name": "Delete API key",
@@ -1982,7 +1630,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "d0ded538-78bc-48e5-ac11-b1223b1ea8b5",
+                                                    "id": "e3e282c2-9556-41d8-9ff9-333ebb8df341",
                                                     "name": "Update API key status",
                                                     "request": {
                                                         "name": "Update API key status",
@@ -2048,7 +1696,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "e22d9203-0e1e-4c08-8360-d44e58ae4c78",
+                                                            "id": "8fe97736-ff88-4a22-b76f-cf5c40dbaf83",
                                                             "name": "Select provider for API key",
                                                             "request": {
                                                                 "name": "Select provider for API key",
@@ -2100,7 +1748,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "3129a41e-786e-4c54-9800-296d1caec7e5",
+                                                            "id": "37691566-c585-400e-8109-d10a87b96020",
                                                             "name": "Deselect provider for API key",
                                                             "request": {
                                                                 "name": "Deselect provider for API key",
@@ -2156,7 +1804,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "7e849917-23c5-445b-aa53-ac6a7590ca6f",
+                                                                    "id": "771a6b85-bf0a-4afa-9b60-563f8b4ab3bf",
                                                                     "name": "Toggle provider active for API key",
                                                                     "request": {
                                                                         "name": "Toggle provider active for API key",
@@ -2227,7 +1875,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "a11ec798-7efc-42bd-9330-43d62e08cc4b",
+                                                                    "id": "5cf64bf9-d371-4287-b6f3-906e4d8ef288",
                                                                     "name": "Toggle model active for API key",
                                                                     "request": {
                                                                         "name": "Toggle model active for API key",
@@ -2298,7 +1946,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "5880bbe3-4488-43ac-94d9-dbf0fdead2e6",
+                                            "id": "3853a0d4-f80f-47ce-b514-2437a1bb1eb5",
                                             "name": "List providers (admin)",
                                             "request": {
                                                 "name": "List providers (admin)",
@@ -2327,7 +1975,7 @@
                                             }
                                         },
                                         {
-                                            "id": "606c440b-5698-4454-a7d7-0ab762255c8b",
+                                            "id": "d3944d28-f3a4-404b-b882-3b5c946cbf53",
                                             "name": "Create provider (admin)",
                                             "request": {
                                                 "name": "Create provider (admin)",
@@ -2375,7 +2023,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "3f9af637-09f4-4a94-87eb-b3484df97733",
+                                                    "id": "e08d1561-5802-4b2a-8f46-a1fce1666cd3",
                                                     "name": "Get provider details (admin)",
                                                     "request": {
                                                         "name": "Get provider details (admin)",
@@ -2416,7 +2064,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "25856ff9-2426-467c-ab83-505d0046d12d",
+                                                    "id": "9feba5df-e664-4ccd-958a-08f0662d5ea9",
                                                     "name": "Update provider (admin)",
                                                     "request": {
                                                         "name": "Update provider (admin)",
@@ -2472,7 +2120,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "e0d8f1cc-cedb-4607-a979-59b5a7aa3dff",
+                                                    "id": "82ce87ca-841f-4525-bd56-bd33ba0f74d9",
                                                     "name": "Delete provider (admin)",
                                                     "request": {
                                                         "name": "Delete provider (admin)",
@@ -2517,7 +2165,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "6d704203-5dd4-4c13-83dc-307762f249c5",
+                                                            "id": "d4b2ffc5-f223-4551-84ee-616749e39f0b",
                                                             "name": "Update provider status (admin)",
                                                             "request": {
                                                                 "name": "Update provider status (admin)",
@@ -2580,7 +2228,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "8dc91a13-d719-4b10-a58e-8ebdc54ef6c0",
+                                                            "id": "8bc3e66b-2196-47c1-a127-077d4a85c32f",
                                                             "name": "List models of provider (admin)",
                                                             "request": {
                                                                 "name": "List models of provider (admin)",
@@ -2622,7 +2270,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "2e0968b8-63a0-4cd9-96ff-3ff7c91326a0",
+                                                            "id": "b17ee7f1-52b1-4408-9b49-c40111f903f4",
                                                             "name": "Create model for provider (admin)",
                                                             "request": {
                                                                 "name": "Create model for provider (admin)",
@@ -2683,7 +2331,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "a6342157-d768-4b3a-b577-15dfa0ca9bb2",
+                                                                    "id": "1eba6945-dd42-4802-96bd-19e90d147448",
                                                                     "name": "Update model (admin)",
                                                                     "request": {
                                                                         "name": "Update model (admin)",
@@ -2751,7 +2399,7 @@
                                                                     }
                                                                 },
                                                                 {
-                                                                    "id": "d9fe1adb-6432-428e-a73f-459c63d9c506",
+                                                                    "id": "cf1b130a-8483-4425-bd10-963b793a5293",
                                                                     "name": "Delete model (admin)",
                                                                     "request": {
                                                                         "name": "Delete model (admin)",
@@ -2808,7 +2456,7 @@
                                                                     "description": "",
                                                                     "item": [
                                                                         {
-                                                                            "id": "cfcae5a3-fa75-4b13-a8cf-6c03a58591b1",
+                                                                            "id": "c0a3c8fd-731d-486e-9307-d3afaa610cd1",
                                                                             "name": "Update model status (admin)",
                                                                             "request": {
                                                                                 "name": "Update model status (admin)",
@@ -2891,7 +2539,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "14117028-0a07-43f6-bda5-50f7be37ccc3",
+                                            "id": "055de7fa-2aff-463f-8ccf-ccc89c8067a3",
                                             "name": "List users (admin)",
                                             "request": {
                                                 "name": "List users (admin)",
@@ -2924,7 +2572,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "7ad92ecd-3189-4fae-8dd4-d99a05ad8566",
+                                                    "id": "bba2ff2e-71b0-452f-a2d0-f2cff68148a5",
                                                     "name": "Get user details (admin)",
                                                     "request": {
                                                         "name": "Get user details (admin)",
@@ -2965,7 +2613,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "bf57e888-7dab-4641-9e62-1247475bdf92",
+                                                    "id": "9cea7a64-6a61-46d7-bfb1-0b15c7195bcf",
                                                     "name": "Update user (admin)",
                                                     "request": {
                                                         "name": "Update user (admin)",
@@ -3021,7 +2669,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "20757b5c-3a34-49a3-ada9-709f09bfa720",
+                                                    "id": "3de4c872-72ae-44a8-bf2c-2a1f3f755a5a",
                                                     "name": "Delete user (admin)",
                                                     "request": {
                                                         "name": "Delete user (admin)",
@@ -3066,7 +2714,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "ddae59a0-664c-4ffc-a79e-3e4cf524fd9b",
+                                                            "id": "580339b3-1b45-40f2-a02c-f60569b7f554",
                                                             "name": "Update user status (admin)",
                                                             "request": {
                                                                 "name": "Update user status (admin)",
@@ -3137,7 +2785,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "030ea4ff-1d4a-4f62-b45f-ae21fbb5475f",
+                                                    "id": "3b061b8e-81eb-4800-8897-9cb7e1669201",
                                                     "name": "Admin login",
                                                     "request": {
                                                         "name": "Admin login",
@@ -3190,7 +2838,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "945a8632-9be2-483c-a74b-bf3374ba4a69",
+                                            "id": "7c772e5c-5aa3-4daf-aaee-f9c5c2899840",
                                             "name": "Fetch admin analytics",
                                             "request": {
                                                 "name": "Fetch admin analytics",
@@ -3239,7 +2887,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "546b0332-c52c-438b-b6e7-b252dff1c37e",
+                                    "id": "6e8c8702-0d96-4f0c-854b-e28d8b16b995",
                                     "name": "Openai Controller chat Completions",
                                     "request": {
                                         "name": "Openai Controller chat Completions",
@@ -3275,7 +2923,7 @@
                     "description": "",
                     "item": [
                         {
-                            "id": "c29d2657-01aa-437d-8daa-5fc675becfd3",
+                            "id": "15e9f453-506f-48a8-aeaa-b9057d540d2e",
                             "name": "Openai Controller responses",
                             "request": {
                                 "name": "Openai Controller responses",
@@ -3308,7 +2956,7 @@
                     "description": "",
                     "item": [
                         {
-                            "id": "1be8d49d-026b-4b7e-af4a-b62b456a0eaa",
+                            "id": "b3282e49-139c-445f-992d-d11a7cbef5c6",
                             "name": "Openai Controller models",
                             "request": {
                                 "name": "Openai Controller models",
@@ -3357,11 +3005,11 @@
         }
     ],
     "info": {
-        "_postman_id": "3b4418b5-32d9-4a4c-90b1-26865ad78965",
-        "name": "NestJS Starter Pack",
+        "_postman_id": "13240b34-5a57-4188-9a13-39f209f4cb7c",
+        "name": "Roundhouse Backend",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {
-            "content": "The API Description for NestJS Backend Starter Pack",
+            "content": "The API Description for Roundhouse Backend - A platform for managing AI providers and API keys.",
             "type": "text/plain"
         }
     }

@@ -7,8 +7,8 @@ async function generateSwagger() {
     const app = await NestFactory.create(AppModule);
 
     const config = new DocumentBuilder()
-        .setTitle("NestJS Starter Pack")
-        .setDescription("The API Description for NestJS Backend Starter Pack")
+        .setTitle("Roundhouse Backend")
+        .setDescription("The API Description for Roundhouse Backend - A platform for managing AI providers and API keys.")
         .setVersion("1.0")
         .addBearerAuth(
             {

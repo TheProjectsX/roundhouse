@@ -212,13 +212,17 @@ export class AdminProvidersService {
         return { message: "Provider created", data: { id: created.id } };
     }
 
-    async updateProvider(payload: UpdateProviderDto, user: UserPayload) {
+    async updateProvider(
+        id: string,
+        payload: UpdateProviderDto,
+        user: UserPayload,
+    ) {
         void user;
-        const provider = await this.resolveProviderEntity(payload.id);
+        const provider = await this.resolveProviderEntity(id);
 
         if (provider.kind === "global") {
             const updated = await this.prisma.provider.update({
-                where: { id: payload.id },
+                where: { id },
                 data: {
                     ...(payload.name !== undefined
                         ? { name: payload.name }
@@ -246,7 +250,7 @@ export class AdminProvidersService {
         }
 
         const updated = await this.prisma.userProvider.update({
-            where: { id: payload.id },
+            where: { id },
             data: {
                 ...(payload.name !== undefined ? { name: payload.name } : {}),
                 ...(payload.description !== undefined
@@ -268,15 +272,16 @@ export class AdminProvidersService {
     }
 
     async updateProviderStatus(
+        id: string,
         payload: UpdateProviderStatusDto,
         user: UserPayload,
     ) {
         void user;
-        const provider = await this.resolveProviderEntity(payload.id);
+        const provider = await this.resolveProviderEntity(id);
 
         if (provider.kind === "global") {
             const updated = await this.prisma.provider.update({
-                where: { id: payload.id },
+                where: { id },
                 data: { status: payload.status },
                 include: { model: true },
             });
@@ -287,7 +292,7 @@ export class AdminProvidersService {
         }
 
         const updated = await this.prisma.userProvider.update({
-            where: { id: payload.id },
+            where: { id },
             data: { status: payload.status },
             include: { models: true },
         });
@@ -366,10 +371,7 @@ export class AdminProvidersService {
         if (provider.kind === "global") {
             const created = await this.prisma.model.upsert({
                 where: { providerId },
-                update: this.buildModelUpdateData({
-                    ...payload,
-                    modelId: providerId,
-                }),
+                update: this.buildModelUpdateData(payload),
                 create: {
                     name: payload.name,
                     code: payload.code,
@@ -387,10 +389,7 @@ export class AdminProvidersService {
 
         const created = await this.prisma.userModel.upsert({
             where: { providerId },
-            update: this.buildModelUpdateData({
-                ...payload,
-                modelId: providerId,
-            }),
+            update: this.buildModelUpdateData(payload),
             create: {
                 name: payload.name,
                 code: payload.code,
@@ -407,22 +406,16 @@ export class AdminProvidersService {
     }
 
     async updateProviderModel(
-        providerId: string,
         modelId: string,
         payload: UpdateProviderModelDto,
         user: UserPayload,
     ) {
         void user;
-        const provider = await this.resolveProviderEntity(providerId);
+        const globalModel = await this.prisma.model.findUnique({
+            where: { id: modelId },
+        });
 
-        if (provider.kind === "global") {
-            const current = await this.prisma.model.findUnique({
-                where: { id: modelId },
-            });
-            if (!current || current.providerId !== providerId) {
-                throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
-            }
-
+        if (globalModel) {
             const updated = await this.prisma.model.update({
                 where: { id: modelId },
                 data: this.buildModelUpdateData(payload),
@@ -434,7 +427,7 @@ export class AdminProvidersService {
         const current = await this.prisma.userModel.findUnique({
             where: { id: modelId },
         });
-        if (!current || current.providerId !== providerId) {
+        if (!current) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
         }
 
@@ -447,23 +440,18 @@ export class AdminProvidersService {
     }
 
     async updateProviderModelStatus(
-        providerId: string,
+        modelId: string,
         payload: UpdateProviderModelStatusDto,
         user: UserPayload,
     ) {
         void user;
-        const provider = await this.resolveProviderEntity(providerId);
+        const globalModel = await this.prisma.model.findUnique({
+            where: { id: modelId },
+        });
 
-        if (provider.kind === "global") {
-            const current = await this.prisma.model.findUnique({
-                where: { id: payload.modelId },
-            });
-            if (!current || current.providerId !== providerId) {
-                throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
-            }
-
+        if (globalModel) {
             const updated = await this.prisma.model.update({
-                where: { id: payload.modelId },
+                where: { id: modelId },
                 data: { status: payload.status },
             });
 
@@ -474,36 +462,27 @@ export class AdminProvidersService {
         }
 
         const current = await this.prisma.userModel.findUnique({
-            where: { id: payload.modelId },
+            where: { id: modelId },
         });
-        if (!current || current.providerId !== providerId) {
+        if (!current) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
         }
 
         const updated = await this.prisma.userModel.update({
-            where: { id: payload.modelId },
+            where: { id: modelId },
             data: { status: payload.status },
         });
 
         return { message: "Model status updated", data: { id: updated.id } };
     }
 
-    async deleteProviderModel(
-        providerId: string,
-        modelId: string,
-        user: UserPayload,
-    ) {
+    async deleteProviderModel(modelId: string, user: UserPayload) {
         void user;
-        const provider = await this.resolveProviderEntity(providerId);
+        const globalModel = await this.prisma.model.findUnique({
+            where: { id: modelId },
+        });
 
-        if (provider.kind === "global") {
-            const current = await this.prisma.model.findUnique({
-                where: { id: modelId },
-            });
-            if (!current || current.providerId !== providerId) {
-                throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
-            }
-
+        if (globalModel) {
             const deleted = await this.prisma.model.delete({
                 where: { id: modelId },
             });
@@ -513,7 +492,7 @@ export class AdminProvidersService {
         const current = await this.prisma.userModel.findUnique({
             where: { id: modelId },
         });
-        if (!current || current.providerId !== providerId) {
+        if (!current) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
         }
 

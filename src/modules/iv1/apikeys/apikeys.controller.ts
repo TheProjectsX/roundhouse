@@ -71,13 +71,18 @@ export class ApikeysController {
         });
     }
 
-    @Patch()
+    @Patch(":id")
     @ApiOperation({ summary: "Update API key" })
     async updateApiKey(
+        @Param("id") id: string,
         @Body() payload: UpdateApiKeyDto,
         @ReqField("user") user: UserPayload,
     ) {
-        const result = await this.apikeysService.updateApiKey(payload, user);
+        const result = await this.apikeysService.updateApiKey(
+            id,
+            payload,
+            user,
+        );
 
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
@@ -94,7 +99,8 @@ export class ApikeysController {
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.apikeysService.updateApiKeyStatus(
-            { ...payload, id },
+            id,
+            payload,
             user,
         );
 
@@ -129,65 +135,6 @@ export class ApikeysController {
         const result = await this.apikeysService.createApiKeyProvider(
             id,
             providerId,
-            user,
-        );
-
-        return ResponseService.formatResponse({
-            statusCode: HttpStatus.OK,
-            message: result.message,
-            data: result.data,
-        });
-    }
-
-    @Delete(":id/providers/:providerId")
-    @ApiOperation({ summary: "Deselect provider for API key" })
-    async deleteApiKeyProvider(
-        @Param("id") id: string,
-        @Param("providerId") providerId: string,
-        @ReqField("user") user: UserPayload,
-    ) {
-        const result = await this.apikeysService.deleteApiKeyProvider(
-            id,
-            providerId,
-            user,
-        );
-
-        return ResponseService.formatResponse({
-            statusCode: HttpStatus.OK,
-            message: result.message,
-        });
-    }
-
-    @Patch(":id/providers/:providerId/status")
-    @ApiOperation({ summary: "Toggle provider active for API key" })
-    async updateApiKeyProviderStatus(
-        @Param("id") id: string,
-        @Param("providerId") providerId: string,
-        @ReqField("user") user: UserPayload,
-    ) {
-        const result = await this.apikeysService.updateApiKeyProviderStatus(
-            id,
-            providerId,
-            user,
-        );
-
-        return ResponseService.formatResponse({
-            statusCode: HttpStatus.OK,
-            message: result.message,
-            data: result.data,
-        });
-    }
-
-    @Patch(":id/models/:modelId/status")
-    @ApiOperation({ summary: "Toggle model active for API key" })
-    async updateApiKeyModelStatus(
-        @Param("id") id: string,
-        @Param("modelId") modelId: string,
-        @ReqField("user") user: UserPayload,
-    ) {
-        const result = await this.apikeysService.updateApiKeyModelStatus(
-            id,
-            modelId,
             user,
         );
 

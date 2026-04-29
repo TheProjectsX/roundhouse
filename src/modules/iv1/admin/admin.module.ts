@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { ProvidersController } from "./providers/providers.controller";
+import { AdminProvidersController } from "./providers/providers.controller";
 import { AdminProvidersService } from "./providers/providers.service";
 import { AdminUsersController } from "./users/users.controller";
 import { AdminUsersService } from "./users/users.service";
@@ -10,7 +10,7 @@ import { AdminAnalyticsService } from "./analytics/analytics.service";
 
 @Module({
     controllers: [
-        ProvidersController,
+        AdminProvidersController,
         AdminUsersController,
         AdminAuthController,
         AdminAnalyticsController,

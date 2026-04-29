@@ -14,9 +14,6 @@ export class CreateApiKeyDto {
 }
 
 export class UpdateApiKeyDto {
-    @IsString()
-    id: string;
-
     @IsOptional()
     @IsString()
     name?: string;
@@ -27,9 +24,33 @@ export class UpdateApiKeyDto {
 }
 
 export class UpdateApiKeyStatusDto {
-    @IsString()
-    id: string;
+    @toBoolean()
+    @IsBoolean()
+    active: boolean;
+}
 
+export class CreateProviderApiKeyDto {
+    @IsString()
+    key: string;
+
+    @IsOptional()
+    @toBoolean()
+    @IsBoolean()
+    active?: boolean;
+}
+
+export class UpdateProviderApiKeyDto {
+    @IsOptional()
+    @IsString()
+    key?: string;
+
+    @IsOptional()
+    @toBoolean()
+    @IsBoolean()
+    active?: boolean;
+}
+
+export class UpdateProviderApiKeyStatusDto {
     @toBoolean()
     @IsBoolean()
     active: boolean;

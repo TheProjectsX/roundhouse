@@ -79,7 +79,8 @@ export class ProvidersController {
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.providersService.updateProvider(
-            { ...payload, id },
+            id,
+            payload,
             user,
         );
 
@@ -98,7 +99,8 @@ export class ProvidersController {
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.providersService.updateProviderStatus(
-            { ...payload, id },
+            id,
+            payload,
             user,
         );
 
@@ -162,18 +164,16 @@ export class ProvidersController {
         });
     }
 
-    @Patch(":id/models/:modelId")
+    @Patch("models/:modelId")
     @ApiOperation({ summary: "Update provider model" })
     async updateProviderModel(
-        @Param("id") id: string,
         @Param("modelId") modelId: string,
         @Body() payload: UpdateProviderModelDto,
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.providersService.updateProviderModel(
-            id,
             modelId,
-            { ...payload, modelId },
+            payload,
             user,
         );
 
@@ -184,17 +184,16 @@ export class ProvidersController {
         });
     }
 
-    @Patch(":id/models/:modelId/status")
+    @Patch("models/:modelId/status")
     @ApiOperation({ summary: "Update provider model status" })
     async updateProviderModelStatus(
-        @Param("id") id: string,
         @Param("modelId") modelId: string,
         @Body() payload: UpdateProviderModelStatusDto,
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.providersService.updateProviderModelStatus(
-            id,
-            { ...payload, modelId },
+            modelId,
+            payload,
             user,
         );
 
@@ -205,15 +204,13 @@ export class ProvidersController {
         });
     }
 
-    @Delete(":id/models/:modelId")
+    @Delete("models/:modelId")
     @ApiOperation({ summary: "Delete provider model" })
     async deleteProviderModel(
-        @Param("id") id: string,
         @Param("modelId") modelId: string,
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.providersService.deleteProviderModel(
-            id,
             modelId,
             user,
         );

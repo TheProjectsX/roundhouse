@@ -50,6 +50,23 @@ const readAuthorizationBearer = (
 
 const resolveProviderFromModel = (model: string): ModelProvider => {
     const lower = model.toLowerCase();
+    const [providerToken] = lower.split("/");
+
+    if (providerToken === "openai") {
+        return "OPENAI";
+    }
+
+    if (providerToken === "anthropic") {
+        return "ANTHROPIC";
+    }
+
+    if (providerToken === "gemini") {
+        return "GEMINI";
+    }
+
+    if (providerToken === "custom") {
+        return "CUSTOM";
+    }
 
     if (lower.startsWith("claude")) {
         return "ANTHROPIC";
@@ -66,29 +83,32 @@ const resolveProviderFromModel = (model: string): ModelProvider => {
     return "OPENAI";
 };
 
+const resolveModelCode = (model: string): string => {
+    const trimmed = model.trim();
+    const slashIndex = trimmed.indexOf("/");
+    if (slashIndex <= 0 || slashIndex === trimmed.length - 1) {
+        return trimmed;
+    }
+
+    const prefix = trimmed.slice(0, slashIndex).toLowerCase();
+    if (
+        prefix === "openai" ||
+        prefix === "anthropic" ||
+        prefix === "gemini" ||
+        prefix === "custom"
+    ) {
+        return trimmed.slice(slashIndex + 1);
+    }
+
+    return trimmed;
+};
+
 const resolveProvider = (
     model: string,
     context: OpenAIWrapperContext,
 ): ModelProvider => {
-    const providerHeader = normalizeHeaderValue(
-        context.headers?.["x-provider"],
-    );
-
     if (context.provider) {
         return context.provider;
-    }
-
-    if (providerHeader) {
-        const upper = providerHeader.toUpperCase();
-
-        if (
-            upper === "OPENAI" ||
-            upper === "ANTHROPIC" ||
-            upper === "GEMINI" ||
-            upper === "CUSTOM"
-        ) {
-            return upper;
-        }
     }
 
     return resolveProviderFromModel(model);
@@ -128,6 +148,7 @@ const buildProviderContext = (
 ) => {
     const request = normalizeOpenAIRequest(body);
     const provider = resolveProvider(request.model, context);
+    request.model = resolveModelCode(request.model);
     const headers = buildProviderHeaders(context.headers);
     const apiKey =
         context.apiKey || readAuthorizationBearer(headers.authorization);

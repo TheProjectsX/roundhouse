@@ -34,7 +34,7 @@ export class MeProvidersController {
         @Query() query: Record<string, string>,
         @ReqField("user") user: UserPayload,
     ) {
-        void user; // Use context
+        void user;
         const result = await this.meProvidersService.fetchAllProviders(query);
 
         return ResponseService.formatResponse({
@@ -89,7 +89,8 @@ export class MeProvidersController {
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.meProvidersService.updateProvider(
-            { ...payload, id },
+            id,
+            payload,
             user,
         );
 
@@ -108,7 +109,8 @@ export class MeProvidersController {
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.meProvidersService.updateProviderStatus(
-            { ...payload, id },
+            id,
+            payload,
             user,
         );
 
@@ -175,18 +177,16 @@ export class MeProvidersController {
         });
     }
 
-    @Patch(":id/models/:modelId")
+    @Patch("models/:modelId")
     @ApiOperation({ summary: "Update custom provider model" })
     async updateProviderModel(
-        @Param("id") id: string,
         @Param("modelId") modelId: string,
         @Body() payload: UpdateProviderModelDto,
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.meProvidersService.updateProviderModel(
-            id,
             modelId,
-            { ...payload, modelId },
+            payload,
             user,
         );
 
@@ -197,17 +197,16 @@ export class MeProvidersController {
         });
     }
 
-    @Patch(":id/models/:modelId/status")
+    @Patch("models/:modelId/status")
     @ApiOperation({ summary: "Update custom provider model status" })
     async updateProviderModelStatus(
-        @Param("id") id: string,
         @Param("modelId") modelId: string,
         @Body() payload: UpdateProviderModelStatusDto,
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.meProvidersService.updateProviderModelStatus(
-            id,
-            { ...payload, modelId },
+            modelId,
+            payload,
             user,
         );
 
@@ -218,15 +217,13 @@ export class MeProvidersController {
         });
     }
 
-    @Delete(":id/models/:modelId")
+    @Delete("models/:modelId")
     @ApiOperation({ summary: "Delete custom provider model" })
     async deleteProviderModel(
-        @Param("id") id: string,
         @Param("modelId") modelId: string,
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.meProvidersService.deleteProviderModel(
-            id,
             modelId,
             user,
         );

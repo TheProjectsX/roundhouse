@@ -145,9 +145,13 @@ export class MeProvidersService {
         };
     }
 
-    async updateProvider(payload: UpdateProviderDto, user: UserPayload) {
+    async updateProvider(
+        id: string,
+        payload: UpdateProviderDto,
+        user: UserPayload,
+    ) {
         void user;
-        const provider = await this.findCustomProvider(payload.id);
+        const provider = await this.findCustomProvider(id);
 
         const updated = await this.prisma.userProvider.update({
             where: { id: provider.id },
@@ -175,14 +179,15 @@ export class MeProvidersService {
     }
 
     async updateProviderStatus(
+        id: string,
         payload: UpdateProviderStatusDto,
         user: UserPayload,
     ) {
         void user;
-        await this.findCustomProvider(payload.id);
+        await this.findCustomProvider(id);
 
         const updated = await this.prisma.userProvider.update({
-            where: { id: payload.id },
+            where: { id },
             data: { status: payload.status },
             include: { models: true },
         });
@@ -240,10 +245,7 @@ export class MeProvidersService {
 
         const created = await this.prisma.userModel.upsert({
             where: { providerId },
-            update: this.buildModelUpdateData({
-                ...payload,
-                modelId: providerId,
-            }),
+            update: this.buildModelUpdateData(payload),
             create: {
                 name: payload.name,
                 code: payload.code,
@@ -259,23 +261,15 @@ export class MeProvidersService {
     }
 
     async updateProviderModel(
-        providerId: string,
         modelId: string,
         payload: UpdateProviderModelDto,
         user: UserPayload,
     ) {
         void user;
-        await this.findCustomProvider(providerId);
-
-        const current = await this.prisma.userModel.findUnique({
-            where: { id: modelId },
-        });
-        if (!current || current.providerId !== providerId) {
-            throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
-        }
+        const current = await this.findOwnedUserModel(modelId);
 
         const updated = await this.prisma.userModel.update({
-            where: { id: modelId },
+            where: { id: current.id },
             data: this.buildModelUpdateData(payload),
         });
 
@@ -283,45 +277,27 @@ export class MeProvidersService {
     }
 
     async updateProviderModelStatus(
-        providerId: string,
+        modelId: string,
         payload: UpdateProviderModelStatusDto,
         user: UserPayload,
     ) {
         void user;
-        await this.findCustomProvider(providerId);
-
-        const current = await this.prisma.userModel.findUnique({
-            where: { id: payload.modelId },
-        });
-        if (!current || current.providerId !== providerId) {
-            throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
-        }
+        const current = await this.findOwnedUserModel(modelId);
 
         const updated = await this.prisma.userModel.update({
-            where: { id: payload.modelId },
+            where: { id: current.id },
             data: { status: payload.status },
         });
 
         return { message: "Model status updated", data: { id: updated.id } };
     }
 
-    async deleteProviderModel(
-        providerId: string,
-        modelId: string,
-        user: UserPayload,
-    ) {
+    async deleteProviderModel(modelId: string, user: UserPayload) {
         void user;
-        await this.findCustomProvider(providerId);
-
-        const current = await this.prisma.userModel.findUnique({
-            where: { id: modelId },
-        });
-        if (!current || current.providerId !== providerId) {
-            throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
-        }
+        const current = await this.findOwnedUserModel(modelId);
 
         const deleted = await this.prisma.userModel.delete({
-            where: { id: modelId },
+            where: { id: current.id },
         });
         return { message: "Model deleted", data: { id: deleted.id } };
     }
@@ -337,6 +313,22 @@ export class MeProvidersService {
         }
 
         return provider;
+    }
+
+    private async findOwnedUserModel(modelId: string) {
+        const model = await this.prisma.userModel.findUnique({
+            where: { id: modelId },
+            include: { provider: true },
+        });
+
+        if (!model) {
+            throw new ApiError(
+                HttpStatus.FORBIDDEN,
+                "Only user-owned models are modifiable",
+            );
+        }
+
+        return model;
     }
 
     private buildModelUpdateData(payload: UpdateProviderModelDto) {

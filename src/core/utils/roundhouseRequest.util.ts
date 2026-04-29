@@ -60,25 +60,33 @@ export const resolveRoundhouseFilters = (
     modelKeys?: Set<string>;
     maxIterations?: number;
 } => {
-    const rawProvider = normalizeHeaderValue(headers["x-provider"]);
-    const provider = rawProvider?.trim().toUpperCase();
-    const providerFilter =
-        provider === "OPENAI" ||
-        provider === "ANTHROPIC" ||
-        provider === "GEMINI" ||
-        provider === "CUSTOM"
-            ? provider
-            : undefined;
+    const rawProviders = normalizeHeaderValue(headers["x-providers"]);
+    const providerTokens = rawProviders
+        ? rawProviders
+              .split(",")
+              .map((part) => part.trim().toLowerCase())
+              .filter(Boolean)
+        : [];
 
     const rawModels = normalizeHeaderValue(headers["x-models"]);
-    const modelKeys = rawModels
-        ? new Set(
-              rawModels
-                  .split(",")
-                  .map((part) => part.trim().toLowerCase())
-                  .filter(Boolean),
-          )
-        : undefined;
+    const modelTokensFromHeader = rawModels
+        ? rawModels
+              .split(",")
+              .map((part) => part.trim().toLowerCase())
+              .filter(Boolean)
+        : [];
+    const mergedTokens = [...providerTokens, ...modelTokensFromHeader];
+    const modelKeys = mergedTokens.length ? new Set(mergedTokens) : undefined;
+
+    // Keep provider field only for backward compatibility/fast path.
+    // Main filtering semantics are driven by `modelKeys`.
+    const providersFromModels = new Set(
+        mergedTokens.map((token) => token.split("/")[0]).filter(Boolean),
+    );
+    const providerFromModels =
+        providersFromModels.size === 1
+            ? [...providersFromModels][0].toUpperCase()
+            : undefined;
 
     const rawIterations = normalizeHeaderValue(headers["x-max-iterations"]);
     const parsedIterations = rawIterations ? Number(rawIterations) : NaN;
@@ -88,7 +96,13 @@ export const resolveRoundhouseFilters = (
             : undefined;
 
     return {
-        provider: providerFilter,
+        provider:
+            providerFromModels === "OPENAI" ||
+            providerFromModels === "ANTHROPIC" ||
+            providerFromModels === "GEMINI" ||
+            providerFromModels === "CUSTOM"
+                ? providerFromModels
+                : undefined,
         modelKeys,
         maxIterations,
     };

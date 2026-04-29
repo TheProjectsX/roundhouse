@@ -28,8 +28,22 @@ type RoundhouseModel = {
 
 export type RoundhouseCandidate = {
     modelSelectionId: string;
+    providerSelectionId: string;
     model: RoundhouseModel;
+    providerApiKeys: RoundhouseProviderApiKey[];
     score: number;
+};
+
+type RoundhouseProviderApiKey = {
+    id: string;
+    key: string;
+    active: boolean;
+    successCount: number;
+};
+
+export type RoundhouseSelectedProviderApiKey = {
+    id: string;
+    key: string;
 };
 
 type RoundhouseFailureResult = {
@@ -47,12 +61,14 @@ type RoundhouseExecutionResult<T> =
 
 type RoundhouseExecute<T> = (
     candidate: RoundhouseCandidate,
+    providerApiKey: RoundhouseSelectedProviderApiKey,
 ) => Promise<RoundhouseExecutionResult<T>>;
 
 export type SelectProviderSuccess<T> = {
     success: true;
     data: T;
     candidate: RoundhouseCandidate;
+    providerApiKey: RoundhouseSelectedProviderApiKey;
     iteration: number;
 };
 
@@ -91,7 +107,9 @@ const pickModel = (candidate: {
 
 const buildCandidates = (
     providerSelections: Array<{
+        id: string;
         active: boolean;
+        providerApiKeys: RoundhouseProviderApiKey[];
         modelSelections: Array<{
             id: string;
             active: boolean;
@@ -107,6 +125,13 @@ const buildCandidates = (
 
     for (const providerSelection of providerSelections) {
         if (!providerSelection.active) {
+            continue;
+        }
+
+        const activeProviderApiKeys = providerSelection.providerApiKeys.filter(
+            (providerApiKey) => providerApiKey.active,
+        );
+        if (activeProviderApiKeys.length === 0) {
             continue;
         }
 
@@ -126,8 +151,14 @@ const buildCandidates = (
 
             if (allowedModelKeys) {
                 const normalizedKey = `${model.provider.type.toLowerCase()}/${model.code.toLowerCase()}`;
+                const normalizedProvider = model.provider.type.toLowerCase();
+                const normalizedModelCode = model.code.toLowerCase();
 
-                if (!allowedModelKeys.has(normalizedKey)) {
+                if (
+                    !allowedModelKeys.has(normalizedKey) &&
+                    !allowedModelKeys.has(normalizedProvider) &&
+                    !allowedModelKeys.has(normalizedModelCode)
+                ) {
                     continue;
                 }
             }
@@ -141,7 +172,9 @@ const buildCandidates = (
 
             candidates.push({
                 modelSelectionId: modelSelection.id,
+                providerSelectionId: providerSelection.id,
                 model,
+                providerApiKeys: activeProviderApiKeys,
                 score: model.efficiencyScore ?? DEFAULT_SCORE,
             });
         }
@@ -165,6 +198,9 @@ const getApiKeyWithSelections = async (
                 include: {
                     providers: true,
                     userProviders: true,
+                    providerApiKeys: {
+                        where: { active: true },
+                    },
                     modelSelections: {
                         where: {
                             active: true,
@@ -232,18 +268,22 @@ const getCandidatePool = async (
     );
 
     if (candidates.length === 0) {
+        const requestedFilters = Boolean(filters?.modelKeys?.size);
         return {
             success: false,
             error: {
                 success: false,
-                ...InternalResponses.NO_AVAILABLE_MODELS,
+                ...(requestedFilters
+                    ? InternalResponses.MODEL_NOT_FOUND
+                    : InternalResponses.NO_AVAILABLE_MODELS),
             },
         };
     }
 
     const excluded = new Set<string>(
         safeApiKeyData.lastErrors.map(
-            (lastError: { modelId: string }) => lastError.modelId,
+            (lastError: { modelId: string; providerApiKeyId: string }) =>
+                `${lastError.modelId}:${lastError.providerApiKeyId}`,
         ),
     );
 
@@ -253,6 +293,27 @@ const getCandidatePool = async (
         candidates,
         excluded,
     };
+};
+
+const createExcludedKey = (
+    modelSelectionId: string,
+    providerApiKeyId: string,
+) => `${modelSelectionId}:${providerApiKeyId}`;
+
+const selectRandomProviderApiKey = (
+    providerApiKeys: RoundhouseProviderApiKey[],
+) => {
+    const index = Math.floor(Math.random() * providerApiKeys.length);
+    const providerApiKey = providerApiKeys[index];
+
+    return {
+        id: providerApiKey.id,
+        key: providerApiKey.key,
+    };
+};
+
+const runInBackground = (promise: Promise<unknown>) => {
+    void promise.catch(() => undefined);
 };
 
 export const createListRoundhouseCandidates = (prisma: PrismaClient) => {
@@ -295,18 +356,39 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
         while (iteration < maxIterations) {
             iteration += 1;
 
-            let available = candidates.filter(
-                (candidate) => !excluded.has(candidate.modelSelectionId),
-            );
+            let available = candidates
+                .map((candidate) => {
+                    const availableProviderApiKeys =
+                        candidate.providerApiKeys.filter(
+                            (providerApiKey) =>
+                                !excluded.has(
+                                    createExcludedKey(
+                                        candidate.modelSelectionId,
+                                        providerApiKey.id,
+                                    ),
+                                ),
+                        );
+
+                    return {
+                        candidate,
+                        availableProviderApiKeys,
+                    };
+                })
+                .filter((entry) => entry.availableProviderApiKeys.length > 0);
 
             if (available.length === 0) {
                 excluded.clear();
 
-                await prisma.lastError.deleteMany({
-                    where: { apiKeyId },
-                });
+                runInBackground(
+                    prisma.lastError.deleteMany({
+                        where: { apiKeyId },
+                    }),
+                );
 
-                available = [...candidates];
+                available = candidates.map((candidate) => ({
+                    candidate,
+                    availableProviderApiKeys: [...candidate.providerApiKeys],
+                }));
 
                 if (available.length === 0) {
                     return {
@@ -316,30 +398,55 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 }
             }
 
-            const candidate = available[0];
-            const result = await execute(candidate);
+            const { candidate, availableProviderApiKeys } = available[0];
+            const providerApiKey = selectRandomProviderApiKey(
+                availableProviderApiKeys,
+            );
+            const result = await execute(candidate, providerApiKey);
 
             if (result.success) {
-                await prisma.lastError.deleteMany({
-                    where: { apiKeyId },
-                });
+                runInBackground(
+                    prisma.lastError.deleteMany({
+                        where: { apiKeyId },
+                    }),
+                );
+
+                runInBackground(
+                    prisma.providerApiKey.update({
+                        where: { id: providerApiKey.id },
+                        data: {
+                            successCount: {
+                                increment: 1,
+                            },
+                        },
+                    }),
+                );
 
                 return {
                     success: true,
                     data: result.data,
                     candidate,
+                    providerApiKey,
                     iteration,
                 };
             }
 
-            excluded.add(candidate.modelSelectionId);
+            excluded.add(
+                createExcludedKey(
+                    candidate.modelSelectionId,
+                    providerApiKey.id,
+                ),
+            );
 
-            await prisma.lastError.create({
-                data: {
-                    apiKeyId,
-                    modelId: candidate.modelSelectionId,
-                },
-            });
+            runInBackground(
+                prisma.lastError.create({
+                    data: {
+                        apiKeyId,
+                        modelId: candidate.modelSelectionId,
+                        providerApiKeyId: providerApiKey.id,
+                    },
+                }),
+            );
         }
 
         return {

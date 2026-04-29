@@ -43,90 +43,6 @@
         ]
       }
     },
-    "/api/iv1/auth/send-otp": {
-      "post": {
-        "operationId": "AuthController_resendOTP",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResendOtpDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Resend OTP",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/iv1/auth/verify-otp": {
-      "post": {
-        "operationId": "AuthController_verifyOTP",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyOtpDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Verify OTP",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/iv1/auth/send-otp/password-reset": {
-      "post": {
-        "operationId": "AuthController_sendForgotPasswordOtp",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SendForgotPasswordOtpDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Send Forgot Password OTP",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/iv1/auth/verify-otp/password-reset": {
-      "post": {
-        "operationId": "AuthController_verifyForgotPasswordOTP",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyForgotPasswordOtpDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Verify Forgot Password OTP",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
     "/api/iv1/auth/change-password": {
       "post": {
         "operationId": "AuthController_changePassword",
@@ -143,69 +59,6 @@
         },
         "responses": {},
         "summary": "Change Password",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/iv1/auth/forgot-password": {
-      "post": {
-        "operationId": "AuthController_forgotPassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForgotPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Forgot Password",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/iv1/auth/reset-password": {
-      "post": {
-        "operationId": "AuthController_resetPassword",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Reset Password",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/iv1/auth/refresh-token": {
-      "post": {
-        "operationId": "AuthController_refreshToken",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshTokenDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Refresh Access Token",
         "tags": [
           "Auth"
         ]
@@ -1469,8 +1322,8 @@
     }
   },
   "info": {
-    "title": "NestJS Starter Pack",
-    "description": "The API Description for NestJS Backend Starter Pack",
+    "title": "Roundhouse Backend",
+    "description": "The API Description for Roundhouse Backend - A platform for managing AI providers and API keys.",
     "version": "1.0",
     "contact": {}
   },
@@ -1528,62 +1381,6 @@
           "password"
         ]
       },
-      "ResendOtpDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
-          }
-        },
-        "required": [
-          "email"
-        ]
-      },
-      "VerifyOtpDto": {
-        "type": "object",
-        "properties": {
-          "otp": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string",
-            "format": "email"
-          }
-        },
-        "required": [
-          "otp",
-          "email"
-        ]
-      },
-      "SendForgotPasswordOtpDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
-          }
-        },
-        "required": [
-          "email"
-        ]
-      },
-      "VerifyForgotPasswordOtpDto": {
-        "type": "object",
-        "properties": {
-          "otp": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string",
-            "format": "email"
-          }
-        },
-        "required": [
-          "otp",
-          "email"
-        ]
-      },
       "ChangePasswordDto": {
         "type": "object",
         "properties": {
@@ -1597,44 +1394,6 @@
         "required": [
           "oldPassword",
           "newPassword"
-        ]
-      },
-      "ForgotPasswordDto": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
-          }
-        },
-        "required": [
-          "email"
-        ]
-      },
-      "ResetPasswordDto": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "token",
-          "password"
-        ]
-      },
-      "RefreshTokenDto": {
-        "type": "object",
-        "properties": {
-          "refreshToken": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "refreshToken"
         ]
       },
       "UpdateProfileDto": {

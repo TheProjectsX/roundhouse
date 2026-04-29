@@ -86,9 +86,6 @@ export class CreateProviderDto {
 }
 
 export class UpdateProviderDto {
-    @IsString()
-    id: string;
-
     @IsOptional()
     @IsString()
     name?: string;
@@ -116,22 +113,49 @@ export class UpdateProviderDto {
 }
 
 export class UpdateProviderStatusDto {
-    @IsString()
-    id: string;
-
     @IsEnum(ContentStatus)
     status: ContentStatus;
 }
 
-export class UpdateProviderModelDto extends ProviderModelBodyDto {
+export class UpdateProviderModelDto {
+    @IsOptional()
     @IsString()
-    modelId: string;
+    name?: string;
+
+    @IsOptional()
+    @IsString()
+    code?: string;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    maxTokens?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    tokenResetInterval?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    @Min(0)
+    @Max(1)
+    efficiencyScore?: number;
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    bestFor?: string[];
+
+    @IsOptional()
+    @IsEnum(ContentStatus)
+    status?: ContentStatus;
 }
 
 export class UpdateProviderModelStatusDto {
-    @IsString()
-    modelId: string;
-
     @IsEnum(ContentStatus)
     status: ContentStatus;
 }

@@ -65,6 +65,33 @@ export class OpenaiService {
         };
     }
 
+    private parseModelFilterTokens(value: string): string[] {
+        return value
+            .split(",")
+            .map((part) => part.trim().toLowerCase())
+            .filter(Boolean);
+    }
+
+    private mergeBodyModelWithModelKeys(
+        bodyModel: string | undefined,
+        modelKeys: Set<string> | undefined,
+    ): Set<string> | undefined {
+        const normalizedBodyModel = bodyModel?.trim().toLowerCase();
+        if (
+            !normalizedBodyModel ||
+            normalizedBodyModel === "auto" ||
+            normalizedBodyModel === "roundhouse"
+        ) {
+            return modelKeys;
+        }
+
+        const merged = modelKeys ? new Set(modelKeys) : new Set<string>();
+        this.parseModelFilterTokens(normalizedBodyModel).forEach((token) =>
+            merged.add(token),
+        );
+        return merged;
+    }
+
     async chatCompletions(req: Request) {
         const apiKey = resolveApiKey(req);
         if (!apiKey) {
@@ -82,21 +109,24 @@ export class OpenaiService {
             ) as OpenAIChatCompletionRequest;
             const { provider, modelKeys, maxIterations } =
                 resolveRoundhouseFilters(req.headers);
+            const mergedModelKeys = this.mergeBodyModelWithModelKeys(
+                body.model,
+                modelKeys,
+            );
 
             if (body.stream) {
                 const streamedResult = await this.executor<string[]>(
                     apiKey,
-                    async (candidate) => {
+                    async (candidate, providerApiKey) => {
                         try {
                             const chunks = await createChatCompletionStream(
                                 {
                                     ...body,
-                                    model: candidate.model.code,
+                                    model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
                                 },
                                 {
-                                    provider: candidate.model.provider.type,
                                     baseApi: candidate.model.provider.baseApi,
-                                    apiKey,
+                                    apiKey: providerApiKey.key,
                                     headers: req.headers,
                                 },
                             );
@@ -114,7 +144,7 @@ export class OpenaiService {
                     maxIterations,
                     {
                         provider,
-                        modelKeys,
+                        modelKeys: mergedModelKeys,
                     },
                 );
 
@@ -136,17 +166,16 @@ export class OpenaiService {
 
             const result = await this.executor(
                 apiKey,
-                async (candidate) => {
+                async (candidate, providerApiKey) => {
                     try {
                         const response = await createChatCompletion(
                             {
                                 ...body,
-                                model: candidate.model.code,
+                                model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
                             },
                             {
-                                provider: candidate.model.provider.type,
                                 baseApi: candidate.model.provider.baseApi,
-                                apiKey,
+                                apiKey: providerApiKey.key,
                                 headers: req.headers,
                             },
                         );
@@ -164,7 +193,7 @@ export class OpenaiService {
                 maxIterations,
                 {
                     provider,
-                    modelKeys,
+                    modelKeys: mergedModelKeys,
                 },
             );
 
@@ -217,20 +246,23 @@ export class OpenaiService {
             ) as OpenAIResponsesRequest;
             const { provider, modelKeys, maxIterations } =
                 resolveRoundhouseFilters(req.headers);
+            const mergedModelKeys = this.mergeBodyModelWithModelKeys(
+                body.model,
+                modelKeys,
+            );
 
             const result = await this.executor(
                 apiKey,
-                async (candidate) => {
+                async (candidate, providerApiKey) => {
                     try {
                         const response = await createResponse(
                             {
                                 ...body,
-                                model: candidate.model.code,
+                                model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
                             },
                             {
-                                provider: candidate.model.provider.type,
                                 baseApi: candidate.model.provider.baseApi,
-                                apiKey,
+                                apiKey: providerApiKey.key,
                                 headers: req.headers,
                             },
                         );
@@ -248,7 +280,7 @@ export class OpenaiService {
                 maxIterations,
                 {
                     provider,
-                    modelKeys,
+                    modelKeys: mergedModelKeys,
                 },
             );
 

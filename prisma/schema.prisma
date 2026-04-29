@@ -57,6 +57,9 @@ model LastError {
     modelId String         @db.ObjectId
     model   ModelSelection @relation(fields: [modelId], references: [id])
 
+    providerApiKeyId String         @db.ObjectId
+    providerApiKey   ProviderApiKey @relation(fields: [providerApiKeyId], references: [id], onDelete: Cascade)
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -177,12 +180,34 @@ model ProviderSelection {
     modelSelectionIds String[]         @db.ObjectId
     modelSelections   ModelSelection[] @relation("ProviderSelectionModelSelections", fields: [modelSelectionIds], references: [id])
 
+    providerApiKeys ProviderApiKey[]
+
     active Boolean @default(true)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     @@map("user__provider_selections")
+}
+
+model ProviderApiKey {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    providerSelectionId String            @db.ObjectId
+    providerSelection   ProviderSelection @relation(fields: [providerSelectionId], references: [id], onDelete: Cascade)
+
+    key String
+
+    active       Boolean @default(true)
+    successCount Int     @default(0)
+
+    lastErrors LastError[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([providerSelectionId, key])
+    @@map("provider_api_keys")
 }
 
 model ModelSelection {
