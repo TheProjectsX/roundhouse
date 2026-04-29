@@ -1,4 +1,5 @@
 import { ContentStatus, ProviderType } from "@prisma/client";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform, Type } from "class-transformer";
 import {
     IsArray,
@@ -52,6 +53,7 @@ export class ProviderModelBodyDto {
     bestFor?: string[];
 
     @IsOptional()
+    @ApiPropertyOptional({ enum: ContentStatus, enumName: "ContentStatus" })
     @IsEnum(ContentStatus)
     status?: ContentStatus;
 }
@@ -73,10 +75,12 @@ export class CreateProviderDto {
     free?: boolean;
 
     @IsOptional()
+    @ApiPropertyOptional({ enum: ProviderType, enumName: "ProviderType" })
     @IsEnum(ProviderType)
     type?: ProviderType;
 
     @IsOptional()
+    @ApiPropertyOptional({ enum: ContentStatus, enumName: "ContentStatus" })
     @IsEnum(ContentStatus)
     status?: ContentStatus;
 
@@ -104,15 +108,18 @@ export class UpdateProviderDto {
     free?: boolean;
 
     @IsOptional()
+    @ApiPropertyOptional({ enum: ProviderType, enumName: "ProviderType" })
     @IsEnum(ProviderType)
     type?: ProviderType;
 
     @IsOptional()
+    @ApiPropertyOptional({ enum: ContentStatus, enumName: "ContentStatus" })
     @IsEnum(ContentStatus)
     status?: ContentStatus;
 }
 
 export class UpdateProviderStatusDto {
+    @ApiProperty({ enum: ContentStatus, enumName: "ContentStatus" })
     @IsEnum(ContentStatus)
     status: ContentStatus;
 }
@@ -151,11 +158,13 @@ export class UpdateProviderModelDto {
     bestFor?: string[];
 
     @IsOptional()
+    @ApiPropertyOptional({ enum: ContentStatus, enumName: "ContentStatus" })
     @IsEnum(ContentStatus)
     status?: ContentStatus;
 }
 
 export class UpdateProviderModelStatusDto {
+    @ApiProperty({ enum: ContentStatus, enumName: "ContentStatus" })
     @IsEnum(ContentStatus)
     status: ContentStatus;
 }

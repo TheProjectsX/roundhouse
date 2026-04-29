@@ -16,7 +16,7 @@ export class AdminAuthService {
 
     async createAdminSession(payload: AdminLoginDto) {
         const user = await this.prisma.user.findFirst({
-            where: { email: payload.email },
+            where: { email: payload.email, role: "ADMIN" },
             select: { id: true, email: true, password: true },
         });
 
@@ -31,15 +31,6 @@ export class AdminAuthService {
 
         if (!passwordMatched) {
             throw new ApiError(HttpStatus.UNAUTHORIZED, "Invalid Credentials");
-        }
-
-        const admins = (process.env.ADMIN_EMAILS || "")
-            .split(",")
-            .map((email) => email.trim())
-            .filter(Boolean);
-
-        if (!admins.includes(user.email)) {
-            throw new ApiError(HttpStatus.FORBIDDEN, "Not an admin");
         }
 
         const accessToken = this.jwt.sign(

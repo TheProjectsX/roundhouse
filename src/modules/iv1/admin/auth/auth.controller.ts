@@ -3,6 +3,7 @@ import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ResponseService } from "@/common/interceptors/response";
 import { AdminLoginDto } from "./dto/body.dto";
 import { AdminAuthService } from "./auth.service";
+import { IsPublic } from "@/common/decorators/auth.decorator";
 
 @ApiTags("Admin - Auth")
 @Controller("auth")
@@ -10,6 +11,7 @@ export class AdminAuthController {
     constructor(private svc: AdminAuthService) {}
 
     @Post("login")
+    @IsPublic()
     @ApiOperation({ summary: "Admin login" })
     async createAdminSession(@Body() payload: AdminLoginDto) {
         const result = await this.svc.createAdminSession(payload);

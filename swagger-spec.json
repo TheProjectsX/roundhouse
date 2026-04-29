@@ -268,18 +268,10 @@
         ]
       }
     },
-    "/api/iv1/me/providers/{id}/models/{modelId}": {
+    "/api/iv1/me/providers/models/{modelId}": {
       "patch": {
         "operationId": "MeProvidersController_updateProviderModel",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "modelId",
             "required": true,
@@ -309,14 +301,6 @@
         "operationId": "MeProvidersController_deleteProviderModel",
         "parameters": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "modelId",
             "required": true,
             "in": "path",
@@ -332,18 +316,10 @@
         ]
       }
     },
-    "/api/iv1/me/providers/{id}/models/{modelId}/status": {
+    "/api/iv1/me/providers/models/{modelId}/status": {
       "patch": {
         "operationId": "MeProvidersController_updateProviderModelStatus",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "modelId",
             "required": true,
@@ -576,18 +552,10 @@
         ]
       }
     },
-    "/api/iv1/providers/{id}/models/{modelId}": {
+    "/api/iv1/providers/models/{modelId}": {
       "patch": {
         "operationId": "ProvidersController_updateProviderModel",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "modelId",
             "required": true,
@@ -617,14 +585,6 @@
         "operationId": "ProvidersController_deleteProviderModel",
         "parameters": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "modelId",
             "required": true,
             "in": "path",
@@ -640,18 +600,10 @@
         ]
       }
     },
-    "/api/iv1/providers/{id}/models/{modelId}/status": {
+    "/api/iv1/providers/models/{modelId}/status": {
       "patch": {
         "operationId": "ProvidersController_updateProviderModelStatus",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "modelId",
             "required": true,
@@ -675,6 +627,154 @@
         "summary": "Update provider model status",
         "tags": [
           "Providers"
+        ]
+      }
+    },
+    "/api/iv1/providers/selections/{providerSelectionId}/keys": {
+      "post": {
+        "operationId": "ProviderSelectionsController_createProviderApiKeyByProviderSelection",
+        "parameters": [
+          {
+            "name": "providerSelectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProviderApiKeyDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Create provider API key by provider selection",
+        "tags": [
+          "Provider Selections"
+        ]
+      }
+    },
+    "/api/iv1/providers/selections/{providerSelectionId}": {
+      "delete": {
+        "operationId": "ProviderSelectionsController_deleteProviderSelectionById",
+        "parameters": [
+          {
+            "name": "providerSelectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "summary": "Deselect provider by selection id",
+        "tags": [
+          "Provider Selections"
+        ]
+      }
+    },
+    "/api/iv1/providers/selections/{providerSelectionId}/status": {
+      "patch": {
+        "operationId": "ProviderSelectionsController_updateProviderSelectionStatusById",
+        "parameters": [
+          {
+            "name": "providerSelectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "summary": "Toggle provider selection status by id",
+        "tags": [
+          "Provider Selections"
+        ]
+      }
+    },
+    "/api/iv1/providers/keys/{providerApiKeyId}": {
+      "patch": {
+        "operationId": "ProviderSelectionsController_updateProviderApiKeyById",
+        "parameters": [
+          {
+            "name": "providerApiKeyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProviderApiKeyDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Update provider API key by id",
+        "tags": [
+          "Provider Selections"
+        ]
+      },
+      "delete": {
+        "operationId": "ProviderSelectionsController_deleteProviderApiKeyById",
+        "parameters": [
+          {
+            "name": "providerApiKeyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "summary": "Delete provider API key by id",
+        "tags": [
+          "Provider Selections"
+        ]
+      }
+    },
+    "/api/iv1/providers/keys/{providerApiKeyId}/status": {
+      "patch": {
+        "operationId": "ProviderSelectionsController_updateProviderApiKeyStatusById",
+        "parameters": [
+          {
+            "name": "providerApiKeyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProviderApiKeyStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Update provider API key status by id",
+        "tags": [
+          "Provider Selections"
         ]
       }
     },
@@ -706,25 +806,6 @@
         "tags": [
           "ApiKeys"
         ]
-      },
-      "patch": {
-        "operationId": "ApikeysController_updateApiKey",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateApiKeyDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Update API key",
-        "tags": [
-          "ApiKeys"
-        ]
       }
     },
     "/api/iv1/apikeys/{id}": {
@@ -742,6 +823,34 @@
         ],
         "responses": {},
         "summary": "Get API key details",
+        "tags": [
+          "ApiKeys"
+        ]
+      },
+      "patch": {
+        "operationId": "ApikeysController_updateApiKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Update API key",
         "tags": [
           "ApiKeys"
         ]
@@ -821,48 +930,14 @@
         "tags": [
           "ApiKeys"
         ]
-      },
-      "delete": {
-        "operationId": "ApikeysController_deleteApiKeyProvider",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "providerId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {},
-        "summary": "Deselect provider for API key",
-        "tags": [
-          "ApiKeys"
-        ]
       }
     },
-    "/api/iv1/apikeys/{id}/providers/{providerId}/status": {
+    "/api/iv1/models/selections/{modelSelectionId}/status": {
       "patch": {
-        "operationId": "ApikeysController_updateApiKeyProviderStatus",
+        "operationId": "ModelsController_updateApiKeyModelSelectionStatus",
         "parameters": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "providerId",
+            "name": "modelSelectionId",
             "required": true,
             "in": "path",
             "schema": {
@@ -871,43 +946,15 @@
           }
         ],
         "responses": {},
-        "summary": "Toggle provider active for API key",
+        "summary": "Toggle model selection active by id",
         "tags": [
-          "ApiKeys"
-        ]
-      }
-    },
-    "/api/iv1/apikeys/{id}/models/{modelId}/status": {
-      "patch": {
-        "operationId": "ApikeysController_updateApiKeyModelStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "modelId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {},
-        "summary": "Toggle model active for API key",
-        "tags": [
-          "ApiKeys"
+          "Model Selections"
         ]
       }
     },
     "/api/iv1/admin/providers": {
       "get": {
-        "operationId": "ProvidersController_fetchAllProviders",
+        "operationId": "AdminProvidersController_fetchAllProviders",
         "parameters": [],
         "responses": {},
         "summary": "List providers (admin)",
@@ -916,7 +963,7 @@
         ]
       },
       "post": {
-        "operationId": "ProvidersController_createProvider",
+        "operationId": "AdminProvidersController_createProvider",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -937,7 +984,7 @@
     },
     "/api/iv1/admin/providers/{id}": {
       "get": {
-        "operationId": "ProvidersController_fetchSingleProvider",
+        "operationId": "AdminProvidersController_fetchSingleProvider",
         "parameters": [
           {
             "name": "id",
@@ -955,7 +1002,7 @@
         ]
       },
       "patch": {
-        "operationId": "ProvidersController_updateProvider",
+        "operationId": "AdminProvidersController_updateProvider",
         "parameters": [
           {
             "name": "id",
@@ -983,7 +1030,7 @@
         ]
       },
       "delete": {
-        "operationId": "ProvidersController_deleteProvider",
+        "operationId": "AdminProvidersController_deleteProvider",
         "parameters": [
           {
             "name": "id",
@@ -1003,7 +1050,7 @@
     },
     "/api/iv1/admin/providers/{id}/status": {
       "patch": {
-        "operationId": "ProvidersController_updateProviderStatus",
+        "operationId": "AdminProvidersController_updateProviderStatus",
         "parameters": [
           {
             "name": "id",
@@ -1033,7 +1080,7 @@
     },
     "/api/iv1/admin/providers/{id}/models": {
       "get": {
-        "operationId": "ProvidersController_fetchAllProviderModels",
+        "operationId": "AdminProvidersController_fetchAllProviderModels",
         "parameters": [
           {
             "name": "id",
@@ -1051,7 +1098,7 @@
         ]
       },
       "post": {
-        "operationId": "ProvidersController_createProviderModel",
+        "operationId": "AdminProvidersController_createProviderModel",
         "parameters": [
           {
             "name": "id",
@@ -1079,18 +1126,10 @@
         ]
       }
     },
-    "/api/iv1/admin/providers/{id}/models/{modelId}": {
+    "/api/iv1/admin/providers/models/{modelId}": {
       "patch": {
-        "operationId": "ProvidersController_updateProviderModel",
+        "operationId": "AdminProvidersController_updateProviderModel",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "modelId",
             "required": true,
@@ -1117,16 +1156,8 @@
         ]
       },
       "delete": {
-        "operationId": "ProvidersController_deleteProviderModel",
+        "operationId": "AdminProvidersController_deleteProviderModel",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "modelId",
             "required": true,
@@ -1143,18 +1174,10 @@
         ]
       }
     },
-    "/api/iv1/admin/providers/{id}/models/{modelId}/status": {
+    "/api/iv1/admin/providers/models/{modelId}/status": {
       "patch": {
-        "operationId": "ProvidersController_updateProviderModelStatus",
+        "operationId": "AdminProvidersController_updateProviderModelStatus",
         "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "modelId",
             "required": true,
@@ -1351,9 +1374,6 @@
             "type": "string",
             "format": "email"
           },
-          "phone": {
-            "type": "string"
-          },
           "password": {
             "type": "string"
           }
@@ -1361,7 +1381,6 @@
         "required": [
           "name",
           "email",
-          "phone",
           "password"
         ]
       },
@@ -1413,9 +1432,35 @@
           }
         }
       },
+      "ProviderType": {
+        "type": "string",
+        "enum": [
+          "OPENAI",
+          "ANTHROPIC",
+          "GEMINI",
+          "CUSTOM"
+        ]
+      },
+      "ContentStatus": {
+        "type": "string",
+        "enum": [
+          "ACTIVE",
+          "INACTIVE",
+          "DEPRECATED",
+          "TESTING",
+          "UPCOMING"
+        ]
+      },
       "ProviderModelBodyDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentStatus"
+              }
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -1440,9 +1485,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "status": {
-            "type": "object"
           }
         },
         "required": [
@@ -1453,6 +1495,20 @@
       "CreateProviderDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProviderType"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentStatus"
+              }
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -1465,12 +1521,6 @@
           },
           "free": {
             "type": "boolean"
-          },
-          "type": {
-            "type": "object"
-          },
-          "status": {
-            "type": "object"
           },
           "model": {
             "$ref": "#/components/schemas/ProviderModelBodyDto"
@@ -1484,8 +1534,19 @@
       "UpdateProviderDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProviderType"
+              }
+            ]
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentStatus"
+              }
+            ]
           },
           "name": {
             "type": "string"
@@ -1499,36 +1560,34 @@
           },
           "free": {
             "type": "boolean"
-          },
-          "type": {
-            "type": "object"
-          },
-          "status": {
-            "type": "object"
           }
-        },
-        "required": [
-          "id"
-        ]
+        }
       },
       "UpdateProviderStatusDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
           "status": {
-            "type": "object"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentStatus"
+              }
+            ]
           }
         },
         "required": [
-          "id",
           "status"
         ]
       },
       "CreateProviderModelDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentStatus"
+              }
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -1553,9 +1612,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "status": {
-            "type": "object"
           }
         },
         "required": [
@@ -1566,6 +1622,13 @@
       "UpdateProviderModelDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentStatus"
+              }
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -1590,33 +1653,58 @@
             "items": {
               "type": "string"
             }
-          },
-          "status": {
-            "type": "object"
-          },
-          "modelId": {
-            "type": "string"
           }
-        },
-        "required": [
-          "name",
-          "code",
-          "modelId"
-        ]
+        }
       },
       "UpdateProviderModelStatusDto": {
         "type": "object",
         "properties": {
-          "modelId": {
-            "type": "string"
-          },
           "status": {
-            "type": "object"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentStatus"
+              }
+            ]
           }
         },
         "required": [
-          "modelId",
           "status"
+        ]
+      },
+      "CreateProviderApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "UpdateProviderApiKeyDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateProviderApiKeyStatusDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active"
         ]
       },
       "CreateApiKeyDto": {
@@ -1633,32 +1721,22 @@
       "UpdateApiKeyDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
           "name": {
             "type": "string"
           },
           "active": {
             "type": "boolean"
           }
-        },
-        "required": [
-          "id"
-        ]
+        }
       },
       "UpdateApiKeyStatusDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
           "active": {
             "type": "boolean"
           }
         },
         "required": [
-          "id",
           "active"
         ]
       },
@@ -1683,19 +1761,32 @@
           "id"
         ]
       },
+      "UserStatus": {
+        "type": "string",
+        "enum": [
+          "ACTIVE",
+          "INACTIVE",
+          "BANNED",
+          "PENDING"
+        ]
+      },
       "UpdateUserStatusDto": {
         "type": "object",
         "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              }
+            ]
+          },
           "id": {
             "type": "string"
-          },
-          "status": {
-            "type": "object"
           }
         },
         "required": [
-          "id",
-          "status"
+          "status",
+          "id"
         ]
       },
       "AdminLoginDto": {

@@ -7,9 +7,6 @@ export class RegisterUserDto {
     @IsEmail()
     email: string;
 
-    @IsPhoneNumber()
-    phone: string;
-
     @IsString()
     password: string;
 }
