@@ -23,7 +23,11 @@ export class UpdateUserStatusDto {
     @IsString()
     id: string;
 
-    @ApiProperty({ enum: UserStatus, enumName: "UserStatus" })
+    @ApiProperty({
+        enum: UserStatus,
+        enumName: "UserStatus",
+        default: UserStatus.ACTIVE,
+    })
     @IsEnum(UserStatus)
     status: UserStatus;
 }

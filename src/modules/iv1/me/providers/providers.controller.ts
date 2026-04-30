@@ -35,7 +35,10 @@ export class MeProvidersController {
         @ReqField("user") user: UserPayload,
     ) {
         void user;
-        const result = await this.meProvidersService.fetchAllProviders(query);
+        const result = await this.meProvidersService.fetchAllProviders(
+            query,
+            user,
+        );
 
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,

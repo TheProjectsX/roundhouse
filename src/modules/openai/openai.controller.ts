@@ -2,8 +2,10 @@ import { Controller, Get, Post, Req, Res } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import type { Request, Response } from "express";
 import { OpenaiService } from "./openai.service";
+import { IsPublic } from "@/common/decorators/auth.decorator";
 
 @ApiTags("OpenAI")
+@IsPublic()
 @Controller("v1")
 export class OpenaiController {
     constructor(private readonly openaiService: OpenaiService) {}

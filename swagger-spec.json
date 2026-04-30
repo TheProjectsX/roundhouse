@@ -19,6 +19,11 @@
         "summary": "Register User",
         "tags": [
           "Auth"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -40,6 +45,11 @@
         "summary": "Login User",
         "tags": [
           "Auth"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -61,6 +71,11 @@
         "summary": "Change Password",
         "tags": [
           "Auth"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -72,6 +87,11 @@
         "summary": "Get user profile",
         "tags": [
           "Me"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "patch": {
@@ -91,6 +111,11 @@
         "summary": "Update user profile",
         "tags": [
           "Me"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -102,6 +127,11 @@
         "summary": "List user's custom providers",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "post": {
@@ -121,6 +151,11 @@
         "summary": "Create custom provider",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -141,6 +176,11 @@
         "summary": "Get user's custom provider details",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "patch": {
@@ -169,6 +209,11 @@
         "summary": "Update custom provider",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "delete": {
@@ -187,6 +232,11 @@
         "summary": "Delete custom provider",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -217,6 +267,11 @@
         "summary": "Update custom provider status",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -237,6 +292,11 @@
         "summary": "List models for custom provider",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "post": {
@@ -265,6 +325,11 @@
         "summary": "Add model to custom provider",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -295,6 +360,11 @@
         "summary": "Update custom provider model",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "delete": {
@@ -313,6 +383,11 @@
         "summary": "Delete custom provider model",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -343,6 +418,11 @@
         "summary": "Update custom provider model status",
         "tags": [
           "Me - Custom Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -353,6 +433,11 @@
         "responses": {},
         "tags": [
           "OpenAI"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -363,6 +448,11 @@
         "responses": {},
         "tags": [
           "OpenAI"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -373,6 +463,11 @@
         "responses": {},
         "tags": [
           "OpenAI"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -384,6 +479,11 @@
         "summary": "List providers (with filters)",
         "tags": [
           "Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -404,109 +504,17 @@
         "summary": "Get provider details",
         "tags": [
           "Providers"
-        ]
-      },
-      "patch": {
-        "operationId": "ProvidersController_updateProvider",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Update custom provider",
-        "tags": [
-          "Providers"
-        ]
-      },
-      "delete": {
-        "operationId": "ProvidersController_deleteProvider",
-        "parameters": [
+        "security": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
+            "accessToken": []
           }
-        ],
-        "responses": {},
-        "summary": "Delete provider (custom only)",
-        "tags": [
-          "Providers"
-        ]
-      }
-    },
-    "/api/iv1/providers/custom": {
-      "post": {
-        "operationId": "ProvidersController_createProvider",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateProviderDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Create custom provider for user",
-        "tags": [
-          "Providers"
-        ]
-      }
-    },
-    "/api/iv1/providers/{id}/status": {
-      "patch": {
-        "operationId": "ProvidersController_updateProviderStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProviderStatusDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Update custom provider status",
-        "tags": [
-          "Providers"
         ]
       }
     },
     "/api/iv1/providers/{id}/models": {
       "get": {
-        "operationId": "ProvidersController_fetchAllProviderModels",
+        "operationId": "ProvidersController_fetchProviderModels",
         "parameters": [
           {
             "name": "id",
@@ -518,115 +526,14 @@
           }
         ],
         "responses": {},
-        "summary": "List models for a provider",
+        "summary": "Get provider's models",
         "tags": [
           "Providers"
-        ]
-      },
-      "post": {
-        "operationId": "ProvidersController_createProviderModel",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateProviderModelDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Add model to provider (custom only)",
-        "tags": [
-          "Providers"
-        ]
-      }
-    },
-    "/api/iv1/providers/models/{modelId}": {
-      "patch": {
-        "operationId": "ProvidersController_updateProviderModel",
-        "parameters": [
+        "security": [
           {
-            "name": "modelId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
+            "accessToken": []
           }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProviderModelDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Update provider model",
-        "tags": [
-          "Providers"
-        ]
-      },
-      "delete": {
-        "operationId": "ProvidersController_deleteProviderModel",
-        "parameters": [
-          {
-            "name": "modelId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {},
-        "summary": "Delete provider model",
-        "tags": [
-          "Providers"
-        ]
-      }
-    },
-    "/api/iv1/providers/models/{modelId}/status": {
-      "patch": {
-        "operationId": "ProvidersController_updateProviderModelStatus",
-        "parameters": [
-          {
-            "name": "modelId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProviderModelStatusDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Update provider model status",
-        "tags": [
-          "Providers"
         ]
       }
     },
@@ -657,6 +564,11 @@
         "summary": "Create provider API key by provider selection",
         "tags": [
           "Provider Selections"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -677,6 +589,11 @@
         "summary": "Deselect provider by selection id",
         "tags": [
           "Provider Selections"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -697,6 +614,11 @@
         "summary": "Toggle provider selection status by id",
         "tags": [
           "Provider Selections"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -727,6 +649,11 @@
         "summary": "Update provider API key by id",
         "tags": [
           "Provider Selections"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "delete": {
@@ -745,6 +672,11 @@
         "summary": "Delete provider API key by id",
         "tags": [
           "Provider Selections"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -775,6 +707,11 @@
         "summary": "Update provider API key status by id",
         "tags": [
           "Provider Selections"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -786,6 +723,11 @@
         "summary": "List API keys",
         "tags": [
           "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "post": {
@@ -805,6 +747,11 @@
         "summary": "Create API key",
         "tags": [
           "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -825,6 +772,11 @@
         "summary": "Get API key details",
         "tags": [
           "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "patch": {
@@ -853,6 +805,11 @@
         "summary": "Update API key",
         "tags": [
           "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "delete": {
@@ -871,6 +828,11 @@
         "summary": "Delete API key",
         "tags": [
           "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -901,6 +863,11 @@
         "summary": "Update API key status",
         "tags": [
           "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -929,6 +896,214 @@
         "summary": "Select provider for API key",
         "tags": [
           "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
+    "/api/iv1/apikeys/{id}/selections/{selectionId}": {
+      "delete": {
+        "operationId": "ApikeysController_deleteApiKeySelection",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "selectionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "summary": "Remove provider selection from API key",
+        "tags": [
+          "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
+    "/api/iv1/apikeys/{id}/providers/{providerId}/models": {
+      "patch": {
+        "operationId": "ApikeysController_selectApiKeyProviderModels",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "providerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyProviderModelsDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Select models for provider under API key",
+        "tags": [
+          "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ApikeysController_deselectApiKeyProviderModels",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "providerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyProviderModelsDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Deselect models for provider under API key",
+        "tags": [
+          "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
+    "/api/iv1/apikeys/{id}/providers/{providerId}/status": {
+      "patch": {
+        "operationId": "ApikeysController_updateApiKeyProviderStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "providerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyProviderModelsStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Update provider selection status under API key",
+        "tags": [
+          "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
+    "/api/iv1/apikeys/{id}/models/{modelId}/status": {
+      "patch": {
+        "operationId": "ApikeysController_updateApiKeyModelStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyProviderModelsStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Update model selection status under API key",
+        "tags": [
+          "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -949,6 +1124,11 @@
         "summary": "Toggle model selection active by id",
         "tags": [
           "Model Selections"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -960,6 +1140,11 @@
         "summary": "List providers (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "post": {
@@ -979,6 +1164,11 @@
         "summary": "Create provider (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -999,6 +1189,11 @@
         "summary": "Get provider details (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "patch": {
@@ -1027,6 +1222,11 @@
         "summary": "Update provider (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "delete": {
@@ -1045,6 +1245,11 @@
         "summary": "Delete provider (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1075,6 +1280,11 @@
         "summary": "Update provider status (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1095,6 +1305,11 @@
         "summary": "List models of provider (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "post": {
@@ -1123,6 +1338,11 @@
         "summary": "Create model for provider (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1153,6 +1373,11 @@
         "summary": "Update model (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "delete": {
@@ -1171,6 +1396,11 @@
         "summary": "Delete model (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1201,6 +1431,11 @@
         "summary": "Update model status (admin)",
         "tags": [
           "Admin - Providers"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1212,6 +1447,11 @@
         "summary": "List users (admin)",
         "tags": [
           "Admin - Users"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1232,6 +1472,11 @@
         "summary": "Get user details (admin)",
         "tags": [
           "Admin - Users"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "patch": {
@@ -1260,6 +1505,11 @@
         "summary": "Update user (admin)",
         "tags": [
           "Admin - Users"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       },
       "delete": {
@@ -1278,6 +1528,11 @@
         "summary": "Delete user (admin)",
         "tags": [
           "Admin - Users"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1308,6 +1563,11 @@
         "summary": "Update user status (admin)",
         "tags": [
           "Admin - Users"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1329,6 +1589,11 @@
         "summary": "Admin login",
         "tags": [
           "Admin - Auth"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     },
@@ -1340,6 +1605,11 @@
         "summary": "Fetch admin analytics",
         "tags": [
           "Admin - Analytics"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
         ]
       }
     }
@@ -1359,7 +1629,7 @@
         "bearerFormat": "JWT",
         "type": "http",
         "name": "Authorization",
-        "description": "Enter JWT token",
+        "description": "JWT Access Token",
         "in": "header"
       }
     },
@@ -1451,51 +1721,11 @@
           "UPCOMING"
         ]
       },
-      "ProviderModelBodyDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ContentStatus"
-              }
-            ]
-          },
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "maxTokens": {
-            "type": "number",
-            "minimum": 1
-          },
-          "tokenResetInterval": {
-            "type": "number",
-            "minimum": 1
-          },
-          "efficiencyScore": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1
-          },
-          "bestFor": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "name",
-          "code"
-        ]
-      },
       "CreateProviderDto": {
         "type": "object",
         "properties": {
           "type": {
+            "default": "CUSTOM",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ProviderType"
@@ -1503,6 +1733,7 @@
             ]
           },
           "status": {
+            "default": "ACTIVE",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ContentStatus"
@@ -1521,9 +1752,6 @@
           },
           "free": {
             "type": "boolean"
-          },
-          "model": {
-            "$ref": "#/components/schemas/ProviderModelBodyDto"
           }
         },
         "required": [
@@ -1535,6 +1763,7 @@
         "type": "object",
         "properties": {
           "type": {
+            "default": "CUSTOM",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ProviderType"
@@ -1542,6 +1771,7 @@
             ]
           },
           "status": {
+            "default": "ACTIVE",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ContentStatus"
@@ -1582,6 +1812,7 @@
         "type": "object",
         "properties": {
           "status": {
+            "default": "ACTIVE",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ContentStatus"
@@ -1623,6 +1854,7 @@
         "type": "object",
         "properties": {
           "status": {
+            "default": "ACTIVE",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ContentStatus"
@@ -1660,6 +1892,7 @@
         "type": "object",
         "properties": {
           "status": {
+            "default": "ACTIVE",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ContentStatus"
@@ -1740,6 +1973,32 @@
           "active"
         ]
       },
+      "UpdateApiKeyProviderModelsDto": {
+        "type": "object",
+        "properties": {
+          "modelIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "modelIds"
+        ]
+      },
+      "UpdateApiKeyProviderModelsStatusDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active"
+        ]
+      },
       "UpdateUserDto": {
         "type": "object",
         "properties": {
@@ -1774,6 +2033,7 @@
         "type": "object",
         "properties": {
           "status": {
+            "default": "ACTIVE",
             "allOf": [
               {
                 "$ref": "#/components/schemas/UserStatus"
@@ -1806,10 +2066,5 @@
         ]
       }
     }
-  },
-  "security": [
-    {
-      "accessToken": []
-    }
-  ]
+  }
 }

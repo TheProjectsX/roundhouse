@@ -1,5 +1,11 @@
 import { Transform } from "class-transformer";
-import { IsBoolean, IsOptional, IsString } from "class-validator";
+import {
+    ArrayNotEmpty,
+    IsArray,
+    IsBoolean,
+    IsOptional,
+    IsString,
+} from "class-validator";
 
 const toBoolean = () =>
     Transform(({ value }) => {
@@ -39,6 +45,8 @@ export class CreateProviderApiKeyDto {
     active?: boolean;
 }
 
+export class CreateApiKeyProviderDto extends CreateProviderApiKeyDto {}
+
 export class UpdateProviderApiKeyDto {
     @IsOptional()
     @IsString()
@@ -51,6 +59,19 @@ export class UpdateProviderApiKeyDto {
 }
 
 export class UpdateProviderApiKeyStatusDto {
+    @toBoolean()
+    @IsBoolean()
+    active: boolean;
+}
+
+export class UpdateApiKeyProviderModelsDto {
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsString({ each: true })
+    modelIds: string[];
+}
+
+export class UpdateApiKeyProviderModelsStatusDto {
     @toBoolean()
     @IsBoolean()
     active: boolean;

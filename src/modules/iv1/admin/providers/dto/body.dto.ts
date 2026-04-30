@@ -1,7 +1,6 @@
 export {
     CreateProviderDto,
     CreateProviderModelDto,
-    ProviderModelBodyDto,
     UpdateProviderDto,
     UpdateProviderModelDto,
     UpdateProviderModelStatusDto,

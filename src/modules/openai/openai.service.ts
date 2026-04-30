@@ -14,6 +14,7 @@ import type {
     OpenAIResponsesRequest,
 } from "@/core/models/types";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
+import { createDevLogger } from "@/common/utils/logger";
 import { toOpenAIError } from "@/core/utils/openaiError.util";
 import {
     resolveApiKey,
@@ -32,6 +33,7 @@ import {
 export class OpenaiService {
     private readonly executor: BoundRoundhouseExecutor;
     private readonly listRoundhouseCandidates: BoundRoundhouseCandidateLister;
+    private readonly logger = createDevLogger("openai.chat");
 
     constructor(private readonly prisma: PrismaService) {
         this.executor = createRoundhouseExecutor(this.prisma);
@@ -93,8 +95,14 @@ export class OpenaiService {
     }
 
     async chatCompletions(req: Request) {
+        const startedAt = Date.now();
+        this.logger.log("chatCompletions request started", {
+            stream: Boolean(req.body?.stream),
+        });
+
         const apiKey = resolveApiKey(req);
         if (!apiKey) {
+            this.logger.warn("chatCompletions missing API key");
             return this.createErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 "Missing API key. Use Authorization: Bearer <key>.",
@@ -104,21 +112,49 @@ export class OpenaiService {
         }
 
         try {
+            const validationStartedAt = Date.now();
             const body = chatCompletionBodySchema.parse(
                 req.body,
             ) as OpenAIChatCompletionRequest;
+            this.logger.log("chatCompletions body validated", {
+                durationMs: Date.now() - validationStartedAt,
+                stream: Boolean(body.stream),
+                messageCount: body.messages?.length ?? 0,
+            });
+
             const { provider, modelKeys, maxIterations } =
                 resolveRoundhouseFilters(req.headers);
             const mergedModelKeys = this.mergeBodyModelWithModelKeys(
                 body.model,
                 modelKeys,
             );
+            this.logger.log("chatCompletions filters resolved", {
+                provider: provider ?? null,
+                maxIterations: maxIterations ?? null,
+                mergedModelKeysCount: mergedModelKeys?.size ?? 0,
+                requestedModel: body.model ?? null,
+            });
 
             if (body.stream) {
+                const streamSelectionStartedAt = Date.now();
                 const streamedResult = await this.executor<string[]>(
                     apiKey,
                     async (candidate, providerApiKey) => {
+                        const providerCallStartedAt = Date.now();
+
                         try {
+                            this.logger.log(
+                                "chatCompletions stream provider call started",
+                                {
+                                    providerSelectionId:
+                                        candidate.providerSelectionId,
+                                    modelSelectionId:
+                                        candidate.modelSelectionId,
+                                    modelId: candidate.model.id,
+                                    providerType: candidate.model.provider.type,
+                                    providerApiKeyId: providerApiKey.id,
+                                },
+                            );
                             const chunks = await createChatCompletionStream(
                                 {
                                     ...body,
@@ -130,12 +166,40 @@ export class OpenaiService {
                                     headers: req.headers,
                                 },
                             );
+                            this.logger.log(
+                                "chatCompletions stream provider call succeeded",
+                                {
+                                    durationMs:
+                                        Date.now() - providerCallStartedAt,
+                                    providerSelectionId:
+                                        candidate.providerSelectionId,
+                                    modelSelectionId:
+                                        candidate.modelSelectionId,
+                                    chunkCount: chunks.length,
+                                },
+                            );
 
                             return {
                                 success: true as const,
                                 data: chunks,
                             };
-                        } catch {
+                        } catch (error) {
+                            this.logger.warn(
+                                "chatCompletions stream provider call failed",
+                                {
+                                    durationMs:
+                                        Date.now() - providerCallStartedAt,
+                                    providerSelectionId:
+                                        candidate.providerSelectionId,
+                                    modelSelectionId:
+                                        candidate.modelSelectionId,
+                                    providerApiKeyId: providerApiKey.id,
+                                    error:
+                                        error instanceof Error
+                                            ? error.message
+                                            : "Unknown error",
+                                },
+                            );
                             return {
                                 success: false as const,
                             };
@@ -147,8 +211,19 @@ export class OpenaiService {
                         modelKeys: mergedModelKeys,
                     },
                 );
+                this.logger.log("chatCompletions stream selection finished", {
+                    durationMs: Date.now() - streamSelectionStartedAt,
+                });
 
                 if ("code" in streamedResult) {
+                    this.logger.warn(
+                        "chatCompletions stream returned roundhouse error",
+                        {
+                            code: streamedResult.code,
+                            statusCode: streamedResult.status_code,
+                            totalDurationMs: Date.now() - startedAt,
+                        },
+                    );
                     return this.createErrorResponse(
                         streamedResult.status_code,
                         streamedResult.message,
@@ -157,6 +232,10 @@ export class OpenaiService {
                     );
                 }
 
+                this.logger.log("chatCompletions stream request succeeded", {
+                    totalDurationMs: Date.now() - startedAt,
+                    chunkCount: streamedResult.data.length,
+                });
                 return {
                     statusCode: HttpStatus.OK,
                     stream: true,
@@ -164,10 +243,35 @@ export class OpenaiService {
                 };
             }
 
+            const selectionStartedAt = Date.now();
             const result = await this.executor(
                 apiKey,
                 async (candidate, providerApiKey) => {
+                    const providerCallStartedAt = Date.now();
+
                     try {
+                        this.logger.log(
+                            "chatCompletions provider call started",
+                            {
+                                providerSelectionId:
+                                    candidate.providerSelectionId,
+                                modelSelectionId: candidate.modelSelectionId,
+                                modelId: candidate.model.id,
+                                providerType: candidate.model.provider.type,
+                                providerApiKeyId: providerApiKey.id,
+                            },
+                        );
+                        this.logger.log(
+                            "chatCompletions provider call request",
+                            {
+                                ...body,
+                                model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
+
+                                baseApi: candidate.model.provider.baseApi,
+                                apiKey: providerApiKey.key,
+                                headers: req.headers,
+                            },
+                        );
                         const response = await createChatCompletion(
                             {
                                 ...body,
@@ -179,12 +283,36 @@ export class OpenaiService {
                                 headers: req.headers,
                             },
                         );
+                        this.logger.log(
+                            "chatCompletions provider call succeeded",
+                            {
+                                durationMs: Date.now() - providerCallStartedAt,
+                                providerSelectionId:
+                                    candidate.providerSelectionId,
+                                modelSelectionId: candidate.modelSelectionId,
+                                providerApiKeyId: providerApiKey.id,
+                            },
+                        );
 
                         return {
                             success: true as const,
                             data: response,
                         };
-                    } catch {
+                    } catch (error) {
+                        this.logger.warn(
+                            "chatCompletions provider call failed",
+                            {
+                                durationMs: Date.now() - providerCallStartedAt,
+                                providerSelectionId:
+                                    candidate.providerSelectionId,
+                                modelSelectionId: candidate.modelSelectionId,
+                                providerApiKeyId: providerApiKey.id,
+                                error:
+                                    error instanceof Error
+                                        ? error.message
+                                        : "Unknown error",
+                            },
+                        );
                         return {
                             success: false as const,
                         };
@@ -196,8 +324,16 @@ export class OpenaiService {
                     modelKeys: mergedModelKeys,
                 },
             );
+            this.logger.log("chatCompletions selection finished", {
+                durationMs: Date.now() - selectionStartedAt,
+            });
 
             if ("code" in result) {
+                this.logger.warn("chatCompletions returned roundhouse error", {
+                    code: result.code,
+                    statusCode: result.status_code,
+                    totalDurationMs: Date.now() - startedAt,
+                });
                 return this.createErrorResponse(
                     result.status_code,
                     result.message,
@@ -206,12 +342,19 @@ export class OpenaiService {
                 );
             }
 
+            this.logger.log("chatCompletions request succeeded", {
+                totalDurationMs: Date.now() - startedAt,
+            });
             return {
                 statusCode: HttpStatus.OK,
                 body: result.data,
             };
         } catch (error) {
             if (error instanceof ZodError) {
+                this.logger.warn("chatCompletions validation failed", {
+                    totalDurationMs: Date.now() - startedAt,
+                    error: this.toValidationMessage(error),
+                });
                 return this.createErrorResponse(
                     HttpStatus.BAD_REQUEST,
                     `Validation failed: ${this.toValidationMessage(error)}`,
@@ -220,6 +363,10 @@ export class OpenaiService {
                 );
             }
 
+            this.logger.error("chatCompletions unexpected server error", {
+                totalDurationMs: Date.now() - startedAt,
+                error: error instanceof Error ? error.message : "Unknown error",
+            });
             return this.createErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Unexpected server error.",

@@ -29,8 +29,8 @@ export class MeController {
 
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
-            message: "User data retrieved",
-            data: result,
+            message: result.message,
+            data: result.data,
         });
     }
 

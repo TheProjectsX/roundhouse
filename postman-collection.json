@@ -17,7 +17,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "da70e87e-b8f7-4a34-9a3c-6e4e97515934",
+                                            "id": "a5e0de40-f9fd-43cb-8858-4f817fb145e5",
                                             "name": "Register User",
                                             "request": {
                                                 "name": "Register User",
@@ -52,7 +52,15 @@
                                                         }
                                                     }
                                                 },
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -67,7 +75,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "946963d6-a455-410c-8b79-b891cd214cf3",
+                                            "id": "cdbc11e6-785b-42a2-a07f-6287587a9e0c",
                                             "name": "Login User",
                                             "request": {
                                                 "name": "Login User",
@@ -102,7 +110,15 @@
                                                         }
                                                     }
                                                 },
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -117,7 +133,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "266a1dfb-1173-4455-9050-bc3c228d4a8f",
+                                            "id": "cd091358-e811-449d-a83e-6a43815796d7",
                                             "name": "Change Password",
                                             "request": {
                                                 "name": "Change Password",
@@ -152,7 +168,15 @@
                                                         }
                                                     }
                                                 },
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -169,7 +193,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "1515e6ca-09a3-4079-85b5-1c01d235d4b6",
+                                    "id": "cb819efd-b893-4208-94e6-81992ba89f06",
                                     "name": "Get user profile",
                                     "request": {
                                         "name": "Get user profile",
@@ -188,7 +212,15 @@
                                         },
                                         "method": "GET",
                                         "body": {},
-                                        "auth": null
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
                                     },
                                     "response": [],
                                     "event": [],
@@ -197,7 +229,7 @@
                                     }
                                 },
                                 {
-                                    "id": "f7eb3e3a-d5c6-4f46-9812-cebb8e63783d",
+                                    "id": "a747e440-afb9-445e-896f-395d1ff3b464",
                                     "name": "Update user profile",
                                     "request": {
                                         "name": "Update user profile",
@@ -231,7 +263,15 @@
                                                 }
                                             }
                                         },
-                                        "auth": null
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
                                     },
                                     "response": [],
                                     "event": [],
@@ -244,7 +284,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "b2d976c4-4948-4b39-baf1-2d87e99e04e4",
+                                            "id": "b9bec94e-8682-4a8f-8d9b-8533306e7984",
                                             "name": "List user's custom providers",
                                             "request": {
                                                 "name": "List user's custom providers",
@@ -264,7 +304,15 @@
                                                 },
                                                 "method": "GET",
                                                 "body": {},
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -273,7 +321,7 @@
                                             }
                                         },
                                         {
-                                            "id": "5c630e99-b84a-4b2d-94ee-8cb2e5360f9c",
+                                            "id": "5cb0c439-e194-4ba2-abcf-e52dbc8d3d99",
                                             "name": "Create custom provider",
                                             "request": {
                                                 "name": "Create custom provider",
@@ -300,7 +348,7 @@
                                                 "method": "POST",
                                                 "body": {
                                                     "mode": "raw",
-                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"TESTING\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
+                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"CUSTOM\",\n  \"status\": \"ACTIVE\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\"\n}",
                                                     "options": {
                                                         "raw": {
                                                             "headerFamily": "json",
@@ -308,7 +356,15 @@
                                                         }
                                                     }
                                                 },
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -321,7 +377,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "7181e1f7-74fb-4f17-9168-73da78e35720",
+                                                    "id": "94b28816-d95b-45d1-b292-c965f4d729ca",
                                                     "name": "Get user's custom provider details",
                                                     "request": {
                                                         "name": "Get user's custom provider details",
@@ -353,7 +409,15 @@
                                                         },
                                                         "method": "GET",
                                                         "body": {},
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -362,7 +426,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "d824b587-6da3-4951-8c4d-82bf4da48f91",
+                                                    "id": "2152985f-0ffd-49cc-ac16-c4fb7b2159cc",
                                                     "name": "Update custom provider",
                                                     "request": {
                                                         "name": "Update custom provider",
@@ -401,7 +465,7 @@
                                                         "method": "PATCH",
                                                         "body": {
                                                             "mode": "raw",
-                                                            "raw": "{\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
+                                                            "raw": "{\n  \"type\": \"CUSTOM\",\n  \"status\": \"ACTIVE\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
                                                             "options": {
                                                                 "raw": {
                                                                     "headerFamily": "json",
@@ -409,7 +473,15 @@
                                                                 }
                                                             }
                                                         },
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -418,7 +490,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "f111a2b6-2801-469a-8070-a5b2008a3ded",
+                                                    "id": "7764899e-d7c3-457a-bdb4-32f8b3ebeedb",
                                                     "name": "Delete custom provider",
                                                     "request": {
                                                         "name": "Delete custom provider",
@@ -450,7 +522,15 @@
                                                         },
                                                         "method": "DELETE",
                                                         "body": {},
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -463,7 +543,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "5712e0c2-3750-4531-8d8e-7b8424fe01c8",
+                                                            "id": "ff7293a7-56ff-49ef-91b0-181352a9ddc8",
                                                             "name": "Update custom provider status",
                                                             "request": {
                                                                 "name": "Update custom provider status",
@@ -503,7 +583,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"ACTIVE\"\n}",
+                                                                    "raw": "{\n  \"status\": \"INACTIVE\"\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -511,7 +591,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -526,7 +614,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "c512b07a-28a0-4f46-bb1f-f37cbebebb4a",
+                                                            "id": "3bb7521a-3e80-4ede-a3b6-7bf116b81fdb",
                                                             "name": "List models for custom provider",
                                                             "request": {
                                                                 "name": "List models for custom provider",
@@ -559,7 +647,15 @@
                                                                 },
                                                                 "method": "GET",
                                                                 "body": {},
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -568,7 +664,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "90dd6d26-8ce1-470b-9d0f-64c63605ea79",
+                                                            "id": "599e67d0-1fab-482d-ba41-267f24c21486",
                                                             "name": "Add model to custom provider",
                                                             "request": {
                                                                 "name": "Add model to custom provider",
@@ -608,7 +704,7 @@
                                                                 "method": "POST",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"DEPRECATED\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"ACTIVE\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -616,7 +712,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -637,7 +741,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "7ea44871-2bdf-4468-a56d-f9de111f29c0",
+                                                            "id": "799997f7-139e-451e-9e3b-ed2f12d8f274",
                                                             "name": "Update custom provider model",
                                                             "request": {
                                                                 "name": "Update custom provider model",
@@ -677,7 +781,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"UPCOMING\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                                    "raw": "{\n  \"status\": \"ACTIVE\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -685,7 +789,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -694,7 +806,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "aa4ecaf4-2ae4-475c-8725-9a6c344ded13",
+                                                            "id": "00468630-f8b7-450b-9823-a73f91f5688b",
                                                             "name": "Delete custom provider model",
                                                             "request": {
                                                                 "name": "Delete custom provider model",
@@ -727,7 +839,15 @@
                                                                 },
                                                                 "method": "DELETE",
                                                                 "body": {},
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -740,7 +860,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "543cea0b-a503-42f9-9a8a-462115f876ab",
+                                                                    "id": "610fcf43-25da-4944-9b0b-ee448fcbce6b",
                                                                     "name": "Update custom provider model status",
                                                                     "request": {
                                                                         "name": "Update custom provider model status",
@@ -789,7 +909,15 @@
                                                                                 }
                                                                             }
                                                                         },
-                                                                        "auth": null
+                                                                        "auth": {
+                                                                            "type": "bearer",
+                                                                            "bearer": [
+                                                                                {
+                                                                                    "key": "token",
+                                                                                    "value": "{{bearerToken}}"
+                                                                                }
+                                                                            ]
+                                                                        }
                                                                     },
                                                                     "response": [],
                                                                     "event": [],
@@ -812,7 +940,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "3b489238-a2df-4342-8bcb-31d89a035ef7",
+                                    "id": "23da0b2f-d69d-47cf-b1d2-05489dfec1c7",
                                     "name": "List providers (with filters)",
                                     "request": {
                                         "name": "List providers (with filters)",
@@ -831,7 +959,15 @@
                                         },
                                         "method": "GET",
                                         "body": {},
-                                        "auth": null
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
                                     },
                                     "response": [],
                                     "event": [],
@@ -844,7 +980,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "6468d78c-6fe3-4484-b04d-31a4cb0250d1",
+                                            "id": "91036196-54c5-4fdf-93f1-074a8e6152fd",
                                             "name": "Get provider details",
                                             "request": {
                                                 "name": "Get provider details",
@@ -875,180 +1011,31 @@
                                                 },
                                                 "method": "GET",
                                                 "body": {},
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        },
-                                        {
-                                            "id": "888b46bd-3815-4f79-9b4e-51b9d798f910",
-                                            "name": "Update custom provider",
-                                            "request": {
-                                                "name": "Update custom provider",
-                                                "description": {},
-                                                "url": {
-                                                    "path": [
-                                                        "api",
-                                                        "iv1",
-                                                        "providers",
-                                                        ":id"
-                                                    ],
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "query": [],
-                                                    "variable": [
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
                                                         {
-                                                            "type": "any",
-                                                            "value": "<string>",
-                                                            "key": "id",
-                                                            "disabled": false,
-                                                            "description": {
-                                                                "content": "(Required) ",
-                                                                "type": "text/plain"
-                                                            }
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
                                                         }
                                                     ]
-                                                },
-                                                "header": [
-                                                    {
-                                                        "key": "Content-Type",
-                                                        "value": "application/json"
-                                                    }
-                                                ],
-                                                "method": "PATCH",
-                                                "body": {
-                                                    "mode": "raw",
-                                                    "raw": "{\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
-                                                    "options": {
-                                                        "raw": {
-                                                            "headerFamily": "json",
-                                                            "language": "json"
-                                                        }
-                                                    }
-                                                },
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        },
-                                        {
-                                            "id": "4b34b5bf-7284-42e9-bc62-e90b755af3d6",
-                                            "name": "Delete provider (custom only)",
-                                            "request": {
-                                                "name": "Delete provider (custom only)",
-                                                "description": {},
-                                                "url": {
-                                                    "path": [
-                                                        "api",
-                                                        "iv1",
-                                                        "providers",
-                                                        ":id"
-                                                    ],
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "query": [],
-                                                    "variable": [
-                                                        {
-                                                            "type": "any",
-                                                            "value": "<string>",
-                                                            "key": "id",
-                                                            "disabled": false,
-                                                            "description": {
-                                                                "content": "(Required) ",
-                                                                "type": "text/plain"
-                                                            }
-                                                        }
-                                                    ]
-                                                },
-                                                "method": "DELETE",
-                                                "body": {},
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        },
-                                        {
-                                            "name": "status",
-                                            "description": "",
-                                            "item": [
-                                                {
-                                                    "id": "3e0c5b13-874a-4bca-bd8d-130eef4eef5b",
-                                                    "name": "Update custom provider status",
-                                                    "request": {
-                                                        "name": "Update custom provider status",
-                                                        "description": {},
-                                                        "url": {
-                                                            "path": [
-                                                                "api",
-                                                                "iv1",
-                                                                "providers",
-                                                                ":id",
-                                                                "status"
-                                                            ],
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
-                                                            "query": [],
-                                                            "variable": [
-                                                                {
-                                                                    "type": "any",
-                                                                    "value": "<string>",
-                                                                    "key": "id",
-                                                                    "disabled": false,
-                                                                    "description": {
-                                                                        "content": "(Required) ",
-                                                                        "type": "text/plain"
-                                                                    }
-                                                                }
-                                                            ]
-                                                        },
-                                                        "header": [
-                                                            {
-                                                                "key": "Content-Type",
-                                                                "value": "application/json"
-                                                            }
-                                                        ],
-                                                        "method": "PATCH",
-                                                        "body": {
-                                                            "mode": "raw",
-                                                            "raw": "{\n  \"status\": \"ACTIVE\"\n}",
-                                                            "options": {
-                                                                "raw": {
-                                                                    "headerFamily": "json",
-                                                                    "language": "json"
-                                                                }
-                                                            }
-                                                        },
-                                                        "auth": null
-                                                    },
-                                                    "response": [],
-                                                    "event": [],
-                                                    "protocolProfileBehavior": {
-                                                        "disableBodyPruning": true
-                                                    }
                                                 }
-                                            ]
+                                            },
+                                            "response": [],
+                                            "event": [],
+                                            "protocolProfileBehavior": {
+                                                "disableBodyPruning": true
+                                            }
                                         },
                                         {
                                             "name": "models",
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "b6d32714-ca09-4565-9077-6ab6ddaee631",
-                                                    "name": "List models for a provider",
+                                                    "id": "3d87f7e8-04df-473c-aeb6-9b2fd11fa1c3",
+                                                    "name": "Get provider's models",
                                                     "request": {
-                                                        "name": "List models for a provider",
+                                                        "name": "Get provider's models",
                                                         "description": {},
                                                         "url": {
                                                             "path": [
@@ -1077,291 +1064,21 @@
                                                         },
                                                         "method": "GET",
                                                         "body": {},
-                                                        "auth": null
-                                                    },
-                                                    "response": [],
-                                                    "event": [],
-                                                    "protocolProfileBehavior": {
-                                                        "disableBodyPruning": true
-                                                    }
-                                                },
-                                                {
-                                                    "id": "d117ccd3-5c5d-4ab3-9ea9-01e4f8c5bbc8",
-                                                    "name": "Add model to provider (custom only)",
-                                                    "request": {
-                                                        "name": "Add model to provider (custom only)",
-                                                        "description": {},
-                                                        "url": {
-                                                            "path": [
-                                                                "api",
-                                                                "iv1",
-                                                                "providers",
-                                                                ":id",
-                                                                "models"
-                                                            ],
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
-                                                            "query": [],
-                                                            "variable": [
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
                                                                 {
-                                                                    "type": "any",
-                                                                    "value": "<string>",
-                                                                    "key": "id",
-                                                                    "disabled": false,
-                                                                    "description": {
-                                                                        "content": "(Required) ",
-                                                                        "type": "text/plain"
-                                                                    }
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
                                                                 }
                                                             ]
-                                                        },
-                                                        "header": [
-                                                            {
-                                                                "key": "Content-Type",
-                                                                "value": "application/json"
-                                                            }
-                                                        ],
-                                                        "method": "POST",
-                                                        "body": {
-                                                            "mode": "raw",
-                                                            "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"DEPRECATED\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
-                                                            "options": {
-                                                                "raw": {
-                                                                    "headerFamily": "json",
-                                                                    "language": "json"
-                                                                }
-                                                            }
-                                                        },
-                                                        "auth": null
-                                                    },
-                                                    "response": [],
-                                                    "event": [],
-                                                    "protocolProfileBehavior": {
-                                                        "disableBodyPruning": true
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "custom",
-                                    "description": "",
-                                    "item": [
-                                        {
-                                            "id": "fd2da524-20fb-495b-97b1-0032f5800c49",
-                                            "name": "Create custom provider for user",
-                                            "request": {
-                                                "name": "Create custom provider for user",
-                                                "description": {},
-                                                "url": {
-                                                    "path": [
-                                                        "api",
-                                                        "iv1",
-                                                        "providers",
-                                                        "custom"
-                                                    ],
-                                                    "host": [
-                                                        "{{baseUrl}}"
-                                                    ],
-                                                    "query": [],
-                                                    "variable": []
-                                                },
-                                                "header": [
-                                                    {
-                                                        "key": "Content-Type",
-                                                        "value": "application/json"
-                                                    }
-                                                ],
-                                                "method": "POST",
-                                                "body": {
-                                                    "mode": "raw",
-                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"TESTING\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
-                                                    "options": {
-                                                        "raw": {
-                                                            "headerFamily": "json",
-                                                            "language": "json"
                                                         }
-                                                    }
-                                                },
-                                                "auth": null
-                                            },
-                                            "response": [],
-                                            "event": [],
-                                            "protocolProfileBehavior": {
-                                                "disableBodyPruning": true
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "models",
-                                    "description": "",
-                                    "item": [
-                                        {
-                                            "name": "{modelId}",
-                                            "description": "",
-                                            "item": [
-                                                {
-                                                    "id": "840fdece-843d-4958-b77d-eb28d560347f",
-                                                    "name": "Update provider model",
-                                                    "request": {
-                                                        "name": "Update provider model",
-                                                        "description": {},
-                                                        "url": {
-                                                            "path": [
-                                                                "api",
-                                                                "iv1",
-                                                                "providers",
-                                                                "models",
-                                                                ":modelId"
-                                                            ],
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
-                                                            "query": [],
-                                                            "variable": [
-                                                                {
-                                                                    "type": "any",
-                                                                    "value": "<string>",
-                                                                    "key": "modelId",
-                                                                    "disabled": false,
-                                                                    "description": {
-                                                                        "content": "(Required) ",
-                                                                        "type": "text/plain"
-                                                                    }
-                                                                }
-                                                            ]
-                                                        },
-                                                        "header": [
-                                                            {
-                                                                "key": "Content-Type",
-                                                                "value": "application/json"
-                                                            }
-                                                        ],
-                                                        "method": "PATCH",
-                                                        "body": {
-                                                            "mode": "raw",
-                                                            "raw": "{\n  \"status\": \"UPCOMING\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
-                                                            "options": {
-                                                                "raw": {
-                                                                    "headerFamily": "json",
-                                                                    "language": "json"
-                                                                }
-                                                            }
-                                                        },
-                                                        "auth": null
                                                     },
                                                     "response": [],
                                                     "event": [],
                                                     "protocolProfileBehavior": {
                                                         "disableBodyPruning": true
                                                     }
-                                                },
-                                                {
-                                                    "id": "ee0a991d-bf36-40fd-83db-8026619b56c7",
-                                                    "name": "Delete provider model",
-                                                    "request": {
-                                                        "name": "Delete provider model",
-                                                        "description": {},
-                                                        "url": {
-                                                            "path": [
-                                                                "api",
-                                                                "iv1",
-                                                                "providers",
-                                                                "models",
-                                                                ":modelId"
-                                                            ],
-                                                            "host": [
-                                                                "{{baseUrl}}"
-                                                            ],
-                                                            "query": [],
-                                                            "variable": [
-                                                                {
-                                                                    "type": "any",
-                                                                    "value": "<string>",
-                                                                    "key": "modelId",
-                                                                    "disabled": false,
-                                                                    "description": {
-                                                                        "content": "(Required) ",
-                                                                        "type": "text/plain"
-                                                                    }
-                                                                }
-                                                            ]
-                                                        },
-                                                        "method": "DELETE",
-                                                        "body": {},
-                                                        "auth": null
-                                                    },
-                                                    "response": [],
-                                                    "event": [],
-                                                    "protocolProfileBehavior": {
-                                                        "disableBodyPruning": true
-                                                    }
-                                                },
-                                                {
-                                                    "name": "status",
-                                                    "description": "",
-                                                    "item": [
-                                                        {
-                                                            "id": "93fba6f2-4223-4229-972f-1c4a55083302",
-                                                            "name": "Update provider model status",
-                                                            "request": {
-                                                                "name": "Update provider model status",
-                                                                "description": {},
-                                                                "url": {
-                                                                    "path": [
-                                                                        "api",
-                                                                        "iv1",
-                                                                        "providers",
-                                                                        "models",
-                                                                        ":modelId",
-                                                                        "status"
-                                                                    ],
-                                                                    "host": [
-                                                                        "{{baseUrl}}"
-                                                                    ],
-                                                                    "query": [],
-                                                                    "variable": [
-                                                                        {
-                                                                            "type": "any",
-                                                                            "value": "<string>",
-                                                                            "key": "modelId",
-                                                                            "disabled": false,
-                                                                            "description": {
-                                                                                "content": "(Required) ",
-                                                                                "type": "text/plain"
-                                                                            }
-                                                                        }
-                                                                    ]
-                                                                },
-                                                                "header": [
-                                                                    {
-                                                                        "key": "Content-Type",
-                                                                        "value": "application/json"
-                                                                    }
-                                                                ],
-                                                                "method": "PATCH",
-                                                                "body": {
-                                                                    "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"ACTIVE\"\n}",
-                                                                    "options": {
-                                                                        "raw": {
-                                                                            "headerFamily": "json",
-                                                                            "language": "json"
-                                                                        }
-                                                                    }
-                                                                },
-                                                                "auth": null
-                                                            },
-                                                            "response": [],
-                                                            "event": [],
-                                                            "protocolProfileBehavior": {
-                                                                "disableBodyPruning": true
-                                                            }
-                                                        }
-                                                    ]
                                                 }
                                             ]
                                         }
@@ -1380,7 +1097,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "916141e5-a1a2-4cc2-9797-7822b88cd22b",
+                                                            "id": "744aa17b-458f-4d00-9966-c963313b3f64",
                                                             "name": "Create provider API key by provider selection",
                                                             "request": {
                                                                 "name": "Create provider API key by provider selection",
@@ -1428,7 +1145,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -1439,7 +1164,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "id": "43881ead-decd-4cf6-be28-ef3fb8e19794",
+                                                    "id": "1792463d-604a-463c-92c4-37fb8fb27d6e",
                                                     "name": "Deselect provider by selection id",
                                                     "request": {
                                                         "name": "Deselect provider by selection id",
@@ -1471,7 +1196,15 @@
                                                         },
                                                         "method": "DELETE",
                                                         "body": {},
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -1484,7 +1217,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "98c09304-0bb0-4f72-91f3-f8cb96b8ea68",
+                                                            "id": "9de43f60-6254-4c55-a0b6-763cb78bf6d9",
                                                             "name": "Toggle provider selection status by id",
                                                             "request": {
                                                                 "name": "Toggle provider selection status by id",
@@ -1517,7 +1250,15 @@
                                                                 },
                                                                 "method": "PATCH",
                                                                 "body": {},
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -1540,7 +1281,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "7098a721-04bb-401e-9feb-219c18fa818d",
+                                                    "id": "95130079-296b-4146-931c-94bcf34d6f14",
                                                     "name": "Update provider API key by id",
                                                     "request": {
                                                         "name": "Update provider API key by id",
@@ -1587,7 +1328,15 @@
                                                                 }
                                                             }
                                                         },
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -1596,7 +1345,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "3d78713c-b4af-4cb1-8047-9bdbb116819d",
+                                                    "id": "1d5375a7-fec8-44ba-91e6-f80b40c9880e",
                                                     "name": "Delete provider API key by id",
                                                     "request": {
                                                         "name": "Delete provider API key by id",
@@ -1628,7 +1377,15 @@
                                                         },
                                                         "method": "DELETE",
                                                         "body": {},
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -1641,7 +1398,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "e2fb603c-251b-4efd-a5b9-3120db586fb3",
+                                                            "id": "09c8d356-e2f8-427c-8f4d-04031446f6c3",
                                                             "name": "Update provider API key status by id",
                                                             "request": {
                                                                 "name": "Update provider API key status by id",
@@ -1689,7 +1446,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -1710,7 +1475,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "173be6b7-924e-4491-9e20-8f6583c4c861",
+                                    "id": "1f3d5346-233b-4e7f-843d-b0e739a917b5",
                                     "name": "List API keys",
                                     "request": {
                                         "name": "List API keys",
@@ -1729,7 +1494,15 @@
                                         },
                                         "method": "GET",
                                         "body": {},
-                                        "auth": null
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
                                     },
                                     "response": [],
                                     "event": [],
@@ -1738,7 +1511,7 @@
                                     }
                                 },
                                 {
-                                    "id": "d5460e4f-0e06-48d8-b91a-ab70d1a5ee62",
+                                    "id": "0949e465-324a-42c4-8122-5652f52676ab",
                                     "name": "Create API key",
                                     "request": {
                                         "name": "Create API key",
@@ -1772,7 +1545,15 @@
                                                 }
                                             }
                                         },
-                                        "auth": null
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
                                     },
                                     "response": [],
                                     "event": [],
@@ -1785,7 +1566,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "240968ae-b7c9-4e3b-860d-c482d9b606d7",
+                                            "id": "658329aa-a761-4d25-aacd-b68c3533c0e7",
                                             "name": "Get API key details",
                                             "request": {
                                                 "name": "Get API key details",
@@ -1816,7 +1597,15 @@
                                                 },
                                                 "method": "GET",
                                                 "body": {},
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -1825,7 +1614,7 @@
                                             }
                                         },
                                         {
-                                            "id": "d3ddd9e7-a718-4738-8de6-4d3b64053760",
+                                            "id": "bf215512-8aea-4b7b-bec4-b6ce9d181841",
                                             "name": "Update API key",
                                             "request": {
                                                 "name": "Update API key",
@@ -1871,7 +1660,15 @@
                                                         }
                                                     }
                                                 },
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -1880,7 +1677,7 @@
                                             }
                                         },
                                         {
-                                            "id": "b8f7e67e-c9e6-40a6-8fa1-196a312e32fc",
+                                            "id": "d34ac14a-505e-4b74-b4b4-50ec19b51eba",
                                             "name": "Delete API key",
                                             "request": {
                                                 "name": "Delete API key",
@@ -1911,7 +1708,15 @@
                                                 },
                                                 "method": "DELETE",
                                                 "body": {},
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -1924,7 +1729,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "5dc36fcc-1bb3-43f7-9cee-a737a2e0a71d",
+                                                    "id": "3b2e39bf-6a52-481c-860e-96cdff20db5c",
                                                     "name": "Update API key status",
                                                     "request": {
                                                         "name": "Update API key status",
@@ -1971,7 +1776,15 @@
                                                                 }
                                                             }
                                                         },
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -1990,7 +1803,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "d6f906b3-fcb4-40a6-8545-42e248554473",
+                                                            "id": "21404263-1804-4726-92ce-f498ead40509",
                                                             "name": "Select provider for API key",
                                                             "request": {
                                                                 "name": "Select provider for API key",
@@ -2033,13 +1846,427 @@
                                                                 },
                                                                 "method": "POST",
                                                                 "body": {},
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
                                                             "protocolProfileBehavior": {
                                                                 "disableBodyPruning": true
                                                             }
+                                                        },
+                                                        {
+                                                            "name": "models",
+                                                            "description": "",
+                                                            "item": [
+                                                                {
+                                                                    "id": "f695a2f6-83b4-486e-b248-672b96ed6427",
+                                                                    "name": "Select models for provider under API key",
+                                                                    "request": {
+                                                                        "name": "Select models for provider under API key",
+                                                                        "description": {},
+                                                                        "url": {
+                                                                            "path": [
+                                                                                "api",
+                                                                                "iv1",
+                                                                                "apikeys",
+                                                                                ":id",
+                                                                                "providers",
+                                                                                ":providerId",
+                                                                                "models"
+                                                                            ],
+                                                                            "host": [
+                                                                                "{{baseUrl}}"
+                                                                            ],
+                                                                            "query": [],
+                                                                            "variable": [
+                                                                                {
+                                                                                    "type": "any",
+                                                                                    "value": "<string>",
+                                                                                    "key": "id",
+                                                                                    "disabled": false,
+                                                                                    "description": {
+                                                                                        "content": "(Required) ",
+                                                                                        "type": "text/plain"
+                                                                                    }
+                                                                                },
+                                                                                {
+                                                                                    "type": "any",
+                                                                                    "value": "<string>",
+                                                                                    "key": "providerId",
+                                                                                    "disabled": false,
+                                                                                    "description": {
+                                                                                        "content": "(Required) ",
+                                                                                        "type": "text/plain"
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "header": [
+                                                                            {
+                                                                                "key": "Content-Type",
+                                                                                "value": "application/json"
+                                                                            }
+                                                                        ],
+                                                                        "method": "PATCH",
+                                                                        "body": {
+                                                                            "mode": "raw",
+                                                                            "raw": "{\n  \"modelIds\": [\n    \"<string>\"\n  ]\n}",
+                                                                            "options": {
+                                                                                "raw": {
+                                                                                    "headerFamily": "json",
+                                                                                    "language": "json"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "auth": {
+                                                                            "type": "bearer",
+                                                                            "bearer": [
+                                                                                {
+                                                                                    "key": "token",
+                                                                                    "value": "{{bearerToken}}"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "response": [],
+                                                                    "event": [],
+                                                                    "protocolProfileBehavior": {
+                                                                        "disableBodyPruning": true
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "id": "1dc3b995-c308-47ca-a8b7-627639fab69d",
+                                                                    "name": "Deselect models for provider under API key",
+                                                                    "request": {
+                                                                        "name": "Deselect models for provider under API key",
+                                                                        "description": {},
+                                                                        "url": {
+                                                                            "path": [
+                                                                                "api",
+                                                                                "iv1",
+                                                                                "apikeys",
+                                                                                ":id",
+                                                                                "providers",
+                                                                                ":providerId",
+                                                                                "models"
+                                                                            ],
+                                                                            "host": [
+                                                                                "{{baseUrl}}"
+                                                                            ],
+                                                                            "query": [],
+                                                                            "variable": [
+                                                                                {
+                                                                                    "type": "any",
+                                                                                    "value": "<string>",
+                                                                                    "key": "id",
+                                                                                    "disabled": false,
+                                                                                    "description": {
+                                                                                        "content": "(Required) ",
+                                                                                        "type": "text/plain"
+                                                                                    }
+                                                                                },
+                                                                                {
+                                                                                    "type": "any",
+                                                                                    "value": "<string>",
+                                                                                    "key": "providerId",
+                                                                                    "disabled": false,
+                                                                                    "description": {
+                                                                                        "content": "(Required) ",
+                                                                                        "type": "text/plain"
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "header": [
+                                                                            {
+                                                                                "key": "Content-Type",
+                                                                                "value": "application/json"
+                                                                            }
+                                                                        ],
+                                                                        "method": "DELETE",
+                                                                        "body": {
+                                                                            "mode": "raw",
+                                                                            "raw": "{\n  \"modelIds\": [\n    \"<string>\"\n  ]\n}",
+                                                                            "options": {
+                                                                                "raw": {
+                                                                                    "headerFamily": "json",
+                                                                                    "language": "json"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "auth": {
+                                                                            "type": "bearer",
+                                                                            "bearer": [
+                                                                                {
+                                                                                    "key": "token",
+                                                                                    "value": "{{bearerToken}}"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "response": [],
+                                                                    "event": [],
+                                                                    "protocolProfileBehavior": {
+                                                                        "disableBodyPruning": true
+                                                                    }
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "status",
+                                                            "description": "",
+                                                            "item": [
+                                                                {
+                                                                    "id": "c97180cb-ee4c-4fe7-b7e1-cb6c18591e74",
+                                                                    "name": "Update provider selection status under API key",
+                                                                    "request": {
+                                                                        "name": "Update provider selection status under API key",
+                                                                        "description": {},
+                                                                        "url": {
+                                                                            "path": [
+                                                                                "api",
+                                                                                "iv1",
+                                                                                "apikeys",
+                                                                                ":id",
+                                                                                "providers",
+                                                                                ":providerId",
+                                                                                "status"
+                                                                            ],
+                                                                            "host": [
+                                                                                "{{baseUrl}}"
+                                                                            ],
+                                                                            "query": [],
+                                                                            "variable": [
+                                                                                {
+                                                                                    "type": "any",
+                                                                                    "value": "<string>",
+                                                                                    "key": "id",
+                                                                                    "disabled": false,
+                                                                                    "description": {
+                                                                                        "content": "(Required) ",
+                                                                                        "type": "text/plain"
+                                                                                    }
+                                                                                },
+                                                                                {
+                                                                                    "type": "any",
+                                                                                    "value": "<string>",
+                                                                                    "key": "providerId",
+                                                                                    "disabled": false,
+                                                                                    "description": {
+                                                                                        "content": "(Required) ",
+                                                                                        "type": "text/plain"
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "header": [
+                                                                            {
+                                                                                "key": "Content-Type",
+                                                                                "value": "application/json"
+                                                                            }
+                                                                        ],
+                                                                        "method": "PATCH",
+                                                                        "body": {
+                                                                            "mode": "raw",
+                                                                            "raw": "{\n  \"active\": \"<boolean>\"\n}",
+                                                                            "options": {
+                                                                                "raw": {
+                                                                                    "headerFamily": "json",
+                                                                                    "language": "json"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "auth": {
+                                                                            "type": "bearer",
+                                                                            "bearer": [
+                                                                                {
+                                                                                    "key": "token",
+                                                                                    "value": "{{bearerToken}}"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "response": [],
+                                                                    "event": [],
+                                                                    "protocolProfileBehavior": {
+                                                                        "disableBodyPruning": true
+                                                                    }
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "selections",
+                                            "description": "",
+                                            "item": [
+                                                {
+                                                    "name": "{selectionId}",
+                                                    "description": "",
+                                                    "item": [
+                                                        {
+                                                            "id": "b6cef886-eb5d-4ef9-a63a-fd39b706b826",
+                                                            "name": "Remove provider selection from API key",
+                                                            "request": {
+                                                                "name": "Remove provider selection from API key",
+                                                                "description": {},
+                                                                "url": {
+                                                                    "path": [
+                                                                        "api",
+                                                                        "iv1",
+                                                                        "apikeys",
+                                                                        ":id",
+                                                                        "selections",
+                                                                        ":selectionId"
+                                                                    ],
+                                                                    "host": [
+                                                                        "{{baseUrl}}"
+                                                                    ],
+                                                                    "query": [],
+                                                                    "variable": [
+                                                                        {
+                                                                            "type": "any",
+                                                                            "value": "<string>",
+                                                                            "key": "id",
+                                                                            "disabled": false,
+                                                                            "description": {
+                                                                                "content": "(Required) ",
+                                                                                "type": "text/plain"
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "type": "any",
+                                                                            "value": "<string>",
+                                                                            "key": "selectionId",
+                                                                            "disabled": false,
+                                                                            "description": {
+                                                                                "content": "(Required) ",
+                                                                                "type": "text/plain"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "method": "DELETE",
+                                                                "body": {},
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "response": [],
+                                                            "event": [],
+                                                            "protocolProfileBehavior": {
+                                                                "disableBodyPruning": true
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "models",
+                                            "description": "",
+                                            "item": [
+                                                {
+                                                    "name": "{modelId}",
+                                                    "description": "",
+                                                    "item": [
+                                                        {
+                                                            "name": "status",
+                                                            "description": "",
+                                                            "item": [
+                                                                {
+                                                                    "id": "3cd99a98-fe4b-493a-b148-e87c767719f2",
+                                                                    "name": "Update model selection status under API key",
+                                                                    "request": {
+                                                                        "name": "Update model selection status under API key",
+                                                                        "description": {},
+                                                                        "url": {
+                                                                            "path": [
+                                                                                "api",
+                                                                                "iv1",
+                                                                                "apikeys",
+                                                                                ":id",
+                                                                                "models",
+                                                                                ":modelId",
+                                                                                "status"
+                                                                            ],
+                                                                            "host": [
+                                                                                "{{baseUrl}}"
+                                                                            ],
+                                                                            "query": [],
+                                                                            "variable": [
+                                                                                {
+                                                                                    "type": "any",
+                                                                                    "value": "<string>",
+                                                                                    "key": "id",
+                                                                                    "disabled": false,
+                                                                                    "description": {
+                                                                                        "content": "(Required) ",
+                                                                                        "type": "text/plain"
+                                                                                    }
+                                                                                },
+                                                                                {
+                                                                                    "type": "any",
+                                                                                    "value": "<string>",
+                                                                                    "key": "modelId",
+                                                                                    "disabled": false,
+                                                                                    "description": {
+                                                                                        "content": "(Required) ",
+                                                                                        "type": "text/plain"
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "header": [
+                                                                            {
+                                                                                "key": "Content-Type",
+                                                                                "value": "application/json"
+                                                                            }
+                                                                        ],
+                                                                        "method": "PATCH",
+                                                                        "body": {
+                                                                            "mode": "raw",
+                                                                            "raw": "{\n  \"active\": \"<boolean>\"\n}",
+                                                                            "options": {
+                                                                                "raw": {
+                                                                                    "headerFamily": "json",
+                                                                                    "language": "json"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        "auth": {
+                                                                            "type": "bearer",
+                                                                            "bearer": [
+                                                                                {
+                                                                                    "key": "token",
+                                                                                    "value": "{{bearerToken}}"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "response": [],
+                                                                    "event": [],
+                                                                    "protocolProfileBehavior": {
+                                                                        "disableBodyPruning": true
+                                                                    }
+                                                                }
+                                                            ]
                                                         }
                                                     ]
                                                 }
@@ -2066,7 +2293,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "a672904f-75ae-4ac3-8091-32dd2b982fc2",
+                                                            "id": "1647dd29-518e-4392-afc6-747ae68af215",
                                                             "name": "Toggle model selection active by id",
                                                             "request": {
                                                                 "name": "Toggle model selection active by id",
@@ -2099,7 +2326,15 @@
                                                                 },
                                                                 "method": "PATCH",
                                                                 "body": {},
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -2124,7 +2359,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "f7a5b8f1-3fd4-4900-97f9-dc2535238b19",
+                                            "id": "2056e17c-363f-4e7b-b76a-271d567d9ad4",
                                             "name": "List providers (admin)",
                                             "request": {
                                                 "name": "List providers (admin)",
@@ -2144,7 +2379,15 @@
                                                 },
                                                 "method": "GET",
                                                 "body": {},
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -2153,7 +2396,7 @@
                                             }
                                         },
                                         {
-                                            "id": "59e364f3-8869-4ce4-8dfc-a0c8e17e91c2",
+                                            "id": "6622c557-ebb3-4c55-9d1e-4043b0e86540",
                                             "name": "Create provider (admin)",
                                             "request": {
                                                 "name": "Create provider (admin)",
@@ -2180,7 +2423,7 @@
                                                 "method": "POST",
                                                 "body": {
                                                     "mode": "raw",
-                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"TESTING\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
+                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"CUSTOM\",\n  \"status\": \"ACTIVE\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\"\n}",
                                                     "options": {
                                                         "raw": {
                                                             "headerFamily": "json",
@@ -2188,7 +2431,15 @@
                                                         }
                                                     }
                                                 },
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -2201,7 +2452,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "bd02bf3c-e1bf-4a71-b013-c971aab6b8e5",
+                                                    "id": "3a32572c-ca83-40bc-956e-46c8947ce731",
                                                     "name": "Get provider details (admin)",
                                                     "request": {
                                                         "name": "Get provider details (admin)",
@@ -2233,7 +2484,15 @@
                                                         },
                                                         "method": "GET",
                                                         "body": {},
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -2242,7 +2501,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "64779346-f631-4e85-b1ed-54b471b3c253",
+                                                    "id": "ce706a44-b08e-425e-8214-5bba077e40cb",
                                                     "name": "Update provider (admin)",
                                                     "request": {
                                                         "name": "Update provider (admin)",
@@ -2281,7 +2540,7 @@
                                                         "method": "PATCH",
                                                         "body": {
                                                             "mode": "raw",
-                                                            "raw": "{\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
+                                                            "raw": "{\n  \"type\": \"CUSTOM\",\n  \"status\": \"ACTIVE\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
                                                             "options": {
                                                                 "raw": {
                                                                     "headerFamily": "json",
@@ -2289,7 +2548,15 @@
                                                                 }
                                                             }
                                                         },
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -2298,7 +2565,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "f82ad701-255c-4e23-a507-270d66571063",
+                                                    "id": "648a8800-1604-4297-8d24-cdd301aead94",
                                                     "name": "Delete provider (admin)",
                                                     "request": {
                                                         "name": "Delete provider (admin)",
@@ -2330,7 +2597,15 @@
                                                         },
                                                         "method": "DELETE",
                                                         "body": {},
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -2343,7 +2618,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "3d4b15f6-d137-4856-aa30-5001abdddd3a",
+                                                            "id": "4f12b1f8-1647-4019-aa0c-75ae9ea7b2fa",
                                                             "name": "Update provider status (admin)",
                                                             "request": {
                                                                 "name": "Update provider status (admin)",
@@ -2383,7 +2658,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"ACTIVE\"\n}",
+                                                                    "raw": "{\n  \"status\": \"INACTIVE\"\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -2391,7 +2666,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -2406,7 +2689,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "ab2de170-7700-40c6-bb3b-20954d92ba28",
+                                                            "id": "ef637a48-3690-4651-b5a3-171b47c8e859",
                                                             "name": "List models of provider (admin)",
                                                             "request": {
                                                                 "name": "List models of provider (admin)",
@@ -2439,7 +2722,15 @@
                                                                 },
                                                                 "method": "GET",
                                                                 "body": {},
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -2448,7 +2739,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "e54e911b-d140-4039-9b9b-9b6c122bafdc",
+                                                            "id": "68466bdf-b240-4725-b2bb-0642e8610cf1",
                                                             "name": "Create model for provider (admin)",
                                                             "request": {
                                                                 "name": "Create model for provider (admin)",
@@ -2488,7 +2779,7 @@
                                                                 "method": "POST",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"DEPRECATED\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"ACTIVE\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -2496,7 +2787,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -2517,7 +2816,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "16cd82c8-2b30-4553-92a9-ee945f204aaf",
+                                                            "id": "b9359f82-bef3-46be-9f99-236f1a7a83fe",
                                                             "name": "Update model (admin)",
                                                             "request": {
                                                                 "name": "Update model (admin)",
@@ -2557,7 +2856,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"UPCOMING\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                                    "raw": "{\n  \"status\": \"ACTIVE\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -2565,7 +2864,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -2574,7 +2881,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "30002292-1b1f-4e21-9ac5-2f34f761c9fa",
+                                                            "id": "ca8ad3a5-34e2-4332-9204-9933be030fee",
                                                             "name": "Delete model (admin)",
                                                             "request": {
                                                                 "name": "Delete model (admin)",
@@ -2607,7 +2914,15 @@
                                                                 },
                                                                 "method": "DELETE",
                                                                 "body": {},
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -2620,7 +2935,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "65c2c54e-697b-4797-ad96-86be2e9e232b",
+                                                                    "id": "9947145f-01ff-4419-bde9-dcdea33850ae",
                                                                     "name": "Update model status (admin)",
                                                                     "request": {
                                                                         "name": "Update model status (admin)",
@@ -2669,7 +2984,15 @@
                                                                                 }
                                                                             }
                                                                         },
-                                                                        "auth": null
+                                                                        "auth": {
+                                                                            "type": "bearer",
+                                                                            "bearer": [
+                                                                                {
+                                                                                    "key": "token",
+                                                                                    "value": "{{bearerToken}}"
+                                                                                }
+                                                                            ]
+                                                                        }
                                                                     },
                                                                     "response": [],
                                                                     "event": [],
@@ -2690,7 +3013,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "90490264-2da2-4281-9e2f-fb7635cc1a86",
+                                            "id": "151ea4b1-031f-4dc2-8234-9d8439f0381e",
                                             "name": "List users (admin)",
                                             "request": {
                                                 "name": "List users (admin)",
@@ -2710,7 +3033,15 @@
                                                 },
                                                 "method": "GET",
                                                 "body": {},
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -2723,7 +3054,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "04b99ae8-3245-4215-ba05-99b08b012e5a",
+                                                    "id": "58d8a36e-4382-4cf2-a270-27572519749f",
                                                     "name": "Get user details (admin)",
                                                     "request": {
                                                         "name": "Get user details (admin)",
@@ -2755,7 +3086,15 @@
                                                         },
                                                         "method": "GET",
                                                         "body": {},
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -2764,7 +3103,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "a8542a8a-78cc-41f1-98c6-56fe4f7ea18e",
+                                                    "id": "2e92b9e1-45a7-4fd0-891a-914fcd8ea67c",
                                                     "name": "Update user (admin)",
                                                     "request": {
                                                         "name": "Update user (admin)",
@@ -2811,7 +3150,15 @@
                                                                 }
                                                             }
                                                         },
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -2820,7 +3167,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "3d4de7b2-620f-406d-a600-f09113da6ab9",
+                                                    "id": "5e592496-b0c0-46a4-aa4c-3152f3ff144a",
                                                     "name": "Delete user (admin)",
                                                     "request": {
                                                         "name": "Delete user (admin)",
@@ -2852,7 +3199,15 @@
                                                         },
                                                         "method": "DELETE",
                                                         "body": {},
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -2865,7 +3220,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "8c2b70c2-8880-4978-aae9-467352230626",
+                                                            "id": "309f6554-fbf4-4105-9677-d4ef618b1feb",
                                                             "name": "Update user status (admin)",
                                                             "request": {
                                                                 "name": "Update user status (admin)",
@@ -2905,7 +3260,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"INACTIVE\",\n  \"id\": \"<string>\"\n}",
+                                                                    "raw": "{\n  \"status\": \"ACTIVE\",\n  \"id\": \"<string>\"\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -2913,7 +3268,15 @@
                                                                         }
                                                                     }
                                                                 },
-                                                                "auth": null
+                                                                "auth": {
+                                                                    "type": "bearer",
+                                                                    "bearer": [
+                                                                        {
+                                                                            "key": "token",
+                                                                            "value": "{{bearerToken}}"
+                                                                        }
+                                                                    ]
+                                                                }
                                                             },
                                                             "response": [],
                                                             "event": [],
@@ -2936,7 +3299,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "5c97f8b2-3823-436d-b502-c5f7b28b85e1",
+                                                    "id": "a9653c0a-1809-4da4-b645-8d236f27fea5",
                                                     "name": "Admin login",
                                                     "request": {
                                                         "name": "Admin login",
@@ -2972,7 +3335,15 @@
                                                                 }
                                                             }
                                                         },
-                                                        "auth": null
+                                                        "auth": {
+                                                            "type": "bearer",
+                                                            "bearer": [
+                                                                {
+                                                                    "key": "token",
+                                                                    "value": "{{bearerToken}}"
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "response": [],
                                                     "event": [],
@@ -2989,7 +3360,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "d21889dd-c004-41db-baa8-012e4c5b93e1",
+                                            "id": "3773b5f7-6868-4e4f-8e24-50e39f05becd",
                                             "name": "Fetch admin analytics",
                                             "request": {
                                                 "name": "Fetch admin analytics",
@@ -3009,7 +3380,15 @@
                                                 },
                                                 "method": "GET",
                                                 "body": {},
-                                                "auth": null
+                                                "auth": {
+                                                    "type": "bearer",
+                                                    "bearer": [
+                                                        {
+                                                            "key": "token",
+                                                            "value": "{{bearerToken}}"
+                                                        }
+                                                    ]
+                                                }
                                             },
                                             "response": [],
                                             "event": [],
@@ -3038,7 +3417,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "b20e4191-767c-44c4-bde1-1ed6855e17f1",
+                                    "id": "affff854-b81b-417f-897d-e7b7ce9cc338",
                                     "name": "Openai Controller chat Completions",
                                     "request": {
                                         "name": "Openai Controller chat Completions",
@@ -3057,7 +3436,15 @@
                                         },
                                         "method": "POST",
                                         "body": {},
-                                        "auth": null
+                                        "auth": {
+                                            "type": "bearer",
+                                            "bearer": [
+                                                {
+                                                    "key": "token",
+                                                    "value": "{{bearerToken}}"
+                                                }
+                                            ]
+                                        }
                                     },
                                     "response": [],
                                     "event": [],
@@ -3074,7 +3461,7 @@
                     "description": "",
                     "item": [
                         {
-                            "id": "9aeb5abb-efe7-4611-9687-47c56ac0bc22",
+                            "id": "59b33dd3-eb91-415e-b06d-33666869349a",
                             "name": "Openai Controller responses",
                             "request": {
                                 "name": "Openai Controller responses",
@@ -3092,7 +3479,15 @@
                                 },
                                 "method": "POST",
                                 "body": {},
-                                "auth": null
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{bearerToken}}"
+                                        }
+                                    ]
+                                }
                             },
                             "response": [],
                             "event": [],
@@ -3107,7 +3502,7 @@
                     "description": "",
                     "item": [
                         {
-                            "id": "1b28e328-07d7-4f6e-99a1-df755a69118d",
+                            "id": "406e1f6d-f4bb-4d4e-a1cd-414af14fdd5a",
                             "name": "Openai Controller models",
                             "request": {
                                 "name": "Openai Controller models",
@@ -3125,7 +3520,15 @@
                                 },
                                 "method": "GET",
                                 "body": {},
-                                "auth": null
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{bearerToken}}"
+                                        }
+                                    ]
+                                }
                             },
                             "response": [],
                             "event": [],
@@ -3138,16 +3541,6 @@
             ]
         }
     ],
-    "auth": {
-        "type": "bearer",
-        "bearer": [
-            {
-                "type": "any",
-                "value": "{{bearerToken}}",
-                "key": "token"
-            }
-        ]
-    },
     "event": [],
     "variable": [
         {
@@ -3156,7 +3549,7 @@
         }
     ],
     "info": {
-        "_postman_id": "94bf1534-32b4-4d68-8e81-8cfb6eb111e7",
+        "_postman_id": "47051819-61ee-44d4-80db-ecb6f1d3337e",
         "name": "Roundhouse Backend",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {

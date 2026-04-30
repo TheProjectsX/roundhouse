@@ -12,8 +12,6 @@ import {
 } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ResponseService } from "@/common/interceptors/response";
-import { ReqField } from "@/common/decorators/request.decorator";
-import { UserPayload } from "@/common/guards/auth.guard";
 import { Roles } from "@/common/decorators/roles.decorator";
 import {
     CreateProviderDto,
@@ -59,11 +57,8 @@ export class AdminProvidersController {
     @Roles("ADMIN")
     @Post()
     @ApiOperation({ summary: "Create provider (admin)" })
-    async createProvider(
-        @Body() payload: CreateProviderDto,
-        @ReqField("user") user: UserPayload,
-    ) {
-        const result = await this.svc.createProvider(payload, user);
+    async createProvider(@Body() payload: CreateProviderDto) {
+        const result = await this.svc.createProvider(payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.CREATED,
             message: result.message,
@@ -77,9 +72,8 @@ export class AdminProvidersController {
     async updateProvider(
         @Param("id") id: string,
         @Body() payload: UpdateProviderDto,
-        @ReqField("user") user: UserPayload,
     ) {
-        const result = await this.svc.updateProvider(id, payload, user);
+        const result = await this.svc.updateProvider(id, payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -93,9 +87,8 @@ export class AdminProvidersController {
     async updateProviderStatus(
         @Param("id") id: string,
         @Body() payload: UpdateProviderStatusDto,
-        @ReqField("user") user: UserPayload,
     ) {
-        const result = await this.svc.updateProviderStatus(id, payload, user);
+        const result = await this.svc.updateProviderStatus(id, payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -106,11 +99,8 @@ export class AdminProvidersController {
     @Roles("ADMIN")
     @Delete(":id")
     @ApiOperation({ summary: "Delete provider (admin)" })
-    async deleteProvider(
-        @Param("id") id: string,
-        @ReqField("user") user: UserPayload,
-    ) {
-        const result = await this.svc.deleteProvider(id, user);
+    async deleteProvider(@Param("id") id: string) {
+        const result = await this.svc.deleteProvider(id);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -139,9 +129,8 @@ export class AdminProvidersController {
     async createProviderModel(
         @Param("id") id: string,
         @Body() payload: CreateProviderModelDto,
-        @ReqField("user") user: UserPayload,
     ) {
-        const result = await this.svc.createProviderModel(id, payload, user);
+        const result = await this.svc.createProviderModel(id, payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.CREATED,
             message: result.message,
@@ -155,13 +144,8 @@ export class AdminProvidersController {
     async updateProviderModel(
         @Param("modelId") modelId: string,
         @Body() payload: UpdateProviderModelDto,
-        @ReqField("user") user: UserPayload,
     ) {
-        const result = await this.svc.updateProviderModel(
-            modelId,
-            payload,
-            user,
-        );
+        const result = await this.svc.updateProviderModel(modelId, payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -175,12 +159,10 @@ export class AdminProvidersController {
     async updateProviderModelStatus(
         @Param("modelId") modelId: string,
         @Body() payload: UpdateProviderModelStatusDto,
-        @ReqField("user") user: UserPayload,
     ) {
         const result = await this.svc.updateProviderModelStatus(
             modelId,
             payload,
-            user,
         );
 
         return ResponseService.formatResponse({
@@ -193,11 +175,8 @@ export class AdminProvidersController {
     @Roles("ADMIN")
     @Delete("models/:modelId")
     @ApiOperation({ summary: "Delete model (admin)" })
-    async deleteProviderModel(
-        @Param("modelId") modelId: string,
-        @ReqField("user") user: UserPayload,
-    ) {
-        const result = await this.svc.deleteProviderModel(modelId, user);
+    async deleteProviderModel(@Param("modelId") modelId: string) {
+        const result = await this.svc.deleteProviderModel(modelId);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,

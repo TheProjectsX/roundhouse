@@ -1,5 +1,6 @@
 import { checkApiKeyError } from "@/core/utils/errorChecker.util";
 import { InternalResponses } from "@/core/constants/response";
+import { createDevLogger } from "@/common/utils/logger";
 import { PrismaClient } from "@prisma/client";
 
 export type SelectProviderError = {
@@ -95,6 +96,7 @@ type BoundRoundhouseCandidateLister = (
 
 const DEFAULT_SCORE = 0.5;
 const DEFAULT_MAX_ITERATIONS = 5;
+const logger = createDevLogger("roundhouse");
 
 const pickModel = (candidate: {
     userModels: RoundhouseModel[];
@@ -123,8 +125,17 @@ const buildCandidates = (
     const candidates: RoundhouseCandidate[] = [];
     const allowedModelKeys = filters?.modelKeys;
 
+    logger.log("Building candidates", {
+        providerSelectionCount: providerSelections.length,
+        providerFilter: filters?.provider ?? null,
+        allowedModelKeysCount: allowedModelKeys?.size ?? 0,
+    });
+
     for (const providerSelection of providerSelections) {
         if (!providerSelection.active) {
+            logger.log("Skipping inactive provider selection", {
+                providerSelectionId: providerSelection.id,
+            });
             continue;
         }
 
@@ -132,20 +143,36 @@ const buildCandidates = (
             (providerApiKey) => providerApiKey.active,
         );
         if (activeProviderApiKeys.length === 0) {
+            logger.warn("No active provider API keys for selection", {
+                providerSelectionId: providerSelection.id,
+            });
             continue;
         }
 
         for (const modelSelection of providerSelection.modelSelections) {
             if (!modelSelection.active) {
+                logger.log("Skipping inactive model selection", {
+                    providerSelectionId: providerSelection.id,
+                    modelSelectionId: modelSelection.id,
+                });
                 continue;
             }
 
             const model = pickModel(modelSelection);
             if (!model) {
+                logger.warn("No active model found for model selection", {
+                    providerSelectionId: providerSelection.id,
+                    modelSelectionId: modelSelection.id,
+                });
                 continue;
             }
 
             if (filters?.provider && model.provider.type !== filters.provider) {
+                logger.log("Skipping model due to provider filter mismatch", {
+                    modelId: model.id,
+                    modelProviderType: model.provider.type,
+                    requestedProviderType: filters.provider,
+                });
                 continue;
             }
 
@@ -159,6 +186,10 @@ const buildCandidates = (
                     !allowedModelKeys.has(normalizedProvider) &&
                     !allowedModelKeys.has(normalizedModelCode)
                 ) {
+                    logger.log("Skipping model due to model key filter mismatch", {
+                        modelId: model.id,
+                        normalizedKey,
+                    });
                     continue;
                 }
             }
@@ -167,6 +198,11 @@ const buildCandidates = (
                 model.maxTokens !== null &&
                 modelSelection.usedTokens >= model.maxTokens
             ) {
+                logger.warn("Skipping model selection due to token limit", {
+                    modelSelectionId: modelSelection.id,
+                    usedTokens: modelSelection.usedTokens,
+                    maxTokens: model.maxTokens,
+                });
                 continue;
             }
 
@@ -182,6 +218,10 @@ const buildCandidates = (
 
     candidates.sort((a, b) => b.score - a.score);
 
+    logger.log("Finished building candidates", {
+        candidateCount: candidates.length,
+    });
+
     return candidates;
 };
 
@@ -189,6 +229,10 @@ const getApiKeyWithSelections = async (
     prisma: PrismaClient,
     apiKey: string,
 ) => {
+    logger.log("Loading API key with selections", {
+        apiKeyPreview: `${apiKey.slice(0, 6)}***`,
+    });
+
     return prisma.apiKey.findUnique({
         where: { key: apiKey },
         include: {
@@ -241,10 +285,19 @@ const getCandidatePool = async (
     apiKey: string,
     filters?: RoundhouseFilters,
 ): Promise<CandidatePoolResult> => {
+    logger.log("Preparing candidate pool", {
+        providerFilter: filters?.provider ?? null,
+        allowedModelKeysCount: filters?.modelKeys?.size ?? 0,
+    });
+
     const apiKeyData = await getApiKeyWithSelections(prisma, apiKey);
 
     const apiKeyError = checkApiKeyError(apiKeyData);
     if (apiKeyError) {
+        logger.warn("API key failed validation", {
+            code: apiKeyError.code,
+            statusCode: apiKeyError.status_code,
+        });
         return {
             success: false,
             error: { success: false, ...apiKeyError },
@@ -253,6 +306,7 @@ const getCandidatePool = async (
 
     const safeApiKeyData = apiKeyData;
     if (!safeApiKeyData) {
+        logger.warn("API key not found during candidate pool preparation");
         return {
             success: false,
             error: {
@@ -269,6 +323,10 @@ const getCandidatePool = async (
 
     if (candidates.length === 0) {
         const requestedFilters = Boolean(filters?.modelKeys?.size);
+        logger.warn("No available roundhouse candidates", {
+            requestedFilters,
+            providerSelectionCount: safeApiKeyData.providerSelections.length,
+        });
         return {
             success: false,
             error: {
@@ -286,6 +344,12 @@ const getCandidatePool = async (
                 `${lastError.modelId}:${lastError.providerApiKeyId}`,
         ),
     );
+
+    logger.log("Candidate pool ready", {
+        apiKeyId: safeApiKeyData.id,
+        candidateCount: candidates.length,
+        excludedCount: excluded.size,
+    });
 
     return {
         success: true,
@@ -324,12 +388,20 @@ export const createListRoundhouseCandidates = (prisma: PrismaClient) => {
         | SelectProviderError
         | { success: true; candidates: RoundhouseCandidate[] }
     > => {
+        logger.log("Listing roundhouse candidates");
         const candidatePool = await getCandidatePool(prisma, apiKey, filters);
 
         if ("error" in candidatePool) {
+            logger.warn("Failed to list roundhouse candidates", {
+                code: candidatePool.error.code,
+                statusCode: candidatePool.error.status_code,
+            });
             return candidatePool.error;
         }
 
+        logger.log("Roundhouse candidates listed", {
+            candidateCount: candidatePool.candidates.length,
+        });
         return {
             success: true,
             candidates: candidatePool.candidates,
@@ -344,9 +416,18 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
         maxIterations = DEFAULT_MAX_ITERATIONS,
         filters?: RoundhouseFilters,
     ): Promise<SelectProviderResponse<T>> => {
+        logger.log("Starting roundhouse execution", {
+            maxIterations,
+            providerFilter: filters?.provider ?? null,
+            allowedModelKeysCount: filters?.modelKeys?.size ?? 0,
+        });
         const candidatePool = await getCandidatePool(prisma, apiKey, filters);
 
         if ("error" in candidatePool) {
+            logger.warn("Roundhouse execution aborted during candidate preparation", {
+                code: candidatePool.error.code,
+                statusCode: candidatePool.error.status_code,
+            });
             return candidatePool.error;
         }
 
@@ -355,6 +436,13 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
 
         while (iteration < maxIterations) {
             iteration += 1;
+
+            logger.log("Roundhouse iteration started", {
+                iteration,
+                maxIterations,
+                candidateCount: candidates.length,
+                excludedCount: excluded.size,
+            });
 
             let available = candidates
                 .map((candidate) => {
@@ -376,7 +464,16 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 })
                 .filter((entry) => entry.availableProviderApiKeys.length > 0);
 
+            logger.log("Evaluated available provider API keys", {
+                iteration,
+                availableCandidateCount: available.length,
+            });
+
             if (available.length === 0) {
+                logger.warn("No available provider API keys remain, clearing exclusions", {
+                    iteration,
+                    excludedCount: excluded.size,
+                });
                 excluded.clear();
 
                 runInBackground(
@@ -391,6 +488,9 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 }));
 
                 if (available.length === 0) {
+                    logger.warn("No candidates available after exclusion reset", {
+                        iteration,
+                    });
                     return {
                         success: false,
                         ...InternalResponses.NO_AVAILABLE_MODELS,
@@ -402,9 +502,23 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
             const providerApiKey = selectRandomProviderApiKey(
                 availableProviderApiKeys,
             );
+            logger.log("Selected candidate for execution", {
+                iteration,
+                providerSelectionId: candidate.providerSelectionId,
+                modelSelectionId: candidate.modelSelectionId,
+                modelId: candidate.model.id,
+                providerApiKeyId: providerApiKey.id,
+                availableProviderApiKeyCount: availableProviderApiKeys.length,
+            });
             const result = await execute(candidate, providerApiKey);
 
             if (result.success) {
+                logger.log("Roundhouse execution succeeded", {
+                    iteration,
+                    providerSelectionId: candidate.providerSelectionId,
+                    modelSelectionId: candidate.modelSelectionId,
+                    providerApiKeyId: providerApiKey.id,
+                });
                 runInBackground(
                     prisma.lastError.deleteMany({
                         where: { apiKeyId },
@@ -431,6 +545,12 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 };
             }
 
+            logger.warn("Roundhouse execution failed for selected provider API key", {
+                iteration,
+                providerSelectionId: candidate.providerSelectionId,
+                modelSelectionId: candidate.modelSelectionId,
+                providerApiKeyId: providerApiKey.id,
+            });
             excluded.add(
                 createExcludedKey(
                     candidate.modelSelectionId,
@@ -449,6 +569,10 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
             );
         }
 
+        logger.warn("Roundhouse execution reached max iterations", {
+            maxIterations,
+            candidateCount: candidates.length,
+        });
         return {
             success: false,
             ...InternalResponses.MAX_ITERATIONS,

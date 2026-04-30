@@ -7,7 +7,41 @@ import QueryBuilder from "@/common/utils/queryBuilder";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { UpdateUserDto, UpdateUserStatusDto } from "./dto/body.dto";
 
-type AdminUserDetails = Prisma.UserGetPayload<{ include: { apiKeys: true } }>;
+type AdminUserDetails = Prisma.UserGetPayload<{
+    include: {
+        apiKeys: {
+            include: {
+                providerSelections: {
+                    include: {
+                        providerApiKeys: true;
+                        modelSelections: {
+                            include: {
+                                models: true;
+                                userModels: true;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        userProviders: {
+            include: {
+                models: true;
+            };
+        };
+        providerSelections: {
+            include: {
+                providerApiKeys: true;
+                modelSelections: {
+                    include: {
+                        models: true;
+                        userModels: true;
+                    };
+                };
+            };
+        };
+    };
+}>;
 
 @Injectable()
 export class AdminUsersService {
@@ -24,17 +58,66 @@ export class AdminUsersService {
             .filter({ exacts: ["status"] })
             .sort()
             .paginate()
-            .include({ apiKeys: true })
+            .include({
+                apiKeys: {
+                    include: {
+                        providerSelections: {
+                            include: {
+                                providerApiKeys: true,
+                                modelSelections: true,
+                            },
+                        },
+                    },
+                },
+                userProviders: {
+                    include: {
+                        models: true,
+                    },
+                },
+                providerSelections: {
+                    include: {
+                        providerApiKeys: true,
+                        modelSelections: true,
+                    },
+                },
+            })
+            .rawFilter({ role: "USER" })
             .execute();
 
         const pagination = await queryBuilder.countTotal();
 
-        const formatted = (data as any[]).map((u) => ({
+        const formatted = data.map((u) => ({
             id: u.id,
             name: u.name,
             email: u.email,
+            avatar: u.avatar,
             status: u.status,
-            apiKeyCount: (u.apiKeys ?? []).length,
+            stats: {
+                apiKeyCount: (u.apiKeys ?? []).length,
+                activeApiKeyCount: (u.apiKeys ?? []).filter(
+                    (apiKey) => apiKey.active,
+                ).length,
+                customProviderCount: (u.userProviders ?? []).length,
+                activeCustomProviderCount: (u.userProviders ?? []).filter(
+                    (provider) => provider.status === "ACTIVE",
+                ).length,
+                providerSelectionCount: (u.providerSelections ?? []).length,
+                providerApiKeyCount: (u.providerSelections ?? []).reduce(
+                    (sum, selection) =>
+                        sum + (selection.providerApiKeys?.length ?? 0),
+                    0,
+                ),
+                usedTokens: (u.providerSelections ?? []).reduce(
+                    (sum, selection) =>
+                        sum +
+                        (selection.modelSelections ?? []).reduce(
+                            (selectionSum, modelSelection) =>
+                                selectionSum + (modelSelection.usedTokens ?? 0),
+                            0,
+                        ),
+                    0,
+                ),
+            },
             createdAt: u.createdAt,
             updatedAt: u.updatedAt,
         }));
@@ -45,14 +128,50 @@ export class AdminUsersService {
     async fetchSingleUser(id: string) {
         const user = await this.prisma.user.findUnique({
             where: { id },
-            include: { apiKeys: true },
+            include: {
+                apiKeys: {
+                    include: {
+                        providerSelections: {
+                            include: {
+                                providerApiKeys: true,
+                                modelSelections: {
+                                    include: {
+                                        models: true,
+                                        userModels: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                userProviders: {
+                    include: {
+                        models: true,
+                    },
+                },
+                providerSelections: {
+                    include: {
+                        providerApiKeys: true,
+                        modelSelections: {
+                            include: {
+                                models: true,
+                                userModels: true,
+                            },
+                        },
+                    },
+                },
+            },
+            omit: { password: true },
         });
 
         if (!user) {
             throw new ApiError(HttpStatus.NOT_FOUND, "User not found");
         }
 
-        return { message: "User fetched", data: user as AdminUserDetails };
+        return {
+            message: "User fetched",
+            data: this.formatUserDetails(user as AdminUserDetails),
+        };
     }
 
     async updateUser(payload: UpdateUserDto) {
@@ -101,5 +220,129 @@ export class AdminUsersService {
         }
 
         return user;
+    }
+
+    private formatUserDetails(user: AdminUserDetails) {
+        const apiKeys = user.apiKeys.map((apiKey) => {
+            const providerSelections = apiKey.providerSelections ?? [];
+            const providerApiKeyCount = providerSelections.reduce(
+                (sum, selection) =>
+                    sum + (selection.providerApiKeys?.length ?? 0),
+                0,
+            );
+            const successfulRequests = providerSelections.reduce(
+                (sum, selection) =>
+                    sum +
+                    (selection.providerApiKeys ?? []).reduce(
+                        (selectionSum, providerApiKey) =>
+                            selectionSum + (providerApiKey.successCount ?? 0),
+                        0,
+                    ),
+                0,
+            );
+            const usedTokens = providerSelections.reduce(
+                (sum, selection) =>
+                    sum +
+                    (selection.modelSelections ?? []).reduce(
+                        (selectionSum, modelSelection) =>
+                            selectionSum + (modelSelection.usedTokens ?? 0),
+                        0,
+                    ),
+                0,
+            );
+            const modelCount = providerSelections.reduce(
+                (sum, selection) =>
+                    sum +
+                    (selection.modelSelections ?? []).reduce(
+                        (selectionSum, modelSelection) =>
+                            selectionSum +
+                            (modelSelection.models?.length ?? 0) +
+                            (modelSelection.userModels?.length ?? 0),
+                        0,
+                    ),
+                0,
+            );
+
+            return {
+                id: apiKey.id,
+                name: apiKey.name,
+                active: apiKey.active,
+                createdAt: apiKey.createdAt,
+                updatedAt: apiKey.updatedAt,
+                stats: {
+                    providerCount: providerSelections.length,
+                    providerApiKeyCount,
+                    modelCount,
+                    successfulRequests,
+                    usedTokens,
+                },
+            };
+        });
+
+        const providers = user.userProviders.map((provider) => ({
+            id: provider.id,
+            name: provider.name,
+            description: provider.description,
+            free: provider.free,
+            type: provider.type,
+            status: provider.status,
+            modelsCount: provider.models.length,
+            activeModelsCount: provider.models.filter(
+                (model) => model.status === "ACTIVE",
+            ).length,
+            createdAt: provider.createdAt,
+            updatedAt: provider.updatedAt,
+        }));
+
+        const totalProviderApiKeys = user.providerSelections.reduce(
+            (sum, selection) => sum + (selection.providerApiKeys?.length ?? 0),
+            0,
+        );
+        const totalSuccessfulRequests = user.providerSelections.reduce(
+            (sum, selection) =>
+                sum +
+                (selection.providerApiKeys ?? []).reduce(
+                    (selectionSum, providerApiKey) =>
+                        selectionSum + (providerApiKey.successCount ?? 0),
+                    0,
+                ),
+            0,
+        );
+        const totalUsedTokens = user.providerSelections.reduce(
+            (sum, selection) =>
+                sum +
+                (selection.modelSelections ?? []).reduce(
+                    (selectionSum, modelSelection) =>
+                        selectionSum + (modelSelection.usedTokens ?? 0),
+                    0,
+                ),
+            0,
+        );
+
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            role: user.role,
+            status: user.status,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            stats: {
+                apiKeyCount: user.apiKeys.length,
+                activeApiKeyCount: user.apiKeys.filter((apiKey) => apiKey.active)
+                    .length,
+                customProviderCount: user.userProviders.length,
+                activeCustomProviderCount: user.userProviders.filter(
+                    (provider) => provider.status === "ACTIVE",
+                ).length,
+                providerSelectionCount: user.providerSelections.length,
+                providerApiKeyCount: totalProviderApiKeys,
+                successfulRequests: totalSuccessfulRequests,
+                usedTokens: totalUsedTokens,
+            },
+            apiKeys,
+            providers,
+        };
     }
 }

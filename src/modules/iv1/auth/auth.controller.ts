@@ -39,7 +39,7 @@ export class AuthController {
 
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
-            message: "OTP Sent to your Email",
+            message: result.message,
             data: result.data,
         });
     }

@@ -18,7 +18,9 @@ model User {
 
     status UserStatus @default(ACTIVE)
 
-    apiKeys ApiKey[]
+    apiKeys            ApiKey[]
+    userProviders      UserProvider[]
+    providerSelections ProviderSelection[]
 
     role UserRole @default(USER)
 
@@ -75,12 +77,12 @@ model Provider {
 
     baseApi String
 
-    free Boolean   @default(false)
+    free Boolean      @default(false)
     type ProviderType @default(OPENAI)
 
     status ContentStatus @default(ACTIVE)
 
-    model Model?
+    models Model[]
 
     providerSelectionIds String[]            @db.ObjectId
     providerSelections   ProviderSelection[] @relation("ProviderSelectionProviders", fields: [providerSelectionIds], references: [id])
@@ -124,7 +126,7 @@ model UserProvider {
 
     baseApi String
 
-    free Boolean   @default(false)
+    free Boolean      @default(false)
     type ProviderType
 
     status ContentStatus @default(ACTIVE)
@@ -133,6 +135,9 @@ model UserProvider {
 
     providerSelectionIds String[]            @db.ObjectId
     providerSelections   ProviderSelection[] @relation("ProviderSelectionUserProviders", fields: [providerSelectionIds], references: [id])
+
+    userId String @db.ObjectId
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -179,6 +184,9 @@ model ProviderSelection {
 
     modelSelectionIds String[]         @db.ObjectId
     modelSelections   ModelSelection[] @relation("ProviderSelectionModelSelections", fields: [modelSelectionIds], references: [id])
+
+    userId String @db.ObjectId
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     providerApiKeys ProviderApiKey[]
 
