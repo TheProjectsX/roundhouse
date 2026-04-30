@@ -17,7 +17,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "9f30c21f-5acb-47e3-8c12-531f871b76fd",
+                                            "id": "da70e87e-b8f7-4a34-9a3c-6e4e97515934",
                                             "name": "Register User",
                                             "request": {
                                                 "name": "Register User",
@@ -67,7 +67,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "789e9e2f-c968-49a9-a908-cb1b211d9836",
+                                            "id": "946963d6-a455-410c-8b79-b891cd214cf3",
                                             "name": "Login User",
                                             "request": {
                                                 "name": "Login User",
@@ -117,7 +117,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "b2f01c23-caf9-4a90-a529-8a6aca0dc370",
+                                            "id": "266a1dfb-1173-4455-9050-bc3c228d4a8f",
                                             "name": "Change Password",
                                             "request": {
                                                 "name": "Change Password",
@@ -169,7 +169,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "04fcfd06-4c4a-440b-ae1c-0b50e2032c90",
+                                    "id": "1515e6ca-09a3-4079-85b5-1c01d235d4b6",
                                     "name": "Get user profile",
                                     "request": {
                                         "name": "Get user profile",
@@ -197,7 +197,7 @@
                                     }
                                 },
                                 {
-                                    "id": "0f58864f-6966-40ed-b478-fb19d532b036",
+                                    "id": "f7eb3e3a-d5c6-4f46-9812-cebb8e63783d",
                                     "name": "Update user profile",
                                     "request": {
                                         "name": "Update user profile",
@@ -244,7 +244,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "eca57f68-c5d7-4afb-a91b-eb1ca0f020dd",
+                                            "id": "b2d976c4-4948-4b39-baf1-2d87e99e04e4",
                                             "name": "List user's custom providers",
                                             "request": {
                                                 "name": "List user's custom providers",
@@ -273,7 +273,7 @@
                                             }
                                         },
                                         {
-                                            "id": "ca89de72-8ac6-4892-8430-27f07490f9c1",
+                                            "id": "5c630e99-b84a-4b2d-94ee-8cb2e5360f9c",
                                             "name": "Create custom provider",
                                             "request": {
                                                 "name": "Create custom provider",
@@ -300,7 +300,7 @@
                                                 "method": "POST",
                                                 "body": {
                                                     "mode": "raw",
-                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"DEPRECATED\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
+                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"TESTING\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
                                                     "options": {
                                                         "raw": {
                                                             "headerFamily": "json",
@@ -321,7 +321,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "75ff2bf5-e85a-40f5-965c-a5f457b46068",
+                                                    "id": "7181e1f7-74fb-4f17-9168-73da78e35720",
                                                     "name": "Get user's custom provider details",
                                                     "request": {
                                                         "name": "Get user's custom provider details",
@@ -362,7 +362,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "dd214886-a4ba-444b-b8fb-a5ea5701bcfb",
+                                                    "id": "d824b587-6da3-4951-8c4d-82bf4da48f91",
                                                     "name": "Update custom provider",
                                                     "request": {
                                                         "name": "Update custom provider",
@@ -401,7 +401,7 @@
                                                         "method": "PATCH",
                                                         "body": {
                                                             "mode": "raw",
-                                                            "raw": "{\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"INACTIVE\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
+                                                            "raw": "{\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
                                                             "options": {
                                                                 "raw": {
                                                                     "headerFamily": "json",
@@ -418,7 +418,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "7fb4b130-38d1-40b1-8d3c-2eab771611e2",
+                                                    "id": "f111a2b6-2801-469a-8070-a5b2008a3ded",
                                                     "name": "Delete custom provider",
                                                     "request": {
                                                         "name": "Delete custom provider",
@@ -463,7 +463,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "f8ef0de9-b4df-436f-8124-5b2760d23a58",
+                                                            "id": "5712e0c2-3750-4531-8d8e-7b8424fe01c8",
                                                             "name": "Update custom provider status",
                                                             "request": {
                                                                 "name": "Update custom provider status",
@@ -503,7 +503,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+                                                                    "raw": "{\n  \"status\": \"ACTIVE\"\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -526,7 +526,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "32c97ce4-c14f-4999-91df-8c9e22f01093",
+                                                            "id": "c512b07a-28a0-4f46-bb1f-f37cbebebb4a",
                                                             "name": "List models for custom provider",
                                                             "request": {
                                                                 "name": "List models for custom provider",
@@ -568,7 +568,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "4fdf295e-2d00-485b-89bb-6b043ecfab8c",
+                                                            "id": "90dd6d26-8ce1-470b-9d0f-64c63605ea79",
                                                             "name": "Add model to custom provider",
                                                             "request": {
                                                                 "name": "Add model to custom provider",
@@ -608,7 +608,7 @@
                                                                 "method": "POST",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"TESTING\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"DEPRECATED\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -637,7 +637,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "f520cb04-241d-4d26-9df2-b4bc9d00a358",
+                                                            "id": "7ea44871-2bdf-4468-a56d-f9de111f29c0",
                                                             "name": "Update custom provider model",
                                                             "request": {
                                                                 "name": "Update custom provider model",
@@ -677,7 +677,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"ACTIVE\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                                    "raw": "{\n  \"status\": \"UPCOMING\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -694,7 +694,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "43b6d539-6673-4ff7-973f-88496662e1fa",
+                                                            "id": "aa4ecaf4-2ae4-475c-8725-9a6c344ded13",
                                                             "name": "Delete custom provider model",
                                                             "request": {
                                                                 "name": "Delete custom provider model",
@@ -740,7 +740,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "22ce4e3f-ce64-4c2f-8994-fe6a70b4c082",
+                                                                    "id": "543cea0b-a503-42f9-9a8a-462115f876ab",
                                                                     "name": "Update custom provider model status",
                                                                     "request": {
                                                                         "name": "Update custom provider model status",
@@ -781,7 +781,7 @@
                                                                         "method": "PATCH",
                                                                         "body": {
                                                                             "mode": "raw",
-                                                                            "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+                                                                            "raw": "{\n  \"status\": \"ACTIVE\"\n}",
                                                                             "options": {
                                                                                 "raw": {
                                                                                     "headerFamily": "json",
@@ -812,7 +812,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "f1e4dcb3-f0fb-4b50-9869-e81053e385e2",
+                                    "id": "3b489238-a2df-4342-8bcb-31d89a035ef7",
                                     "name": "List providers (with filters)",
                                     "request": {
                                         "name": "List providers (with filters)",
@@ -844,7 +844,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "476f8edf-e028-4c93-bad2-bcda2c916f19",
+                                            "id": "6468d78c-6fe3-4484-b04d-31a4cb0250d1",
                                             "name": "Get provider details",
                                             "request": {
                                                 "name": "Get provider details",
@@ -884,7 +884,7 @@
                                             }
                                         },
                                         {
-                                            "id": "8771e21a-917a-4238-bf47-69f7e9641a78",
+                                            "id": "888b46bd-3815-4f79-9b4e-51b9d798f910",
                                             "name": "Update custom provider",
                                             "request": {
                                                 "name": "Update custom provider",
@@ -922,7 +922,7 @@
                                                 "method": "PATCH",
                                                 "body": {
                                                     "mode": "raw",
-                                                    "raw": "{\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"INACTIVE\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
+                                                    "raw": "{\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
                                                     "options": {
                                                         "raw": {
                                                             "headerFamily": "json",
@@ -939,7 +939,7 @@
                                             }
                                         },
                                         {
-                                            "id": "8c0610a2-1008-4d0e-a30d-076d1458de3d",
+                                            "id": "4b34b5bf-7284-42e9-bc62-e90b755af3d6",
                                             "name": "Delete provider (custom only)",
                                             "request": {
                                                 "name": "Delete provider (custom only)",
@@ -983,7 +983,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "4af5a550-7e90-42de-b117-5406ed760291",
+                                                    "id": "3e0c5b13-874a-4bca-bd8d-130eef4eef5b",
                                                     "name": "Update custom provider status",
                                                     "request": {
                                                         "name": "Update custom provider status",
@@ -1022,7 +1022,7 @@
                                                         "method": "PATCH",
                                                         "body": {
                                                             "mode": "raw",
-                                                            "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+                                                            "raw": "{\n  \"status\": \"ACTIVE\"\n}",
                                                             "options": {
                                                                 "raw": {
                                                                     "headerFamily": "json",
@@ -1045,7 +1045,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "583fdba3-0d16-4745-bca8-522a14177eed",
+                                                    "id": "b6d32714-ca09-4565-9077-6ab6ddaee631",
                                                     "name": "List models for a provider",
                                                     "request": {
                                                         "name": "List models for a provider",
@@ -1086,7 +1086,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "3c321399-6fc2-4150-9f31-d9bf6141519a",
+                                                    "id": "d117ccd3-5c5d-4ab3-9ea9-01e4f8c5bbc8",
                                                     "name": "Add model to provider (custom only)",
                                                     "request": {
                                                         "name": "Add model to provider (custom only)",
@@ -1125,7 +1125,7 @@
                                                         "method": "POST",
                                                         "body": {
                                                             "mode": "raw",
-                                                            "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"TESTING\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                            "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"DEPRECATED\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                             "options": {
                                                                 "raw": {
                                                                     "headerFamily": "json",
@@ -1150,7 +1150,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "8af06be7-8d99-45ae-bb07-43810e29e1f3",
+                                            "id": "fd2da524-20fb-495b-97b1-0032f5800c49",
                                             "name": "Create custom provider for user",
                                             "request": {
                                                 "name": "Create custom provider for user",
@@ -1177,7 +1177,7 @@
                                                 "method": "POST",
                                                 "body": {
                                                     "mode": "raw",
-                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"DEPRECATED\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
+                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"TESTING\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
                                                     "options": {
                                                         "raw": {
                                                             "headerFamily": "json",
@@ -1204,7 +1204,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "054a005b-b9c4-44c2-aa40-9b9eb6c65732",
+                                                    "id": "840fdece-843d-4958-b77d-eb28d560347f",
                                                     "name": "Update provider model",
                                                     "request": {
                                                         "name": "Update provider model",
@@ -1243,7 +1243,7 @@
                                                         "method": "PATCH",
                                                         "body": {
                                                             "mode": "raw",
-                                                            "raw": "{\n  \"status\": \"ACTIVE\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                            "raw": "{\n  \"status\": \"UPCOMING\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                             "options": {
                                                                 "raw": {
                                                                     "headerFamily": "json",
@@ -1260,7 +1260,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "67690759-43d3-421a-919c-cb9d502441b9",
+                                                    "id": "ee0a991d-bf36-40fd-83db-8026619b56c7",
                                                     "name": "Delete provider model",
                                                     "request": {
                                                         "name": "Delete provider model",
@@ -1305,7 +1305,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "13f00cc3-242d-4fcb-b6b9-29e89df105c5",
+                                                            "id": "93fba6f2-4223-4229-972f-1c4a55083302",
                                                             "name": "Update provider model status",
                                                             "request": {
                                                                 "name": "Update provider model status",
@@ -1345,7 +1345,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+                                                                    "raw": "{\n  \"status\": \"ACTIVE\"\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -1380,7 +1380,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "25dca239-18bf-4756-bf84-72d24911cb52",
+                                                            "id": "916141e5-a1a2-4cc2-9797-7822b88cd22b",
                                                             "name": "Create provider API key by provider selection",
                                                             "request": {
                                                                 "name": "Create provider API key by provider selection",
@@ -1439,7 +1439,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "id": "5c8d25c0-34da-4e94-8f5a-54537aab475a",
+                                                    "id": "43881ead-decd-4cf6-be28-ef3fb8e19794",
                                                     "name": "Deselect provider by selection id",
                                                     "request": {
                                                         "name": "Deselect provider by selection id",
@@ -1484,7 +1484,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "6de6e74c-1ae6-41c1-99b8-0cda786c43c8",
+                                                            "id": "98c09304-0bb0-4f72-91f3-f8cb96b8ea68",
                                                             "name": "Toggle provider selection status by id",
                                                             "request": {
                                                                 "name": "Toggle provider selection status by id",
@@ -1540,7 +1540,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "b7fcb82d-2316-47f9-8ade-2f2dfc33b314",
+                                                    "id": "7098a721-04bb-401e-9feb-219c18fa818d",
                                                     "name": "Update provider API key by id",
                                                     "request": {
                                                         "name": "Update provider API key by id",
@@ -1596,7 +1596,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "c1a4041a-8c91-4100-825c-70046b5e3d19",
+                                                    "id": "3d78713c-b4af-4cb1-8047-9bdbb116819d",
                                                     "name": "Delete provider API key by id",
                                                     "request": {
                                                         "name": "Delete provider API key by id",
@@ -1641,7 +1641,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "fdc66020-d3a0-4af9-9a4a-4adbcdcaebd8",
+                                                            "id": "e2fb603c-251b-4efd-a5b9-3120db586fb3",
                                                             "name": "Update provider API key status by id",
                                                             "request": {
                                                                 "name": "Update provider API key status by id",
@@ -1710,7 +1710,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "a5d2c5e8-23b1-4448-8a8d-7719fdf3580a",
+                                    "id": "173be6b7-924e-4491-9e20-8f6583c4c861",
                                     "name": "List API keys",
                                     "request": {
                                         "name": "List API keys",
@@ -1738,7 +1738,7 @@
                                     }
                                 },
                                 {
-                                    "id": "a74dcae6-5183-4d79-be72-a97fc82b1228",
+                                    "id": "d5460e4f-0e06-48d8-b91a-ab70d1a5ee62",
                                     "name": "Create API key",
                                     "request": {
                                         "name": "Create API key",
@@ -1785,7 +1785,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "831c9abc-cf6c-4f07-910c-0e7c04fae63c",
+                                            "id": "240968ae-b7c9-4e3b-860d-c482d9b606d7",
                                             "name": "Get API key details",
                                             "request": {
                                                 "name": "Get API key details",
@@ -1825,7 +1825,7 @@
                                             }
                                         },
                                         {
-                                            "id": "81f2e229-96bf-4dce-b65c-7fe5a7169b76",
+                                            "id": "d3ddd9e7-a718-4738-8de6-4d3b64053760",
                                             "name": "Update API key",
                                             "request": {
                                                 "name": "Update API key",
@@ -1880,7 +1880,7 @@
                                             }
                                         },
                                         {
-                                            "id": "f5f395c3-4576-4e81-bbb0-57c6b038e4e8",
+                                            "id": "b8f7e67e-c9e6-40a6-8fa1-196a312e32fc",
                                             "name": "Delete API key",
                                             "request": {
                                                 "name": "Delete API key",
@@ -1924,7 +1924,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "be130978-6f17-43b3-a4a9-2b8f9b187171",
+                                                    "id": "5dc36fcc-1bb3-43f7-9cee-a737a2e0a71d",
                                                     "name": "Update API key status",
                                                     "request": {
                                                         "name": "Update API key status",
@@ -1990,7 +1990,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "4ce1a721-8056-4c82-8fa5-5982cf947520",
+                                                            "id": "d6f906b3-fcb4-40a6-8545-42e248554473",
                                                             "name": "Select provider for API key",
                                                             "request": {
                                                                 "name": "Select provider for API key",
@@ -2066,7 +2066,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "b35a389a-910a-4743-8078-7cec91cccaf8",
+                                                            "id": "a672904f-75ae-4ac3-8091-32dd2b982fc2",
                                                             "name": "Toggle model selection active by id",
                                                             "request": {
                                                                 "name": "Toggle model selection active by id",
@@ -2124,7 +2124,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "1ef7dcff-35f4-413c-9049-317d306596b0",
+                                            "id": "f7a5b8f1-3fd4-4900-97f9-dc2535238b19",
                                             "name": "List providers (admin)",
                                             "request": {
                                                 "name": "List providers (admin)",
@@ -2153,7 +2153,7 @@
                                             }
                                         },
                                         {
-                                            "id": "bb3f5738-ea5f-41ed-b7cf-6292672961b6",
+                                            "id": "59e364f3-8869-4ce4-8dfc-a0c8e17e91c2",
                                             "name": "Create provider (admin)",
                                             "request": {
                                                 "name": "Create provider (admin)",
@@ -2180,7 +2180,7 @@
                                                 "method": "POST",
                                                 "body": {
                                                     "mode": "raw",
-                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"DEPRECATED\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
+                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"DEPRECATED\",\n  \"description\": \"<string>\",\n  \"free\": \"<boolean>\",\n  \"model\": {\n    \"name\": \"<string>\",\n    \"code\": \"<string>\",\n    \"status\": \"TESTING\",\n    \"maxTokens\": \"<number>\",\n    \"tokenResetInterval\": \"<number>\",\n    \"efficiencyScore\": \"<number>\",\n    \"bestFor\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
                                                     "options": {
                                                         "raw": {
                                                             "headerFamily": "json",
@@ -2201,7 +2201,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "f09e0a3b-ae57-4b9f-9bef-df45c6eff711",
+                                                    "id": "bd02bf3c-e1bf-4a71-b013-c971aab6b8e5",
                                                     "name": "Get provider details (admin)",
                                                     "request": {
                                                         "name": "Get provider details (admin)",
@@ -2242,7 +2242,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "45a39a16-7671-4195-b079-c8d4bd2977dc",
+                                                    "id": "64779346-f631-4e85-b1ed-54b471b3c253",
                                                     "name": "Update provider (admin)",
                                                     "request": {
                                                         "name": "Update provider (admin)",
@@ -2281,7 +2281,7 @@
                                                         "method": "PATCH",
                                                         "body": {
                                                             "mode": "raw",
-                                                            "raw": "{\n  \"type\": \"ANTHROPIC\",\n  \"status\": \"INACTIVE\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
+                                                            "raw": "{\n  \"type\": \"CUSTOM\",\n  \"status\": \"DEPRECATED\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"baseApi\": \"<uri>\",\n  \"free\": \"<boolean>\"\n}",
                                                             "options": {
                                                                 "raw": {
                                                                     "headerFamily": "json",
@@ -2298,7 +2298,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "f5648300-85a6-4959-a8bb-47defc41b3c2",
+                                                    "id": "f82ad701-255c-4e23-a507-270d66571063",
                                                     "name": "Delete provider (admin)",
                                                     "request": {
                                                         "name": "Delete provider (admin)",
@@ -2343,7 +2343,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "2cfe42cc-989a-475a-84eb-7b8b9d61bd43",
+                                                            "id": "3d4b15f6-d137-4856-aa30-5001abdddd3a",
                                                             "name": "Update provider status (admin)",
                                                             "request": {
                                                                 "name": "Update provider status (admin)",
@@ -2383,7 +2383,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+                                                                    "raw": "{\n  \"status\": \"ACTIVE\"\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -2406,7 +2406,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "87fc0227-18fc-4aaf-9bab-f03ae437cc22",
+                                                            "id": "ab2de170-7700-40c6-bb3b-20954d92ba28",
                                                             "name": "List models of provider (admin)",
                                                             "request": {
                                                                 "name": "List models of provider (admin)",
@@ -2448,7 +2448,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "16cd60b6-5819-49f3-b1d2-683f40c1d3a4",
+                                                            "id": "e54e911b-d140-4039-9b9b-9b6c122bafdc",
                                                             "name": "Create model for provider (admin)",
                                                             "request": {
                                                                 "name": "Create model for provider (admin)",
@@ -2488,7 +2488,7 @@
                                                                 "method": "POST",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"TESTING\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                                    "raw": "{\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"status\": \"DEPRECATED\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -2517,7 +2517,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "151d3946-96fe-44f8-b664-3c804485e6e2",
+                                                            "id": "16cd82c8-2b30-4553-92a9-ee945f204aaf",
                                                             "name": "Update model (admin)",
                                                             "request": {
                                                                 "name": "Update model (admin)",
@@ -2557,7 +2557,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"ACTIVE\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                                                                    "raw": "{\n  \"status\": \"UPCOMING\",\n  \"name\": \"<string>\",\n  \"code\": \"<string>\",\n  \"maxTokens\": \"<number>\",\n  \"tokenResetInterval\": \"<number>\",\n  \"efficiencyScore\": \"<number>\",\n  \"bestFor\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -2574,7 +2574,7 @@
                                                             }
                                                         },
                                                         {
-                                                            "id": "65e8c600-2d1f-416d-bf1b-b0f383a1dfd5",
+                                                            "id": "30002292-1b1f-4e21-9ac5-2f34f761c9fa",
                                                             "name": "Delete model (admin)",
                                                             "request": {
                                                                 "name": "Delete model (admin)",
@@ -2620,7 +2620,7 @@
                                                             "description": "",
                                                             "item": [
                                                                 {
-                                                                    "id": "765bf598-5d4a-406f-a2b6-caf3edd57868",
+                                                                    "id": "65c2c54e-697b-4797-ad96-86be2e9e232b",
                                                                     "name": "Update model status (admin)",
                                                                     "request": {
                                                                         "name": "Update model status (admin)",
@@ -2661,7 +2661,7 @@
                                                                         "method": "PATCH",
                                                                         "body": {
                                                                             "mode": "raw",
-                                                                            "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+                                                                            "raw": "{\n  \"status\": \"ACTIVE\"\n}",
                                                                             "options": {
                                                                                 "raw": {
                                                                                     "headerFamily": "json",
@@ -2690,7 +2690,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "0f4684e9-7066-4631-96a6-29c26f6a9757",
+                                            "id": "90490264-2da2-4281-9e2f-fb7635cc1a86",
                                             "name": "List users (admin)",
                                             "request": {
                                                 "name": "List users (admin)",
@@ -2723,7 +2723,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "59b3550d-8ab2-458d-a8ec-e88f53066d82",
+                                                    "id": "04b99ae8-3245-4215-ba05-99b08b012e5a",
                                                     "name": "Get user details (admin)",
                                                     "request": {
                                                         "name": "Get user details (admin)",
@@ -2764,7 +2764,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "13335ee4-9202-4480-b7f9-aba651fa5f70",
+                                                    "id": "a8542a8a-78cc-41f1-98c6-56fe4f7ea18e",
                                                     "name": "Update user (admin)",
                                                     "request": {
                                                         "name": "Update user (admin)",
@@ -2820,7 +2820,7 @@
                                                     }
                                                 },
                                                 {
-                                                    "id": "cdb84fab-f91c-47be-820a-708bb8676533",
+                                                    "id": "3d4de7b2-620f-406d-a600-f09113da6ab9",
                                                     "name": "Delete user (admin)",
                                                     "request": {
                                                         "name": "Delete user (admin)",
@@ -2865,7 +2865,7 @@
                                                     "description": "",
                                                     "item": [
                                                         {
-                                                            "id": "206314c6-07c4-4118-81fe-ee0ac10be592",
+                                                            "id": "8c2b70c2-8880-4978-aae9-467352230626",
                                                             "name": "Update user status (admin)",
                                                             "request": {
                                                                 "name": "Update user status (admin)",
@@ -2905,7 +2905,7 @@
                                                                 "method": "PATCH",
                                                                 "body": {
                                                                     "mode": "raw",
-                                                                    "raw": "{\n  \"status\": \"ACTIVE\",\n  \"id\": \"<string>\"\n}",
+                                                                    "raw": "{\n  \"status\": \"INACTIVE\",\n  \"id\": \"<string>\"\n}",
                                                                     "options": {
                                                                         "raw": {
                                                                             "headerFamily": "json",
@@ -2936,7 +2936,7 @@
                                             "description": "",
                                             "item": [
                                                 {
-                                                    "id": "a49ccc40-633f-47ac-a99a-b7a194622e25",
+                                                    "id": "5c97f8b2-3823-436d-b502-c5f7b28b85e1",
                                                     "name": "Admin login",
                                                     "request": {
                                                         "name": "Admin login",
@@ -2989,7 +2989,7 @@
                                     "description": "",
                                     "item": [
                                         {
-                                            "id": "33985de2-6c86-410d-98cd-43bd42f34e7a",
+                                            "id": "d21889dd-c004-41db-baa8-012e4c5b93e1",
                                             "name": "Fetch admin analytics",
                                             "request": {
                                                 "name": "Fetch admin analytics",
@@ -3038,7 +3038,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "c28b84b1-df99-40d6-b948-dc28d09d9cc1",
+                                    "id": "b20e4191-767c-44c4-bde1-1ed6855e17f1",
                                     "name": "Openai Controller chat Completions",
                                     "request": {
                                         "name": "Openai Controller chat Completions",
@@ -3074,7 +3074,7 @@
                     "description": "",
                     "item": [
                         {
-                            "id": "87f6b649-524f-4cb8-bda4-e4eee2ea7e4e",
+                            "id": "9aeb5abb-efe7-4611-9687-47c56ac0bc22",
                             "name": "Openai Controller responses",
                             "request": {
                                 "name": "Openai Controller responses",
@@ -3107,7 +3107,7 @@
                     "description": "",
                     "item": [
                         {
-                            "id": "fd1921b0-076a-4c1d-9bdb-f48ae9f828eb",
+                            "id": "1b28e328-07d7-4f6e-99a1-df755a69118d",
                             "name": "Openai Controller models",
                             "request": {
                                 "name": "Openai Controller models",
@@ -3156,7 +3156,7 @@
         }
     ],
     "info": {
-        "_postman_id": "f475d302-6bf4-466d-a512-46d6ba988af6",
+        "_postman_id": "94bf1534-32b4-4d68-8e81-8cfb6eb111e7",
         "name": "Roundhouse Backend",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {
