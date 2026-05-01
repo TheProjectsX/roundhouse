@@ -2,6 +2,7 @@ import "tsconfig-paths/register";
 import { ConsoleLogger, ValidationPipe } from "@nestjs/common";
 import cookieParser from "cookie-parser";
 import { NestFactory } from "@nestjs/core";
+import { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "@/app/app.module";
 import type { Request, Response } from "express";
 import config from "./config";
@@ -10,7 +11,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { getLocalIP } from "./common/utils/localIp";
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule, {
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
         logger: new ConsoleLogger({
             prefix: "roundhouse",
             logLevels: ["error", "warn", "fatal"],
@@ -22,6 +23,13 @@ async function bootstrap() {
 
     // --- Middlewares & Config ---
     app.use(cookieParser());
+    app.useBodyParser("json", {
+        limit: "10mb",
+    });
+    app.useBodyParser("urlencoded", {
+        limit: "10mb",
+        extended: true,
+    });
 
     // --- CORS ---
     app.enableCors({

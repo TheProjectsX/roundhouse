@@ -31,6 +31,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         let message = "Something went wrong!";
         let errorMessages: IGenericErrorMessage[] = [];
 
+        if (config.env !== "production") {
+            console.error(exception);
+        }
+
         // Handle Prisma Validation Error
         if (exception instanceof Prisma.PrismaClientValidationError) {
             const simplifiedError = handleValidationError(exception);
