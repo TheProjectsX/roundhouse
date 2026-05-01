@@ -4,8 +4,6 @@ import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
     CreateApiKeyDto,
     CreateApiKeyProviderDto,
@@ -20,12 +18,11 @@ type ApiKeyDetails = Prisma.ApiKeyGetPayload<{
     include: {
         providerSelections: {
             include: {
-                providers: true;
-                userProviders: { include: { models: true } };
+                provider: true;
+                userProvider: true;
                 providerApiKeys: true;
-                modelSelections: {
-                    include: { models: true; userModels: true };
-                };
+                models: true;
+                userModels: true;
             };
         };
     };
@@ -50,13 +47,9 @@ export class ApikeysService {
             .include({
                 providerSelections: {
                     include: {
-                        modelSelections: {
-                            include: {
-                                models: true,
-                                userModels: true,
-                            },
-                        },
                         providerApiKeys: true,
+                        models: true,
+                        userModels: true,
                     },
                 },
             })
@@ -68,26 +61,20 @@ export class ApikeysService {
             const providerCount = providerSelections.length;
             let providerApiKeyCount = 0;
             let successfulRequests = 0;
-
             let modelCount = 0;
-            let usedTokens = 0;
 
             providerSelections.forEach((providerSelection) => {
                 const providerApiKeys = providerSelection.providerApiKeys ?? [];
                 providerApiKeyCount += providerApiKeys.length;
                 successfulRequests += providerApiKeys.reduce(
-                    (sum: number, providerApiKey) =>
+                    (sum, providerApiKey) =>
                         sum + (providerApiKey.successCount ?? 0),
                     0,
                 );
 
-                const modelSelections = providerSelection.modelSelections ?? [];
-                modelSelections.forEach((modelSelection) => {
-                    modelCount +=
-                        (modelSelection.models?.length ?? 0) +
-                        (modelSelection.userModels?.length ?? 0);
-                    usedTokens += modelSelection.usedTokens ?? 0;
-                });
+                modelCount +=
+                    (providerSelection.models?.length ?? 0) +
+                    (providerSelection.userModels?.length ?? 0);
             });
 
             return {
@@ -102,7 +89,6 @@ export class ApikeysService {
                     providerApiKeyCount,
                     modelCount,
                     successfulRequests,
-                    usedTokens,
                 },
             };
         });
@@ -116,12 +102,11 @@ export class ApikeysService {
             include: {
                 providerSelections: {
                     include: {
-                        providers: true,
-                        userProviders: { include: { models: true } },
+                        provider: true,
+                        userProvider: true,
                         providerApiKeys: true,
-                        modelSelections: {
-                            include: { models: true, userModels: true },
-                        },
+                        models: true,
+                        userModels: true,
                     },
                 },
             },
@@ -154,13 +139,7 @@ export class ApikeysService {
         payload: UpdateApiKeyDto,
         user: UserPayload,
     ) {
-        const apiKey = await this.prisma.apiKey.findUnique({
-            where: { id, userId: user.id },
-        });
-
-        if (!apiKey) {
-            throw new ApiError(HttpStatus.NOT_FOUND, "ApiKey not found");
-        }
+        const apiKey = await this.ensureOwnedApiKey(id, user.id);
 
         const updated = await this.prisma.apiKey.update({
             where: { id: apiKey.id },
@@ -180,13 +159,7 @@ export class ApikeysService {
         payload: UpdateApiKeyStatusDto,
         user: UserPayload,
     ) {
-        const apiKey = await this.prisma.apiKey.findUnique({
-            where: { id, userId: user.id },
-        });
-
-        if (!apiKey) {
-            throw new ApiError(HttpStatus.NOT_FOUND, "ApiKey not found");
-        }
+        const apiKey = await this.ensureOwnedApiKey(id, user.id);
 
         const updated = await this.prisma.apiKey.update({
             where: { id: apiKey.id },
@@ -197,13 +170,7 @@ export class ApikeysService {
     }
 
     async deleteApiKey(id: string, user: UserPayload) {
-        const apiKey = await this.prisma.apiKey.findUnique({
-            where: { id, userId: user.id },
-        });
-
-        if (!apiKey) {
-            throw new ApiError(HttpStatus.NOT_FOUND, "ApiKey not found");
-        }
+        const apiKey = await this.ensureOwnedApiKey(id, user.id);
 
         const deleted = await this.prisma.apiKey.delete({
             where: { id: apiKey.id },
@@ -218,16 +185,18 @@ export class ApikeysService {
         user: UserPayload,
     ) {
         const apiKey = await this.ensureOwnedApiKey(apiKeyId, user.id);
+        const providerEntity = await this.resolveProviderEntity(
+            providerId,
+            user.id,
+        );
 
-        const providerEntity = await this.resolveProviderEntity(providerId);
         const existingSelection = await this.prisma.providerSelection.findFirst(
             {
                 where: {
                     apiKeyId: apiKey.id,
-                    OR: [
-                        { providerIds: { has: providerId } },
-                        { userProviderIds: { has: providerId } },
-                    ],
+                    ...(providerEntity.kind === "global"
+                        ? { providerId: providerEntity.id }
+                        : { userProviderId: providerEntity.id }),
                 },
                 select: { id: true },
             },
@@ -240,17 +209,26 @@ export class ApikeysService {
             );
         }
 
+        const modelIds = await this.fetchProviderModelIds(providerEntity);
+
         const providerSelection = await this.prisma.providerSelection.create({
             data: {
                 active: true,
-                apiKey: { connect: { id: apiKey.id } },
-                user: { connect: { id: user.id } },
-                ...(providerEntity.kind === "global"
-                    ? { providers: { connect: { id: providerEntity.id } } }
-                    : {
-                          userProviders: { connect: { id: providerEntity.id } },
-                      }),
-            },
+                apiKeyId: apiKey.id,
+                userId: user.id,
+                providerId:
+                    providerEntity.kind === "global"
+                        ? providerEntity.id
+                        : undefined,
+                userProviderId:
+                    providerEntity.kind === "custom"
+                        ? providerEntity.id
+                        : undefined,
+                modelIds: providerEntity.kind === "global" ? modelIds : [],
+                userModelIds: providerEntity.kind === "custom" ? modelIds : [],
+                inactiveModelIds: [],
+                inactiveUserModelIds: [],
+            } satisfies Prisma.ProviderSelectionUncheckedCreateInput,
         });
 
         const providerApiKey = await this.prisma.providerApiKey.create({
@@ -259,26 +237,6 @@ export class ApikeysService {
                 key: payload.key.trim(),
                 active: payload.active ?? true,
             },
-        });
-
-        const modelIds = await this.fetchProviderModelIds(
-            providerEntity.kind,
-            providerId,
-        );
-
-        const modelSelection = await this.prisma.modelSelection.create({
-            data: {
-                providerSelectionIds: [providerSelection.id],
-                ...(providerEntity.kind === "global"
-                    ? { modelIds }
-                    : { userModelIds: modelIds }),
-                active: true,
-            } satisfies Prisma.ModelSelectionUncheckedCreateInput,
-        });
-
-        await this.prisma.providerSelection.update({
-            where: { id: providerSelection.id },
-            data: { modelSelectionIds: [modelSelection.id] },
         });
 
         return {
@@ -303,12 +261,6 @@ export class ApikeysService {
             user.id,
         );
 
-        if (providerSelection.modelSelectionIds.length) {
-            await this.prisma.modelSelection.deleteMany({
-                where: { id: { in: providerSelection.modelSelectionIds } },
-            });
-        }
-
         const deleted = await this.prisma.providerSelection.delete({
             where: { id: providerSelection.id },
         });
@@ -322,34 +274,46 @@ export class ApikeysService {
         payload: UpdateApiKeyProviderModelsDto,
         user: UserPayload,
     ) {
-        const { providerSelection, kind } =
-            await this.ensureOwnedSelectionByProvider(
-                apiKeyId,
-                providerId,
-                user.id,
-            );
-        const modelSelection = this.getPrimaryModelSelection(providerSelection);
-        const validatedModelIds = await this.validateProviderModelIds(
-            kind,
+        const selection = await this.ensureOwnedSelectionByProvider(
+            apiKeyId,
             providerId,
+            user.id,
+        );
+        const validatedModelIds = await this.validateProviderModelIds(
+            selection,
             payload.modelIds,
         );
 
-        const uniqueModelIds = Array.from(
-            new Set([
-                ...(kind === "global"
-                    ? modelSelection.modelIds
-                    : modelSelection.userModelIds),
-                ...validatedModelIds,
-            ]),
-        );
+        if (selection.kind === "global") {
+            const currentIds = new Set(selection.providerSelection.modelIds);
+            validatedModelIds.forEach((id) => currentIds.add(id));
 
-        const updated = await this.prisma.modelSelection.update({
-            where: { id: modelSelection.id },
-            data:
-                kind === "global"
-                    ? { modelIds: uniqueModelIds }
-                    : { userModelIds: uniqueModelIds },
+            const updated = await this.prisma.providerSelection.update({
+                where: { id: selection.providerSelection.id },
+                data: {
+                    modelIds: [...currentIds],
+                    inactiveModelIds:
+                        selection.providerSelection.inactiveModelIds.filter(
+                            (id) => !validatedModelIds.includes(id),
+                        ),
+                },
+            });
+
+            return { message: "Models selected", data: { id: updated.id } };
+        }
+
+        const currentIds = new Set(selection.providerSelection.userModelIds);
+        validatedModelIds.forEach((id) => currentIds.add(id));
+
+        const updated = await this.prisma.providerSelection.update({
+            where: { id: selection.providerSelection.id },
+            data: {
+                userModelIds: [...currentIds],
+                inactiveUserModelIds:
+                    selection.providerSelection.inactiveUserModelIds.filter(
+                        (id) => !validatedModelIds.includes(id),
+                    ),
+            },
         });
 
         return { message: "Models selected", data: { id: updated.id } };
@@ -361,33 +325,39 @@ export class ApikeysService {
         payload: UpdateApiKeyProviderModelsDto,
         user: UserPayload,
     ) {
-        const { providerSelection, kind } =
-            await this.ensureOwnedSelectionByProvider(
-                apiKeyId,
-                providerId,
-                user.id,
-            );
-        const modelSelection = this.getPrimaryModelSelection(providerSelection);
-        const validatedModelIds = await this.validateProviderModelIds(
-            kind,
+        const selection = await this.ensureOwnedSelectionByProvider(
+            apiKeyId,
             providerId,
+            user.id,
+        );
+        const validatedModelIds = await this.validateProviderModelIds(
+            selection,
             payload.modelIds,
         );
         const targetIds = new Set(validatedModelIds);
 
-        const updated = await this.prisma.modelSelection.update({
-            where: { id: modelSelection.id },
+        const updated = await this.prisma.providerSelection.update({
+            where: { id: selection.providerSelection.id },
             data:
-                kind === "global"
+                selection.kind === "global"
                     ? {
-                          modelIds: modelSelection.modelIds.filter(
+                          modelIds: selection.providerSelection.modelIds.filter(
                               (id) => !targetIds.has(id),
                           ),
+                          inactiveModelIds:
+                              selection.providerSelection.inactiveModelIds.filter(
+                                  (id) => !targetIds.has(id),
+                              ),
                       }
                     : {
-                          userModelIds: modelSelection.userModelIds.filter(
-                              (id) => !targetIds.has(id),
-                          ),
+                          userModelIds:
+                              selection.providerSelection.userModelIds.filter(
+                                  (id) => !targetIds.has(id),
+                              ),
+                          inactiveUserModelIds:
+                              selection.providerSelection.inactiveUserModelIds.filter(
+                                  (id) => !targetIds.has(id),
+                              ),
                       },
         });
 
@@ -422,25 +392,42 @@ export class ApikeysService {
     ) {
         await this.ensureOwnedApiKey(apiKeyId, user.id);
 
-        const modelSelection = await this.prisma.modelSelection.findFirst({
-            where: {
-                providerSelections: {
-                    some: {
-                        apiKeyId,
-                        apiKey: { userId: user.id },
-                    },
+        const providerSelection = await this.prisma.providerSelection.findFirst(
+            {
+                where: {
+                    apiKeyId,
+                    apiKey: { userId: user.id },
+                    OR: [
+                        { modelIds: { has: modelId } },
+                        { userModelIds: { has: modelId } },
+                    ],
                 },
-                OR: [{ modelIds: { has: modelId } }, { userModelIds: { has: modelId } }],
             },
-        });
+        );
 
-        if (!modelSelection) {
-            throw new ApiError(HttpStatus.NOT_FOUND, "Model selection not found");
+        if (!providerSelection) {
+            throw new ApiError(
+                HttpStatus.NOT_FOUND,
+                "Model selection not found",
+            );
         }
 
-        const updated = await this.prisma.modelSelection.update({
-            where: { id: modelSelection.id },
-            data: { active: payload.active },
+        const isGlobalModel = providerSelection.modelIds.includes(modelId);
+        const inactiveIds = isGlobalModel
+            ? new Set(providerSelection.inactiveModelIds)
+            : new Set(providerSelection.inactiveUserModelIds);
+
+        if (payload.active) {
+            inactiveIds.delete(modelId);
+        } else {
+            inactiveIds.add(modelId);
+        }
+
+        const updated = await this.prisma.providerSelection.update({
+            where: { id: providerSelection.id },
+            data: isGlobalModel
+                ? { inactiveModelIds: [...inactiveIds] }
+                : { inactiveUserModelIds: [...inactiveIds] },
         });
 
         return { message: "Model status updated", data: { id: updated.id } };
@@ -463,16 +450,15 @@ export class ApikeysService {
         selectionId: string,
         userId: string,
     ) {
-        const providerSelection = await this.prisma.providerSelection.findFirst({
-            where: {
-                id: selectionId,
-                apiKeyId,
-                apiKey: { userId },
+        const providerSelection = await this.prisma.providerSelection.findFirst(
+            {
+                where: {
+                    id: selectionId,
+                    apiKeyId,
+                    apiKey: { userId },
+                },
             },
-            include: {
-                modelSelections: true,
-            },
-        });
+        );
 
         if (!providerSelection) {
             throw new ApiError(
@@ -491,19 +477,19 @@ export class ApikeysService {
     ) {
         await this.ensureOwnedApiKey(apiKeyId, userId);
 
-        const providerSelection = await this.prisma.providerSelection.findFirst({
-            where: {
-                apiKeyId,
-                apiKey: { userId },
-                OR: [
-                    { providerIds: { has: providerId } },
-                    { userProviderIds: { has: providerId } },
-                ],
+        const providerSelection = await this.prisma.providerSelection.findFirst(
+            {
+                where: {
+                    apiKeyId,
+                    apiKey: { userId },
+                    OR: [{ providerId }, { userProviderId: providerId }],
+                },
+                include: {
+                    provider: true,
+                    userProvider: true,
+                },
             },
-            include: {
-                modelSelections: true,
-            },
-        });
+        );
 
         if (!providerSelection) {
             throw new ApiError(
@@ -514,41 +500,31 @@ export class ApikeysService {
 
         return {
             providerSelection,
-            kind:
-                providerSelection.providerIds.includes(providerId) &&
-                !providerSelection.userProviderIds.includes(providerId)
-                    ? ("global" as const)
-                    : ("custom" as const),
+            kind: providerSelection.providerId
+                ? ("global" as const)
+                : ("custom" as const),
         };
     }
 
-    private getPrimaryModelSelection(providerSelection: {
-        modelSelections: Array<{
-            id: string;
-            modelIds: string[];
-            userModelIds: string[];
-            active: boolean;
-        }>;
-    }) {
-        const modelSelection = providerSelection.modelSelections?.[0];
-
-        if (!modelSelection) {
-            throw new ApiError(HttpStatus.NOT_FOUND, "Model selection not found");
-        }
-
-        return modelSelection;
-    }
-
     private async validateProviderModelIds(
-        kind: "global" | "custom",
-        providerId: string,
+        selection: Awaited<
+            ReturnType<typeof this.ensureOwnedSelectionByProvider>
+        >,
         modelIds: string[],
     ) {
         const uniqueModelIds = Array.from(new Set(modelIds));
 
-        if (kind === "global") {
+        if (selection.kind === "global") {
+            const providerCode = selection.providerSelection.provider?.code;
+            if (!providerCode) {
+                throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+            }
+
             const models = await this.prisma.model.findMany({
-                where: { id: { in: uniqueModelIds }, providerId },
+                where: {
+                    id: { in: uniqueModelIds },
+                    provider: providerCode,
+                },
                 select: { id: true },
             });
 
@@ -562,8 +538,17 @@ export class ApikeysService {
             return models.map((model) => model.id);
         }
 
+        const providerCode = selection.providerSelection.userProvider?.code;
+        if (!providerCode) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+
         const models = await this.prisma.userModel.findMany({
-            where: { id: { in: uniqueModelIds }, providerId },
+            where: {
+                id: { in: uniqueModelIds },
+                provider: providerCode,
+                userId: selection.providerSelection.userId,
+            },
             select: { id: true },
         });
 
@@ -586,43 +571,42 @@ export class ApikeysService {
             createdAt: apiKey.createdAt,
             updatedAt: apiKey.updatedAt,
             providers: apiKey.providerSelections.map((selection) => {
-                const globalProvider = selection.providers?.[0];
-                const customProvider = selection.userProviders?.[0];
-                const provider = globalProvider ?? customProvider;
-                const models = selection.modelSelections.flatMap(
-                    (modelSelection) => [
-                        ...(modelSelection.models ?? []).map((model) => ({
-                            id: model.id,
-                            name: model.name,
-                            code: model.code,
-                            maxTokens: model.maxTokens,
-                            tokenResetInterval: model.tokenResetInterval,
-                            efficiencyScore: model.efficiencyScore,
-                            bestFor: model.bestFor,
-                            status: model.status,
-                            active: modelSelection.active,
-                            usedTokens: modelSelection.usedTokens,
-                            isCustom: false,
-                        })),
-                        ...(modelSelection.userModels ?? []).map((model) => ({
-                            id: model.id,
-                            name: model.name,
-                            code: model.code,
-                            maxTokens: model.maxTokens,
-                            tokenResetInterval: model.tokenResetInterval,
-                            efficiencyScore: model.efficiencyScore,
-                            bestFor: model.bestFor,
-                            status: model.status,
-                            active: modelSelection.active,
-                            usedTokens: modelSelection.usedTokens,
-                            isCustom: true,
-                        })),
-                    ],
-                );
+                const provider = selection.provider ?? selection.userProvider;
+                const models = [
+                    ...(selection.models ?? []).map((model) => ({
+                        id: model.id,
+                        name: model.name,
+                        code: model.code,
+                        maxTokens: model.maxTokens,
+                        tokenResetInterval: model.tokenResetInterval,
+                        efficiencyScore: model.efficiencyScore,
+                        bestFor: model.bestFor,
+                        thinking: model.thinking,
+                        status: model.status,
+                        active: !selection.inactiveModelIds.includes(model.id),
+                        isCustom: false,
+                    })),
+                    ...(selection.userModels ?? []).map((model) => ({
+                        id: model.id,
+                        name: model.name,
+                        code: model.code,
+                        maxTokens: model.maxTokens,
+                        tokenResetInterval: model.tokenResetInterval,
+                        efficiencyScore: model.efficiencyScore,
+                        bestFor: model.bestFor,
+                        thinking: model.thinking,
+                        status: model.status,
+                        active: !selection.inactiveUserModelIds.includes(
+                            model.id,
+                        ),
+                        isCustom: true,
+                    })),
+                ];
 
                 return {
                     id: selection.id,
                     providerId: provider?.id,
+                    code: provider?.code,
                     name: provider?.name,
                     description: provider?.description,
                     baseApi: provider?.baseApi,
@@ -630,7 +614,7 @@ export class ApikeysService {
                     type: provider?.type,
                     status: provider?.status,
                     active: selection.active,
-                    isCustom: !!customProvider,
+                    isCustom: Boolean(selection.userProviderId),
                     providerApiKeys: selection.providerApiKeys.map(
                         (providerApiKey) =>
                             this.formatProviderApiKey(providerApiKey),
@@ -669,44 +653,46 @@ export class ApikeysService {
         return `${key.slice(0, 4)}***${key.slice(-4)}`;
     }
 
-    private async resolveProviderEntity(providerId: string) {
+    private async resolveProviderEntity(providerId: string, userId: string) {
         const global = await this.prisma.provider.findUnique({
             where: { id: providerId },
-            select: { id: true },
+            select: { id: true, code: true },
         });
 
         if (global) {
-            return { kind: "global" as const, id: global.id };
+            return { kind: "global" as const, ...global };
         }
 
-        const custom = await this.prisma.userProvider.findUnique({
-            where: { id: providerId },
-            select: { id: true },
+        const custom = await this.prisma.userProvider.findFirst({
+            where: { id: providerId, userId },
+            select: { id: true, code: true },
         });
 
         if (!custom) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
         }
 
-        return { kind: "custom" as const, id: custom.id };
+        return { kind: "custom" as const, ...custom };
     }
 
     private async fetchProviderModelIds(
-        kind: "global" | "custom",
-        providerId: string,
+        providerEntity: Awaited<ReturnType<typeof this.resolveProviderEntity>>,
     ) {
-        if (kind === "global") {
+        if (providerEntity.kind === "global") {
             const models = await this.prisma.model.findMany({
-                where: { providerId },
+                where: { provider: providerEntity.code },
                 select: { id: true },
             });
             return models.map((model) => model.id);
         }
 
         const models = await this.prisma.userModel.findMany({
-            where: { providerId },
+            where: {
+                provider: providerEntity.code,
+            },
             select: { id: true },
         });
+
         return models.map((model) => model.id);
     }
 }

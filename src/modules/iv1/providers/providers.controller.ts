@@ -1,14 +1,4 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpStatus,
-    Param,
-    Patch,
-    Post,
-    Query,
-} from "@nestjs/common";
+import { Controller, Get, HttpStatus, Param, Query } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ResponseService } from "@/common/interceptors/response";
 import { ReqField } from "@/common/decorators/request.decorator";
@@ -35,14 +25,20 @@ export class ProvidersController {
             statusCode: HttpStatus.OK,
             message: result.message,
             data: result.data,
-            pagination: result.pagination,
+            // pagination: result.pagination,
         });
     }
 
     @Get(":id")
     @ApiOperation({ summary: "Get provider details" })
-    async fetchSingleProvider(@Param("id") id: string) {
-        const result = await this.providersService.fetchSingleProvider(id);
+    async fetchSingleProvider(
+        @Param("id") id: string,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.providersService.fetchSingleProvider(
+            id,
+            user,
+        );
 
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
@@ -53,8 +49,14 @@ export class ProvidersController {
 
     @Get(":id/models")
     @ApiOperation({ summary: "Get provider's models" })
-    async fetchProviderModels(@Param("id") id: string) {
-        const result = await this.providersService.fetchProviderModels(id);
+    async fetchProviderModels(
+        @Param("id") id: string,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.providersService.fetchProviderModels(
+            id,
+            user,
+        );
 
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,

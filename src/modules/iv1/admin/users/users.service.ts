@@ -3,8 +3,6 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import QueryBuilder from "@/common/utils/queryBuilder";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UpdateUserDto, UpdateUserStatusDto } from "./dto/body.dto";
 
 type AdminUserDetails = Prisma.UserGetPayload<{
@@ -14,30 +12,18 @@ type AdminUserDetails = Prisma.UserGetPayload<{
                 providerSelections: {
                     include: {
                         providerApiKeys: true;
-                        modelSelections: {
-                            include: {
-                                models: true;
-                                userModels: true;
-                            };
-                        };
-                    };
-                };
-            };
-        };
-        userProviders: {
-            include: {
-                models: true;
-            };
-        };
-        providerSelections: {
-            include: {
-                providerApiKeys: true;
-                modelSelections: {
-                    include: {
                         models: true;
                         userModels: true;
                     };
                 };
+            };
+        };
+        userProviders: true;
+        providerSelections: {
+            include: {
+                providerApiKeys: true;
+                models: true;
+                userModels: true;
             };
         };
     };
@@ -64,20 +50,18 @@ export class AdminUsersService {
                         providerSelections: {
                             include: {
                                 providerApiKeys: true,
-                                modelSelections: true,
+                                models: true,
+                                userModels: true,
                             },
                         },
                     },
                 },
-                userProviders: {
-                    include: {
-                        models: true,
-                    },
-                },
+                userProviders: true,
                 providerSelections: {
                     include: {
                         providerApiKeys: true,
-                        modelSelections: true,
+                        models: true,
+                        userModels: true,
                     },
                 },
             })
@@ -86,41 +70,41 @@ export class AdminUsersService {
 
         const pagination = await queryBuilder.countTotal();
 
-        const formatted = data.map((u) => ({
-            id: u.id,
-            name: u.name,
-            email: u.email,
-            avatar: u.avatar,
-            status: u.status,
-            stats: {
-                apiKeyCount: (u.apiKeys ?? []).length,
-                activeApiKeyCount: (u.apiKeys ?? []).filter(
-                    (apiKey) => apiKey.active,
-                ).length,
-                customProviderCount: (u.userProviders ?? []).length,
-                activeCustomProviderCount: (u.userProviders ?? []).filter(
-                    (provider) => provider.status === "ACTIVE",
-                ).length,
-                providerSelectionCount: (u.providerSelections ?? []).length,
-                providerApiKeyCount: (u.providerSelections ?? []).reduce(
-                    (sum, selection) =>
-                        sum + (selection.providerApiKeys?.length ?? 0),
-                    0,
-                ),
-                usedTokens: (u.providerSelections ?? []).reduce(
-                    (sum, selection) =>
-                        sum +
-                        (selection.modelSelections ?? []).reduce(
-                            (selectionSum, modelSelection) =>
-                                selectionSum + (modelSelection.usedTokens ?? 0),
-                            0,
-                        ),
-                    0,
-                ),
-            },
-            createdAt: u.createdAt,
-            updatedAt: u.updatedAt,
-        }));
+        const formatted = await Promise.all(
+            data.map(async (user) => ({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+                status: user.status,
+                stats: {
+                    apiKeyCount: (user.apiKeys ?? []).length,
+                    activeApiKeyCount: (user.apiKeys ?? []).filter(
+                        (apiKey) => apiKey.active,
+                    ).length,
+                    customProviderCount: (user.userProviders ?? []).length,
+                    activeCustomProviderCount: (
+                        user.userProviders ?? []
+                    ).filter((provider) => provider.status === "ACTIVE").length,
+                    providerSelectionCount: (user.providerSelections ?? [])
+                        .length,
+                    providerApiKeyCount: (user.providerSelections ?? []).reduce(
+                        (sum, selection) =>
+                            sum + (selection.providerApiKeys?.length ?? 0),
+                        0,
+                    ),
+                    selectedModelCount: (user.providerSelections ?? []).reduce(
+                        (sum, selection) =>
+                            sum +
+                            (selection.models?.length ?? 0) +
+                            (selection.userModels?.length ?? 0),
+                        0,
+                    ),
+                },
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            })),
+        );
 
         return { message: "Users fetched", data: formatted, pagination };
     }
@@ -134,30 +118,18 @@ export class AdminUsersService {
                         providerSelections: {
                             include: {
                                 providerApiKeys: true,
-                                modelSelections: {
-                                    include: {
-                                        models: true,
-                                        userModels: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-                userProviders: {
-                    include: {
-                        models: true,
-                    },
-                },
-                providerSelections: {
-                    include: {
-                        providerApiKeys: true,
-                        modelSelections: {
-                            include: {
                                 models: true,
                                 userModels: true,
                             },
                         },
+                    },
+                },
+                userProviders: true,
+                providerSelections: {
+                    include: {
+                        providerApiKeys: true,
+                        models: true,
+                        userModels: true,
                     },
                 },
             },
@@ -170,7 +142,7 @@ export class AdminUsersService {
 
         return {
             message: "User fetched",
-            data: this.formatUserDetails(user as AdminUserDetails),
+            data: await this.formatUserDetails(user as AdminUserDetails),
         };
     }
 
@@ -222,7 +194,7 @@ export class AdminUsersService {
         return user;
     }
 
-    private formatUserDetails(user: AdminUserDetails) {
+    private async formatUserDetails(user: AdminUserDetails) {
         const apiKeys = user.apiKeys.map((apiKey) => {
             const providerSelections = apiKey.providerSelections ?? [];
             const providerApiKeyCount = providerSelections.reduce(
@@ -240,26 +212,11 @@ export class AdminUsersService {
                     ),
                 0,
             );
-            const usedTokens = providerSelections.reduce(
-                (sum, selection) =>
-                    sum +
-                    (selection.modelSelections ?? []).reduce(
-                        (selectionSum, modelSelection) =>
-                            selectionSum + (modelSelection.usedTokens ?? 0),
-                        0,
-                    ),
-                0,
-            );
             const modelCount = providerSelections.reduce(
                 (sum, selection) =>
                     sum +
-                    (selection.modelSelections ?? []).reduce(
-                        (selectionSum, modelSelection) =>
-                            selectionSum +
-                            (modelSelection.models?.length ?? 0) +
-                            (modelSelection.userModels?.length ?? 0),
-                        0,
-                    ),
+                    (selection.models?.length ?? 0) +
+                    (selection.userModels?.length ?? 0),
                 0,
             );
 
@@ -274,25 +231,43 @@ export class AdminUsersService {
                     providerApiKeyCount,
                     modelCount,
                     successfulRequests,
-                    usedTokens,
                 },
             };
         });
 
-        const providers = user.userProviders.map((provider) => ({
-            id: provider.id,
-            name: provider.name,
-            description: provider.description,
-            free: provider.free,
-            type: provider.type,
-            status: provider.status,
-            modelsCount: provider.models.length,
-            activeModelsCount: provider.models.filter(
-                (model) => model.status === "ACTIVE",
-            ).length,
-            createdAt: provider.createdAt,
-            updatedAt: provider.updatedAt,
-        }));
+        const providers = await Promise.all(
+            user.userProviders.map(async (provider) => {
+                const [modelsCount, activeModelsCount] = await Promise.all([
+                    this.prisma.userModel.count({
+                        where: {
+                            provider: provider.code,
+                            userId: user.id,
+                        },
+                    }),
+                    this.prisma.userModel.count({
+                        where: {
+                            provider: provider.code,
+                            userId: user.id,
+                            status: "ACTIVE",
+                        },
+                    }),
+                ]);
+
+                return {
+                    id: provider.id,
+                    code: provider.code,
+                    name: provider.name,
+                    description: provider.description,
+                    free: provider.free,
+                    type: provider.type,
+                    status: provider.status,
+                    modelsCount,
+                    activeModelsCount,
+                    createdAt: provider.createdAt,
+                    updatedAt: provider.updatedAt,
+                };
+            }),
+        );
 
         const totalProviderApiKeys = user.providerSelections.reduce(
             (sum, selection) => sum + (selection.providerApiKeys?.length ?? 0),
@@ -308,14 +283,11 @@ export class AdminUsersService {
                 ),
             0,
         );
-        const totalUsedTokens = user.providerSelections.reduce(
+        const totalSelectedModels = user.providerSelections.reduce(
             (sum, selection) =>
                 sum +
-                (selection.modelSelections ?? []).reduce(
-                    (selectionSum, modelSelection) =>
-                        selectionSum + (modelSelection.usedTokens ?? 0),
-                    0,
-                ),
+                (selection.models?.length ?? 0) +
+                (selection.userModels?.length ?? 0),
             0,
         );
 
@@ -330,8 +302,9 @@ export class AdminUsersService {
             updatedAt: user.updatedAt,
             stats: {
                 apiKeyCount: user.apiKeys.length,
-                activeApiKeyCount: user.apiKeys.filter((apiKey) => apiKey.active)
-                    .length,
+                activeApiKeyCount: user.apiKeys.filter(
+                    (apiKey) => apiKey.active,
+                ).length,
                 customProviderCount: user.userProviders.length,
                 activeCustomProviderCount: user.userProviders.filter(
                     (provider) => provider.status === "ACTIVE",
@@ -339,7 +312,7 @@ export class AdminUsersService {
                 providerSelectionCount: user.providerSelections.length,
                 providerApiKeyCount: totalProviderApiKeys,
                 successfulRequests: totalSuccessfulRequests,
-                usedTokens: totalUsedTokens,
+                selectedModelCount: totalSelectedModels,
             },
             apiKeys,
             providers,

@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { HttpStatus, Injectable } from "@nestjs/common";
+import { ContentStatus, Prisma, Provider, UserProvider } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
+import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
 
@@ -16,25 +17,8 @@ type ProviderListSelection = {
     };
 };
 
-type GlobalProviderListItem = Prisma.ProviderGetPayload<{
-    include: {
-        models: true;
-        providerSelections: {
-            where: { userId: string };
-            select: ProviderListSelection;
-        };
-    };
-}>;
-
-type CustomProviderListItem = Prisma.UserProviderGetPayload<{
-    include: {
-        models: true;
-        providerSelections: {
-            where: { userId: string };
-            select: ProviderListSelection;
-        };
-    };
-}>;
+type GlobalProviderListItem = Provider;
+type CustomProviderListItem = UserProvider;
 
 @Injectable()
 export class ProvidersService {
@@ -51,39 +35,19 @@ export class ProvidersService {
             Prisma.$UserProviderPayload
         >(this.prisma.userProvider, query);
 
-        const sharedInclude = {
-            models: true,
-            providerSelections: {
-                where: { userId: user.id },
-                select: {
-                    id: true,
-                    active: true,
-                    apiKey: {
-                        select: {
-                            id: true,
-                            active: true,
-                            key: true,
-                        },
-                    },
-                },
-            },
-        } as const;
-
         const globalProviders = await globalQueryBuilder
-            .search(["name", "description"])
+            .search(["name", "description", "code"])
             .filter({ exacts: ["status", "type"], booleans: ["free"] })
             .sort()
-            .include(sharedInclude)
             .rawFilter({
                 status: { notIn: ["INACTIVE", "TESTING", "DEPRECATED"] },
             })
             .execute();
 
         const customProviders = await customQueryBuilder
-            .search(["name", "description"])
+            .search(["name", "description", "code"])
             .filter({ exacts: ["status", "type"], booleans: ["free"] })
             .sort()
-            .include(sharedInclude)
             .rawFilter({
                 userId: user.id,
                 status: { notIn: ["INACTIVE", "TESTING", "DEPRECATED"] },
@@ -91,49 +55,114 @@ export class ProvidersService {
             .execute();
 
         const formatted = [
-            ...(globalProviders as GlobalProviderListItem[]).map((provider) =>
-                this.formatProviderListItem(provider, false),
-            ),
-            ...(customProviders as CustomProviderListItem[]).map((provider) =>
-                this.formatProviderListItem(provider, true),
-            ),
-        ]
-            .sort((a, b) => this.sortProviders(a, b, query));
+            ...(await this.formatProviderList(
+                globalProviders as GlobalProviderListItem[],
+                false,
+                user.id,
+            )),
+            ...(await this.formatProviderList(
+                customProviders as CustomProviderListItem[],
+                true,
+                user.id,
+            )),
+        ].sort((a, b) => this.sortProviders(a, b, query));
 
-        const page = Number(query.page) || 1;
-        const limit = Number(query.limit) || 10;
-        const start = (page - 1) * limit;
-        const paginated = formatted.slice(start, start + limit);
-        const total = formatted.length;
+        // const page = Number(query.page) || 1;
+        // const limit = Number(query.limit) || 10;
+        // const start = (page - 1) * limit;
+        // const paginated = formatted.slice(start, start + limit);
+        // const total = formatted.length;
 
         return {
             message: "Providers fetched",
-            data: paginated,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPage: Math.ceil(total / limit),
-            },
+            data: formatted,
+            // pagination: {
+            //     page,
+            //     limit,
+            //     total,
+            //     totalPage: Math.ceil(total / limit),
+            // },
         };
     }
 
-    async fetchSingleProvider(id: string) {
-        const provider = await this.prisma.provider.findUnique({
-            where: { id },
-            include: { models: { where: { status: "ACTIVE" } } },
+    async fetchSingleProvider(id: string, user: UserPayload) {
+        const globalProvider = await this.prisma.provider.findFirst({
+            where: {
+                id,
+                status: { not: ContentStatus.INACTIVE },
+            },
         });
+
+        const customProvider = await this.prisma.userProvider.findFirst({
+            where: {
+                userId: user.id,
+                id,
+                status: { not: ContentStatus.INACTIVE },
+            },
+        });
+
+        if (!globalProvider && !customProvider) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+
+        const providers = [
+            ...(globalProvider
+                ? [await this.formatSingleProvider(globalProvider, false)]
+                : []),
+            ...(customProvider
+                ? [await this.formatSingleProvider(customProvider, true)]
+                : []),
+        ];
 
         return {
             message: "Provider fetched",
-            data: provider,
+            data: providers.length === 1 ? providers[0] : providers,
         };
     }
 
-    async fetchProviderModels(id: string) {
-        const models = await this.prisma.model.findMany({
-            where: { providerId: id, status: "ACTIVE" },
+    async fetchProviderModels(id: string, user: UserPayload) {
+        const globalProvider = await this.prisma.provider.findFirst({
+            where: {
+                id,
+                status: { not: ContentStatus.INACTIVE },
+            },
         });
+
+        const customProvider = await this.prisma.userProvider.findFirst({
+            where: {
+                userId: user.id,
+                id,
+                status: { not: ContentStatus.INACTIVE },
+            },
+        });
+
+        if (!globalProvider && !customProvider) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+
+        const models = [
+            ...(globalProvider
+                ? (
+                      await this.prisma.model.findMany({
+                          where: {
+                              provider: globalProvider.code,
+                              status: ContentStatus.ACTIVE,
+                          },
+                      })
+                  ).map((model) => ({ ...model, isCustom: false }))
+                : []),
+            ...(customProvider
+                ? (
+                      await this.prisma.userModel.findMany({
+                          where: {
+                              provider: customProvider.code,
+                              userId: user.id,
+                              status: ContentStatus.ACTIVE,
+                          },
+                      })
+                  ).map((model) => ({ ...model, isCustom: true }))
+                : []),
+        ];
 
         return {
             message: "Provider models fetched",
@@ -141,17 +170,73 @@ export class ProvidersService {
         };
     }
 
-    private formatProviderListItem(
+    private async formatProviderList(
+        providers: Array<GlobalProviderListItem | CustomProviderListItem>,
+        isCustom: boolean,
+        userId: string,
+    ) {
+        return Promise.all(
+            providers.map(async (provider) =>
+                this.formatProviderListItem(provider, isCustom, userId),
+            ),
+        );
+    }
+
+    private async formatProviderListItem(
         provider: GlobalProviderListItem | CustomProviderListItem,
         isCustom: boolean,
+        userId: string,
     ) {
-        const modelsCount = (provider.models ?? []).length;
-        const activeModelsCount = (provider.models ?? []).filter(
-            (model) => model.status === "ACTIVE",
-        ).length;
+        const [modelsCount, activeModelsCount, providerSelections] =
+            await Promise.all([
+                isCustom
+                    ? this.prisma.userModel.count({
+                          where: {
+                              provider: provider.code,
+                              userId,
+                          },
+                      })
+                    : this.prisma.model.count({
+                          where: { provider: provider.code },
+                      }),
+                isCustom
+                    ? this.prisma.userModel.count({
+                          where: {
+                              provider: provider.code,
+                              userId,
+                              status: ContentStatus.ACTIVE,
+                          },
+                      })
+                    : this.prisma.model.count({
+                          where: {
+                              provider: provider.code,
+                              status: ContentStatus.ACTIVE,
+                          },
+                      }),
+                this.prisma.providerSelection.findMany({
+                    where: {
+                        userId,
+                        ...(isCustom
+                            ? { userProviderId: provider.id }
+                            : { providerId: provider.id }),
+                    },
+                    select: {
+                        id: true,
+                        active: true,
+                        apiKey: {
+                            select: {
+                                id: true,
+                                active: true,
+                                key: true,
+                            },
+                        },
+                    } satisfies ProviderListSelection,
+                }),
+            ]);
 
         return {
             id: provider.id,
+            code: provider.code,
             name: provider.name,
             description: provider.description,
             free: provider.free,
@@ -159,18 +244,64 @@ export class ProvidersService {
             status: provider.status,
             modelsCount,
             activeModelsCount,
-            apiKeys: provider.providerSelections?.[0]?.apiKey,
-            connected: provider.providerSelections?.length > 0,
-            active: provider.providerSelections?.[0]?.active ?? false,
+            apiKeys: providerSelections?.[0]?.apiKey,
+            connected: providerSelections.length > 0,
+            active: providerSelections?.[0]?.active ?? false,
             isCustom,
             createdAt: provider.createdAt,
             updatedAt: provider.updatedAt,
         };
     }
 
+    private async formatSingleProvider(
+        provider: Provider | UserProvider,
+        isCustom: boolean,
+    ) {
+        const models = isCustom
+            ? await this.prisma.userModel.findMany({
+                  where: {
+                      provider: provider.code,
+                      userId: (provider as UserProvider).userId,
+                      status: ContentStatus.ACTIVE,
+                  },
+              })
+            : await this.prisma.model.findMany({
+                  where: {
+                      provider: provider.code,
+                      status: ContentStatus.ACTIVE,
+                  },
+              });
+
+        return {
+            id: provider.id,
+            code: provider.code,
+            name: provider.name,
+            description: provider.description,
+            baseApi: provider.baseApi,
+            free: provider.free,
+            type: provider.type,
+            status: provider.status,
+            isCustom,
+            models: models.map((model) => ({
+                id: model.id,
+                name: model.name,
+                code: model.code,
+                maxTokens: model.maxTokens,
+                tokenResetInterval: model.tokenResetInterval,
+                efficiencyScore: model.efficiencyScore,
+                bestFor: model.bestFor,
+                thinking: model.thinking,
+                status: model.status,
+                isCustom,
+            })),
+            createdAt: provider.createdAt,
+            updatedAt: provider.updatedAt,
+        };
+    }
+
     private sortProviders(
-        a: { [key: string]: any },
-        b: { [key: string]: any },
+        a: { [key: string]: unknown },
+        b: { [key: string]: unknown },
         query: Record<string, string>,
     ) {
         const order = (query.order ?? "").split(",").filter(Boolean);

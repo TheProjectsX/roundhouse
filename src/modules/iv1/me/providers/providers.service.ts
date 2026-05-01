@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Prisma, ContentStatus, ProviderType, User } from "@prisma/client";
+import { Prisma, ContentStatus, ProviderType } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
@@ -13,8 +13,6 @@ import {
     UpdateProviderStatusDto,
 } from "@/modules/iv1/providers/dto/body.dto";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 @Injectable()
 export class MeProvidersService {
     constructor(private prisma: PrismaService) {}
@@ -26,41 +24,52 @@ export class MeProvidersService {
         >(this.prisma.userProvider, query);
 
         const data = await queryBuilder
-            .search(["name", "description"])
+            .search(["name", "description", "code"])
             .filter({ exacts: ["status", "type"], booleans: ["free"] })
             .sort()
             .paginate()
-            .include({ models: true })
             .rawFilter({ userId: user.id })
             .execute();
 
         const pagination = await queryBuilder.countTotal();
 
         const formatted = await Promise.all(
-            (data as any[]).map(async (p) => {
-                const modelsCount = (p.models ?? []).length;
-                const activeModelsCount = (p.models ?? []).filter(
-                    (m: any) => m.status === "ACTIVE",
-                ).length;
-                const connectedApiCount =
-                    await this.prisma.providerSelection.count({
-                        where: {
-                            userProviderIds: { has: p.id },
-                        },
-                    });
+            data.map(async (provider) => {
+                const [modelsCount, activeModelsCount, connectedApiCount] =
+                    await Promise.all([
+                        this.prisma.userModel.count({
+                            where: {
+                                provider: provider.code,
+                                userId: user.id,
+                            },
+                        }),
+                        this.prisma.userModel.count({
+                            where: {
+                                provider: provider.code,
+                                userId: user.id,
+                                status: ContentStatus.ACTIVE,
+                            },
+                        }),
+                        this.prisma.providerSelection.count({
+                            where: {
+                                userProviderId: provider.id,
+                            },
+                        }),
+                    ]);
 
                 return {
-                    id: p.id,
-                    name: p.name,
-                    description: p.description,
-                    free: p.free,
-                    type: p.type,
-                    status: p.status,
+                    id: provider.id,
+                    code: provider.code,
+                    name: provider.name,
+                    description: provider.description,
+                    free: provider.free,
+                    type: provider.type,
+                    status: provider.status,
                     modelsCount,
                     activeModelsCount,
                     connectedApiCount,
-                    createdAt: p.createdAt,
-                    updatedAt: p.updatedAt,
+                    createdAt: provider.createdAt,
+                    updatedAt: provider.updatedAt,
                 };
             }),
         );
@@ -73,39 +82,49 @@ export class MeProvidersService {
     }
 
     async fetchSingleProvider(id: string, user: UserPayload) {
-        const provider = await this.prisma.userProvider.findUnique({
-            where: { id, userId: user.id },
-            include: { models: true },
+        const provider = await this.prisma.userProvider.findFirst({
+            where: {
+                userId: user.id,
+                id,
+            },
         });
 
         if (!provider) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
         }
 
-        const formatted = {
-            id: provider.id,
-            name: provider.name,
-            description: provider.description,
-            free: provider.free,
-            type: provider.type,
-            status: provider.status,
-            models: (provider.models ?? []).map((m: any) => ({
-                id: m.id,
-                name: m.name,
-                code: m.code,
-                maxTokens: m.maxTokens,
-                tokenResetInterval: m.tokenResetInterval,
-                efficiencyScore: m.efficiencyScore,
-                bestFor: m.bestFor,
-                status: m.status,
-            })),
-            createdAt: provider.createdAt,
-            updatedAt: provider.updatedAt,
-        };
+        const models = await this.prisma.userModel.findMany({
+            where: {
+                provider: provider.code,
+                userId: user.id,
+            },
+        });
 
         return {
             message: "Provider fetched",
-            data: formatted,
+            data: {
+                id: provider.id,
+                code: provider.code,
+                name: provider.name,
+                description: provider.description,
+                baseApi: provider.baseApi,
+                free: provider.free,
+                type: provider.type,
+                status: provider.status,
+                models: models.map((model) => ({
+                    id: model.id,
+                    name: model.name,
+                    code: model.code,
+                    maxTokens: model.maxTokens,
+                    tokenResetInterval: model.tokenResetInterval,
+                    efficiencyScore: model.efficiencyScore,
+                    bestFor: model.bestFor,
+                    thinking: model.thinking,
+                    status: model.status,
+                })),
+                createdAt: provider.createdAt,
+                updatedAt: provider.updatedAt,
+            },
         };
     }
 
@@ -113,6 +132,7 @@ export class MeProvidersService {
         const created = await this.prisma.userProvider.create({
             data: {
                 name: payload.name,
+                code: this.buildProviderCode(payload.name, payload.code),
                 description: payload.description,
                 baseApi: payload.baseApi,
                 free: payload.free ?? false,
@@ -120,7 +140,6 @@ export class MeProvidersService {
                 status: payload.status ?? ContentStatus.ACTIVE,
                 user: { connect: { id: user.id } },
             },
-            include: { models: true },
         });
 
         return {
@@ -134,7 +153,7 @@ export class MeProvidersService {
         payload: UpdateProviderDto,
         user: UserPayload,
     ) {
-        const provider = await this.prisma.userProvider.findUnique({
+        const provider = await this.prisma.userProvider.findFirst({
             where: { id, userId: user.id },
         });
 
@@ -144,8 +163,17 @@ export class MeProvidersService {
 
         const updated = await this.prisma.userProvider.update({
             where: { id: provider.id },
-            data: { ...payload },
-            include: { models: true },
+            data: {
+                ...payload,
+                ...(payload.code || payload.name
+                    ? {
+                          code: this.buildProviderCode(
+                              payload.name ?? provider.name,
+                              payload.code ?? provider.code,
+                          ),
+                      }
+                    : {}),
+            },
         });
 
         return {
@@ -159,7 +187,7 @@ export class MeProvidersService {
         payload: UpdateProviderStatusDto,
         user: UserPayload,
     ) {
-        const provider = await this.prisma.userProvider.findUnique({
+        const provider = await this.prisma.userProvider.findFirst({
             where: { id, userId: user.id },
         });
 
@@ -170,7 +198,6 @@ export class MeProvidersService {
         const updated = await this.prisma.userProvider.update({
             where: { id },
             data: { status: payload.status },
-            include: { models: true },
         });
 
         return {
@@ -180,7 +207,7 @@ export class MeProvidersService {
     }
 
     async deleteProvider(id: string, user: UserPayload) {
-        const provider = await this.prisma.userProvider.findUnique({
+        const provider = await this.prisma.userProvider.findFirst({
             where: { id, userId: user.id },
         });
 
@@ -200,8 +227,11 @@ export class MeProvidersService {
         query: Record<string, string>,
         user: UserPayload,
     ) {
-        const provider = await this.prisma.userProvider.findUnique({
-            where: { id: providerId, userId: user.id },
+        const provider = await this.prisma.userProvider.findFirst({
+            where: {
+                userId: user.id,
+                id: providerId,
+            },
         });
 
         if (!provider) {
@@ -214,7 +244,10 @@ export class MeProvidersService {
         >(this.prisma.userModel, query)
             .search(["name", "code"])
             .filter({ exacts: ["status"] })
-            .rawFilter({ providerId: provider.id })
+            .rawFilter({
+                provider: provider.code,
+                userId: user.id,
+            })
             .sort()
             .paginate();
 
@@ -231,7 +264,7 @@ export class MeProvidersService {
         payload: CreateProviderModelDto,
         user: UserPayload,
     ) {
-        const provider = await this.prisma.userProvider.findUnique({
+        const provider = await this.prisma.userProvider.findFirst({
             where: { id: providerId, userId: user.id },
         });
 
@@ -247,8 +280,10 @@ export class MeProvidersService {
                 tokenResetInterval: payload.tokenResetInterval,
                 efficiencyScore: payload.efficiencyScore,
                 bestFor: payload.bestFor ?? [],
+                thinking: payload.thinking ?? false,
                 status: payload.status ?? ContentStatus.ACTIVE,
-                provider: { connect: { id: providerId } },
+                provider: provider.code,
+                user: { connect: { id: user.id } },
             },
         });
         return { message: "Model created", data: { id: created.id } };
@@ -259,9 +294,8 @@ export class MeProvidersService {
         payload: UpdateProviderModelDto,
         user: UserPayload,
     ) {
-        const model = await this.prisma.userModel.findUnique({
-            where: { id: modelId, provider: { userId: user.id } },
-            include: { provider: true },
+        const model = await this.prisma.userModel.findFirst({
+            where: { id: modelId, userId: user.id },
         });
 
         if (!model) {
@@ -283,8 +317,8 @@ export class MeProvidersService {
         payload: UpdateProviderModelStatusDto,
         user: UserPayload,
     ) {
-        const model = await this.prisma.userModel.findUnique({
-            where: { id: modelId, provider: { userId: user.id } },
+        const model = await this.prisma.userModel.findFirst({
+            where: { id: modelId, userId: user.id },
         });
 
         if (!model) {
@@ -300,8 +334,8 @@ export class MeProvidersService {
     }
 
     async deleteProviderModel(modelId: string, user: UserPayload) {
-        const model = await this.prisma.userModel.findUnique({
-            where: { id: modelId, provider: { userId: user.id } },
+        const model = await this.prisma.userModel.findFirst({
+            where: { id: modelId, userId: user.id },
         });
 
         if (!model) {
@@ -312,5 +346,12 @@ export class MeProvidersService {
             where: { id: model.id },
         });
         return { message: "Model deleted", data: { id: deleted.id } };
+    }
+
+    private buildProviderCode(name: string, code?: string) {
+        return (code ?? name)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
     }
 }

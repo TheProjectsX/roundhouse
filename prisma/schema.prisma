@@ -17,12 +17,12 @@ model User {
     avatar String?
 
     status UserStatus @default(ACTIVE)
+    role   UserRole   @default(USER)
 
     apiKeys            ApiKey[]
     userProviders      UserProvider[]
+    userModels         UserModel[]
     providerSelections ProviderSelection[]
-
-    role UserRole @default(USER)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -56,8 +56,7 @@ model LastError {
     apiKeyId String @db.ObjectId
     apiKey   ApiKey @relation(fields: [apiKeyId], references: [id])
 
-    modelId String         @db.ObjectId
-    model   ModelSelection @relation(fields: [modelId], references: [id])
+    modelId String
 
     providerApiKeyId String         @db.ObjectId
     providerApiKey   ProviderApiKey @relation(fields: [providerApiKeyId], references: [id], onDelete: Cascade)
@@ -72,7 +71,7 @@ model Provider {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
     name        String
-    key         String  @unique
+    code        String  @unique
     description String?
 
     baseApi String
@@ -82,10 +81,7 @@ model Provider {
 
     status ContentStatus @default(ACTIVE)
 
-    models Model[]
-
-    providerSelectionIds String[]            @db.ObjectId
-    providerSelections   ProviderSelection[] @relation("ProviderSelectionProviders", fields: [providerSelectionIds], references: [id])
+    providerSelections ProviderSelection[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -96,25 +92,25 @@ model Provider {
 model Model {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
-    providerId String   @unique @db.ObjectId
-    provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-
     name               String
     code               String
     maxTokens          Int?
-    tokenResetInterval Int? // In Minutes
+    tokenResetInterval Int?
+    provider           String
 
-    efficiencyScore Float? // 0.0 - 1.0, where 1.0 is most efficient
+    efficiencyScore Float?
     bestFor         String[]
+    thinking        Boolean  @default(false)
 
     status ContentStatus @default(ACTIVE)
 
-    modelSelectionIds String[]         @db.ObjectId
-    modelSelections   ModelSelection[] @relation("ModelSelectionModels", fields: [modelSelectionIds], references: [id])
+    providerSelections   ProviderSelection[] @relation("ProviderSelectionModels", fields: [providerSelectionIds], references: [id])
+    providerSelectionIds String[]            @db.ObjectId
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
+    @@unique([code, provider])
     @@map("models")
 }
 
@@ -122,19 +118,17 @@ model UserProvider {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
     name        String
+    code        String
     description String?
 
     baseApi String
 
     free Boolean      @default(false)
-    type ProviderType
+    type ProviderType @default(CUSTOM)
 
     status ContentStatus @default(ACTIVE)
 
-    models UserModel[]
-
-    providerSelectionIds String[]            @db.ObjectId
-    providerSelections   ProviderSelection[] @relation("ProviderSelectionUserProviders", fields: [providerSelectionIds], references: [id])
+    providerSelections ProviderSelection[]
 
     userId String @db.ObjectId
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -142,31 +136,35 @@ model UserProvider {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
+    @@unique([userId, code])
     @@map("user__providers")
 }
 
 model UserModel {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
-    providerId String       @unique @db.ObjectId
-    provider   UserProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-
     name               String
     code               String
     maxTokens          Int?
-    tokenResetInterval Int? // In Minutes
+    tokenResetInterval Int?
+    provider           String
 
-    efficiencyScore Float? // 0.0 - 1.0, where 1.0 is most efficient
+    efficiencyScore Float?
     bestFor         String[]
+    thinking        Boolean  @default(false)
 
     status ContentStatus @default(ACTIVE)
 
-    modelSelectionIds String[]         @db.ObjectId
-    modelSelections   ModelSelection[] @relation("ModelSelectionUserModels", fields: [modelSelectionIds], references: [id])
+    providerSelections   ProviderSelection[] @relation("ProviderSelectionUserModels", fields: [providerSelectionIds], references: [id])
+    providerSelectionIds String[]            @db.ObjectId
+
+    userId String @db.ObjectId
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
+    @@unique([code, provider, userId])
     @@map("user__models")
 }
 
@@ -176,14 +174,19 @@ model ProviderSelection {
     apiKeyId String @db.ObjectId
     apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
 
-    providerIds String[]   @db.ObjectId
-    providers   Provider[] @relation("ProviderSelectionProviders", fields: [providerIds], references: [id])
+    providerId String?   @db.ObjectId
+    provider   Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-    userProviderIds String[]       @db.ObjectId
-    userProviders   UserProvider[] @relation("ProviderSelectionUserProviders", fields: [userProviderIds], references: [id])
+    userProviderId String?       @db.ObjectId
+    userProvider   UserProvider? @relation(fields: [userProviderId], references: [id], onDelete: Cascade)
 
-    modelSelectionIds String[]         @db.ObjectId
-    modelSelections   ModelSelection[] @relation("ProviderSelectionModelSelections", fields: [modelSelectionIds], references: [id])
+    modelIds         String[] @db.ObjectId
+    models           Model[]  @relation("ProviderSelectionModels", fields: [modelIds], references: [id])
+    inactiveModelIds String[] @db.ObjectId
+
+    userModelIds         String[]    @db.ObjectId
+    userModels           UserModel[] @relation("ProviderSelectionUserModels", fields: [userModelIds], references: [id])
+    inactiveUserModelIds String[]    @db.ObjectId
 
     userId String @db.ObjectId
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -218,30 +221,6 @@ model ProviderApiKey {
     @@map("provider_api_keys")
 }
 
-model ModelSelection {
-    id String @id @default(auto()) @map("_id") @db.ObjectId
-
-    providerSelectionIds String[]            @db.ObjectId
-    providerSelections   ProviderSelection[] @relation("ProviderSelectionModelSelections", fields: [providerSelectionIds], references: [id])
-
-    modelIds String[] @db.ObjectId
-    models   Model[]  @relation("ModelSelectionModels", fields: [modelIds], references: [id])
-
-    userModelIds String[]    @db.ObjectId
-    userModels   UserModel[] @relation("ModelSelectionUserModels", fields: [userModelIds], references: [id])
-
-    lastErrors LastError[]
-
-    usedTokens Int     @default(0)
-    active     Boolean @default(true)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@map("user__model_selections")
-}
-
-// ENUMs
 enum UserStatus {
     ACTIVE
     INACTIVE

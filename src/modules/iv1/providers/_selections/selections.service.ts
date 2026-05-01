@@ -45,12 +45,6 @@ export class ProviderSelectionsService {
             user.id,
         );
 
-        if (providerSelection.modelSelectionIds.length) {
-            await this.prisma.modelSelection.deleteMany({
-                where: { id: { in: providerSelection.modelSelectionIds } },
-            });
-        }
-
         const deleted = await this.prisma.providerSelection.delete({
             where: { id: providerSelection.id },
         });

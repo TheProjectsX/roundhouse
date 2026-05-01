@@ -27,6 +27,10 @@ export class CreateProviderDto {
 
     @IsOptional()
     @IsString()
+    code?: string;
+
+    @IsOptional()
+    @IsString()
     description?: string;
 
     @IsUrl()
@@ -103,6 +107,11 @@ export class CreateProviderModelDto {
     })
     @IsEnum(ContentStatus)
     status?: ContentStatus;
+
+    @IsOptional()
+    @IsBoolean()
+    @toBoolean()
+    thinking?: boolean;
 }
 
 export class UpdateProviderModelDto extends PartialType(

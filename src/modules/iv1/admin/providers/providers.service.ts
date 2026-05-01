@@ -1,12 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import {
     ContentStatus,
-    ProviderType,
     Prisma,
+    ProviderType,
     UserProvider,
     Provider,
-    Model,
-    UserModel,
 } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
@@ -33,35 +31,9 @@ export class AdminProvidersService {
             ]);
 
             const formatted = await Promise.all(
-                data.map(async (p) => {
-                    const modelsCount = (p.models ?? []).length;
-                    const activeModelsCount = (p.models ?? []).filter(
-                        (m) => m.status === "ACTIVE",
-                    ).length;
-                    const connectedApiCount =
-                        await this.prisma.providerSelection.count({
-                            where: {
-                                OR: [
-                                    { providerIds: { has: p.id } },
-                                    { userProviderIds: { has: p.id } },
-                                ],
-                            },
-                        });
-
-                    return {
-                        id: p.id,
-                        name: p.name,
-                        description: p.description,
-                        free: p.free,
-                        type: p.type,
-                        status: p.status,
-                        modelsCount,
-                        activeModelsCount,
-                        connectedApiCount,
-                        createdAt: p.createdAt,
-                        updatedAt: p.updatedAt,
-                    };
-                }),
+                data.map(async (provider) =>
+                    this.formatProviderSummary(provider, true),
+                ),
             );
 
             return {
@@ -70,6 +42,7 @@ export class AdminProvidersService {
                 pagination,
             };
         }
+
         const builder = this.buildGlobalProviderQuery(query);
         const [data, pagination] = await Promise.all([
             builder.execute(),
@@ -77,73 +50,53 @@ export class AdminProvidersService {
         ]);
 
         const formatted = await Promise.all(
-            data.map(async (p) => {
-                const modelsCount = p.models.length;
-                const activeModelsCount = p.models.filter(
-                    (m) => m.status === "ACTIVE",
-                ).length;
-                const connectedApiCount =
-                    await this.prisma.providerSelection.count({
-                        where: {
-                            OR: [
-                                { providerIds: { has: p.id } },
-                                { userProviderIds: { has: p.id } },
-                            ],
-                        },
-                    });
-
-                return {
-                    id: p.id,
-                    name: p.name,
-                    description: p.description,
-                    free: p.free,
-                    type: p.type,
-                    status: p.status,
-                    modelsCount,
-                    activeModelsCount,
-                    connectedApiCount,
-                    createdAt: p.createdAt,
-                    updatedAt: p.updatedAt,
-                };
-            }),
+            data.map(async (provider) =>
+                this.formatProviderSummary(provider, false),
+            ),
         );
 
         return { message: "Providers fetched", data: formatted, pagination };
     }
 
     async fetchSingleProvider(id: string) {
-        const provider = await this.resolveProviderEntity(id, true);
-        const p = provider.record;
+        const provider = await this.resolveProviderEntity(id);
+        const models = await this.fetchModelsForProvider(provider);
 
-        const formatted = {
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            free: p.free,
-            type: p.type,
-            status: p.status,
-            models: p.models?.map((m) => ({
-                id: m.id,
-                name: m.name,
-                code: m.code,
-                maxTokens: m.maxTokens,
-                tokenResetInterval: m.tokenResetInterval,
-                efficiencyScore: m.efficiencyScore,
-                bestFor: m.bestFor,
-                status: m.status,
-            })),
-            createdAt: p.createdAt,
-            updatedAt: p.updatedAt,
+        return {
+            message: "Provider fetched",
+            data: {
+                id: provider.record.id,
+                code: provider.record.code,
+                name: provider.record.name,
+                description: provider.record.description,
+                baseApi: provider.record.baseApi,
+                free: provider.record.free,
+                type: provider.record.type,
+                status: provider.record.status,
+                isCustom: provider.kind === "custom",
+                models: models.map((model) => ({
+                    id: model.id,
+                    name: model.name,
+                    code: model.code,
+                    maxTokens: model.maxTokens,
+                    tokenResetInterval: model.tokenResetInterval,
+                    efficiencyScore: model.efficiencyScore,
+                    bestFor: model.bestFor,
+                    thinking: model.thinking,
+                    status: model.status,
+                })),
+                createdAt: provider.record.createdAt,
+                updatedAt: provider.record.updatedAt,
+            },
         };
-
-        return { message: "Provider fetched", data: formatted };
     }
 
     async createProvider(payload: CreateProviderDto) {
+        const code = this.buildProviderCode(payload.name, payload.code);
         const created = await this.prisma.provider.create({
             data: {
                 name: payload.name,
-                key: this.buildProviderKey(payload.name),
+                code,
                 description: payload.description,
                 baseApi: payload.baseApi ?? "",
                 free: payload.free ?? false,
@@ -168,8 +121,15 @@ export class AdminProvidersService {
             where: { id },
             data: {
                 ...payload,
+                ...(payload.code || payload.name
+                    ? {
+                          code: this.buildProviderCode(
+                              payload.name ?? provider.name,
+                              payload.code ?? provider.code,
+                          ),
+                      }
+                    : {}),
             },
-            include: { models: true },
         });
 
         return { message: "Provider updated", data: { id: updated.id } };
@@ -219,7 +179,7 @@ export class AdminProvidersService {
             >(this.prisma.model, query)
                 .search(["name", "code"])
                 .filter({ exacts: ["status"] })
-                .rawFilter({ providerId })
+                .rawFilter({ provider: provider.record.code })
                 .sort()
                 .paginate();
 
@@ -237,7 +197,10 @@ export class AdminProvidersService {
         >(this.prisma.userModel, query)
             .search(["name", "code"])
             .filter({ exacts: ["status"] })
-            .rawFilter({ providerId })
+            .rawFilter({
+                provider: provider.record.code,
+                userId: provider.record.userId,
+            })
             .sort()
             .paginate();
 
@@ -268,8 +231,9 @@ export class AdminProvidersService {
                 tokenResetInterval: payload.tokenResetInterval,
                 efficiencyScore: payload.efficiencyScore,
                 bestFor: payload.bestFor ?? [],
+                thinking: payload.thinking ?? false,
                 status: payload.status ?? ContentStatus.ACTIVE,
-                provider: { connect: { id: providerId } },
+                provider: provider.code,
             },
         });
 
@@ -337,11 +301,10 @@ export class AdminProvidersService {
             typeof this.prisma.provider,
             Prisma.$ProviderPayload
         >(this.prisma.provider, query)
-            .search(["name", "description"])
+            .search(["name", "description", "code"])
             .filter({ exacts: ["status", "type"], booleans: ["free"] })
             .sort()
-            .paginate()
-            .include({ models: true });
+            .paginate();
     }
 
     private buildCustomProviderQuery(query: Record<string, string>) {
@@ -349,32 +312,32 @@ export class AdminProvidersService {
             typeof this.prisma.userProvider,
             Prisma.$UserProviderPayload
         >(this.prisma.userProvider, query)
-            .search(["name", "description"])
+            .search(["name", "description", "code"])
             .filter({ exacts: ["status", "type"], booleans: ["free"] })
             .sort()
-            .paginate()
-            .include({ models: true });
+            .paginate();
     }
 
     private async resolveProviderEntity(
         providerId: string,
-        full?: boolean,
     ): Promise<
-        | { kind: "global"; record: Provider & { models?: Model[] } }
-        | { kind: "custom"; record: UserProvider & { models?: UserModel[] } }
+        | { kind: "global"; record: Provider }
+        | { kind: "custom"; record: UserProvider }
     > {
-        const global = await this.prisma.provider.findUnique({
-            where: { id: providerId },
-            include: full ? { models: true } : undefined,
+        const global = await this.prisma.provider.findFirst({
+            where: {
+                id: providerId,
+            },
         });
 
         if (global) {
             return { kind: "global", record: global };
         }
 
-        const custom = await this.prisma.userProvider.findUnique({
-            where: { id: providerId },
-            include: full ? { models: true } : undefined,
+        const custom = await this.prisma.userProvider.findFirst({
+            where: {
+                id: providerId,
+            },
         });
 
         if (!custom) {
@@ -384,8 +347,81 @@ export class AdminProvidersService {
         return { kind: "custom", record: custom };
     }
 
-    private buildProviderKey(name: string) {
-        return name
+    private async fetchModelsForProvider(
+        provider:
+            | { kind: "global"; record: Provider }
+            | { kind: "custom"; record: UserProvider },
+    ) {
+        if (provider.kind === "global") {
+            return this.prisma.model.findMany({
+                where: { provider: provider.record.code },
+            });
+        }
+
+        return this.prisma.userModel.findMany({
+            where: {
+                provider: provider.record.code,
+                userId: provider.record.userId,
+            },
+        });
+    }
+
+    private async formatProviderSummary(
+        provider: Provider | UserProvider,
+        isCustom: boolean,
+    ) {
+        const [modelsCount, activeModelsCount, connectedApiCount] =
+            await Promise.all([
+                isCustom
+                    ? this.prisma.userModel.count({
+                          where: {
+                              provider: provider.code,
+                              userId: (provider as UserProvider).userId,
+                          },
+                      })
+                    : this.prisma.model.count({
+                          where: { provider: provider.code },
+                      }),
+                isCustom
+                    ? this.prisma.userModel.count({
+                          where: {
+                              provider: provider.code,
+                              userId: (provider as UserProvider).userId,
+                              status: ContentStatus.ACTIVE,
+                          },
+                      })
+                    : this.prisma.model.count({
+                          where: {
+                              provider: provider.code,
+                              status: ContentStatus.ACTIVE,
+                          },
+                      }),
+                this.prisma.providerSelection.count({
+                    where: isCustom
+                        ? { userProviderId: provider.id }
+                        : { providerId: provider.id },
+                }),
+            ]);
+
+        return {
+            id: provider.id,
+            code: provider.code,
+            name: provider.name,
+            description: provider.description,
+            free: provider.free,
+            type: provider.type,
+            status: provider.status,
+            modelsCount,
+            activeModelsCount,
+            connectedApiCount,
+            isCustom,
+            createdAt: provider.createdAt,
+            updatedAt: provider.updatedAt,
+        };
+    }
+
+    private buildProviderCode(name: string, code?: string) {
+        return (code ?? name)
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-+|-+$/g, "");

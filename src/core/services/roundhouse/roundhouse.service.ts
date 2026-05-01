@@ -12,9 +12,11 @@ export type SelectProviderError = {
 
 type RoundhouseProvider = {
     id: string;
+    code: string;
     name: string;
     type: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
     baseApi: string;
+    isCustom: boolean;
 };
 
 type RoundhouseModel = {
@@ -78,6 +80,7 @@ type SelectProviderResponse<T> = SelectProviderError | SelectProviderSuccess<T>;
 export type RoundhouseFilters = {
     provider?: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
     modelKeys?: Set<string>;
+    strategy?: "random" | "efficiency";
 };
 
 type BoundRoundhouseExecutor = <T>(
@@ -98,27 +101,61 @@ const DEFAULT_SCORE = 0.5;
 const DEFAULT_MAX_ITERATIONS = 5;
 const logger = createDevLogger("roundhouse");
 
-const pickModel = (candidate: {
-    userModels: RoundhouseModel[];
-    models: RoundhouseModel[];
-}): RoundhouseModel | undefined => {
-    return [...candidate.userModels, ...candidate.models].find(
-        (model) => model.status === "ACTIVE",
-    );
+const buildProviderRecord = (providerSelection: {
+    provider: {
+        id: string;
+        code: string;
+        name: string;
+        type: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
+        baseApi: string;
+    } | null;
+    userProvider: {
+        id: string;
+        code: string;
+        name: string;
+        type: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
+        baseApi: string;
+    } | null;
+}) => {
+    const provider =
+        providerSelection.provider ?? providerSelection.userProvider;
+    if (!provider) {
+        return undefined;
+    }
+
+    return {
+        id: provider.id,
+        code: provider.code,
+        name: provider.name,
+        type: provider.type,
+        baseApi: provider.baseApi,
+        isCustom: Boolean(providerSelection.userProvider),
+    } satisfies RoundhouseProvider;
 };
 
 const buildCandidates = (
     providerSelections: Array<{
         id: string;
         active: boolean;
+        inactiveModelIds: string[];
+        inactiveUserModelIds: string[];
         providerApiKeys: RoundhouseProviderApiKey[];
-        modelSelections: Array<{
+        provider: {
             id: string;
-            active: boolean;
-            usedTokens: number;
-            models: RoundhouseModel[];
-            userModels: RoundhouseModel[];
-        }>;
+            code: string;
+            name: string;
+            type: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
+            baseApi: string;
+        } | null;
+        userProvider: {
+            id: string;
+            code: string;
+            name: string;
+            type: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
+            baseApi: string;
+        } | null;
+        models: Array<Omit<RoundhouseModel, "provider">>;
+        userModels: Array<Omit<RoundhouseModel, "provider">>;
     }>,
     filters?: RoundhouseFilters,
 ): RoundhouseCandidate[] => {
@@ -129,13 +166,16 @@ const buildCandidates = (
         providerSelectionCount: providerSelections.length,
         providerFilter: filters?.provider ?? null,
         allowedModelKeysCount: allowedModelKeys?.size ?? 0,
+        strategy: filters?.strategy ?? "efficiency",
     });
 
     for (const providerSelection of providerSelections) {
         if (!providerSelection.active) {
-            logger.log("Skipping inactive provider selection", {
-                providerSelectionId: providerSelection.id,
-            });
+            continue;
+        }
+
+        const provider = buildProviderRecord(providerSelection);
+        if (!provider) {
             continue;
         }
 
@@ -143,71 +183,55 @@ const buildCandidates = (
             (providerApiKey) => providerApiKey.active,
         );
         if (activeProviderApiKeys.length === 0) {
-            logger.warn("No active provider API keys for selection", {
-                providerSelectionId: providerSelection.id,
-            });
             continue;
         }
 
-        for (const modelSelection of providerSelection.modelSelections) {
-            if (!modelSelection.active) {
-                logger.log("Skipping inactive model selection", {
-                    providerSelectionId: providerSelection.id,
-                    modelSelectionId: modelSelection.id,
-                });
-                continue;
-            }
+        const selectedModels = [
+            ...providerSelection.models
+                .filter(
+                    (model) =>
+                        !providerSelection.inactiveModelIds.includes(model.id),
+                )
+                .map((model) => ({ ...model, provider })),
+            ...providerSelection.userModels
+                .filter(
+                    (model) =>
+                        !providerSelection.inactiveUserModelIds.includes(
+                            model.id,
+                        ),
+                )
+                .map((model) => ({ ...model, provider })),
+        ];
 
-            const model = pickModel(modelSelection);
-            if (!model) {
-                logger.warn("No active model found for model selection", {
-                    providerSelectionId: providerSelection.id,
-                    modelSelectionId: modelSelection.id,
-                });
+        for (const model of selectedModels) {
+            if (model.status !== "ACTIVE") {
                 continue;
             }
 
             if (filters?.provider && model.provider.type !== filters.provider) {
-                logger.log("Skipping model due to provider filter mismatch", {
-                    modelId: model.id,
-                    modelProviderType: model.provider.type,
-                    requestedProviderType: filters.provider,
-                });
                 continue;
             }
 
             if (allowedModelKeys) {
-                const normalizedKey = `${model.provider.type.toLowerCase()}/${model.code.toLowerCase()}`;
-                const normalizedProvider = model.provider.type.toLowerCase();
+                const normalizedProvider = model.provider.code.toLowerCase();
+                const normalizedType = model.provider.type.toLowerCase();
                 const normalizedModelCode = model.code.toLowerCase();
+                const normalizedProviderKey = `${normalizedProvider}/${normalizedModelCode}`;
+                const normalizedTypeKey = `${normalizedType}/${normalizedModelCode}`;
 
                 if (
-                    !allowedModelKeys.has(normalizedKey) &&
+                    !allowedModelKeys.has(normalizedProviderKey) &&
+                    !allowedModelKeys.has(normalizedTypeKey) &&
                     !allowedModelKeys.has(normalizedProvider) &&
+                    !allowedModelKeys.has(normalizedType) &&
                     !allowedModelKeys.has(normalizedModelCode)
                 ) {
-                    logger.log("Skipping model due to model key filter mismatch", {
-                        modelId: model.id,
-                        normalizedKey,
-                    });
                     continue;
                 }
             }
 
-            if (
-                model.maxTokens !== null &&
-                modelSelection.usedTokens >= model.maxTokens
-            ) {
-                logger.warn("Skipping model selection due to token limit", {
-                    modelSelectionId: modelSelection.id,
-                    usedTokens: modelSelection.usedTokens,
-                    maxTokens: model.maxTokens,
-                });
-                continue;
-            }
-
             candidates.push({
-                modelSelectionId: modelSelection.id,
+                modelSelectionId: model.id,
                 providerSelectionId: providerSelection.id,
                 model,
                 providerApiKeys: activeProviderApiKeys,
@@ -216,7 +240,17 @@ const buildCandidates = (
         }
     }
 
-    candidates.sort((a, b) => b.score - a.score);
+    if (filters?.strategy === "random") {
+        for (let index = candidates.length - 1; index > 0; index -= 1) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [candidates[index], candidates[swapIndex]] = [
+                candidates[swapIndex],
+                candidates[index],
+            ];
+        }
+    } else {
+        candidates.sort((a, b) => b.score - a.score);
+    }
 
     logger.log("Finished building candidates", {
         candidateCount: candidates.length,
@@ -240,28 +274,13 @@ const getApiKeyWithSelections = async (
             providerSelections: {
                 where: { active: true },
                 include: {
-                    providers: true,
-                    userProviders: true,
+                    provider: true,
+                    userProvider: true,
                     providerApiKeys: {
                         where: { active: true },
                     },
-                    modelSelections: {
-                        where: {
-                            active: true,
-                        },
-                        include: {
-                            models: {
-                                include: {
-                                    provider: true,
-                                },
-                            },
-                            userModels: {
-                                include: {
-                                    provider: true,
-                                },
-                            },
-                        },
-                    },
+                    models: true,
+                    userModels: true,
                 },
             },
         },
@@ -285,28 +304,17 @@ const getCandidatePool = async (
     apiKey: string,
     filters?: RoundhouseFilters,
 ): Promise<CandidatePoolResult> => {
-    logger.log("Preparing candidate pool", {
-        providerFilter: filters?.provider ?? null,
-        allowedModelKeysCount: filters?.modelKeys?.size ?? 0,
-    });
-
     const apiKeyData = await getApiKeyWithSelections(prisma, apiKey);
 
     const apiKeyError = checkApiKeyError(apiKeyData);
     if (apiKeyError) {
-        logger.warn("API key failed validation", {
-            code: apiKeyError.code,
-            statusCode: apiKeyError.status_code,
-        });
         return {
             success: false,
             error: { success: false, ...apiKeyError },
         };
     }
 
-    const safeApiKeyData = apiKeyData;
-    if (!safeApiKeyData) {
-        logger.warn("API key not found during candidate pool preparation");
+    if (!apiKeyData) {
         return {
             success: false,
             error: {
@@ -316,17 +324,10 @@ const getCandidatePool = async (
         };
     }
 
-    const candidates = buildCandidates(
-        safeApiKeyData.providerSelections,
-        filters,
-    );
+    const candidates = buildCandidates(apiKeyData.providerSelections, filters);
 
     if (candidates.length === 0) {
         const requestedFilters = Boolean(filters?.modelKeys?.size);
-        logger.warn("No available roundhouse candidates", {
-            requestedFilters,
-            providerSelectionCount: safeApiKeyData.providerSelections.length,
-        });
         return {
             success: false,
             error: {
@@ -339,30 +340,22 @@ const getCandidatePool = async (
     }
 
     const excluded = new Set<string>(
-        safeApiKeyData.lastErrors.map(
+        apiKeyData.lastErrors.map(
             (lastError: { modelId: string; providerApiKeyId: string }) =>
                 `${lastError.modelId}:${lastError.providerApiKeyId}`,
         ),
     );
 
-    logger.log("Candidate pool ready", {
-        apiKeyId: safeApiKeyData.id,
-        candidateCount: candidates.length,
-        excludedCount: excluded.size,
-    });
-
     return {
         success: true,
-        apiKeyId: safeApiKeyData.id,
+        apiKeyId: apiKeyData.id,
         candidates,
         excluded,
     };
 };
 
-const createExcludedKey = (
-    modelSelectionId: string,
-    providerApiKeyId: string,
-) => `${modelSelectionId}:${providerApiKeyId}`;
+const createExcludedKey = (modelId: string, providerApiKeyId: string) =>
+    `${modelId}:${providerApiKeyId}`;
 
 const selectRandomProviderApiKey = (
     providerApiKeys: RoundhouseProviderApiKey[],
@@ -388,20 +381,12 @@ export const createListRoundhouseCandidates = (prisma: PrismaClient) => {
         | SelectProviderError
         | { success: true; candidates: RoundhouseCandidate[] }
     > => {
-        logger.log("Listing roundhouse candidates");
         const candidatePool = await getCandidatePool(prisma, apiKey, filters);
 
         if ("error" in candidatePool) {
-            logger.warn("Failed to list roundhouse candidates", {
-                code: candidatePool.error.code,
-                statusCode: candidatePool.error.status_code,
-            });
             return candidatePool.error;
         }
 
-        logger.log("Roundhouse candidates listed", {
-            candidateCount: candidatePool.candidates.length,
-        });
         return {
             success: true,
             candidates: candidatePool.candidates,
@@ -416,18 +401,9 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
         maxIterations = DEFAULT_MAX_ITERATIONS,
         filters?: RoundhouseFilters,
     ): Promise<SelectProviderResponse<T>> => {
-        logger.log("Starting roundhouse execution", {
-            maxIterations,
-            providerFilter: filters?.provider ?? null,
-            allowedModelKeysCount: filters?.modelKeys?.size ?? 0,
-        });
         const candidatePool = await getCandidatePool(prisma, apiKey, filters);
 
         if ("error" in candidatePool) {
-            logger.warn("Roundhouse execution aborted during candidate preparation", {
-                code: candidatePool.error.code,
-                statusCode: candidatePool.error.status_code,
-            });
             return candidatePool.error;
         }
 
@@ -437,43 +413,22 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
         while (iteration < maxIterations) {
             iteration += 1;
 
-            logger.log("Roundhouse iteration started", {
-                iteration,
-                maxIterations,
-                candidateCount: candidates.length,
-                excludedCount: excluded.size,
-            });
-
             let available = candidates
-                .map((candidate) => {
-                    const availableProviderApiKeys =
-                        candidate.providerApiKeys.filter(
-                            (providerApiKey) =>
-                                !excluded.has(
-                                    createExcludedKey(
-                                        candidate.modelSelectionId,
-                                        providerApiKey.id,
-                                    ),
+                .map((candidate) => ({
+                    candidate,
+                    availableProviderApiKeys: candidate.providerApiKeys.filter(
+                        (providerApiKey) =>
+                            !excluded.has(
+                                createExcludedKey(
+                                    candidate.modelSelectionId,
+                                    providerApiKey.id,
                                 ),
-                        );
-
-                    return {
-                        candidate,
-                        availableProviderApiKeys,
-                    };
-                })
+                            ),
+                    ),
+                }))
                 .filter((entry) => entry.availableProviderApiKeys.length > 0);
 
-            logger.log("Evaluated available provider API keys", {
-                iteration,
-                availableCandidateCount: available.length,
-            });
-
             if (available.length === 0) {
-                logger.warn("No available provider API keys remain, clearing exclusions", {
-                    iteration,
-                    excludedCount: excluded.size,
-                });
                 excluded.clear();
 
                 runInBackground(
@@ -488,9 +443,6 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 }));
 
                 if (available.length === 0) {
-                    logger.warn("No candidates available after exclusion reset", {
-                        iteration,
-                    });
                     return {
                         success: false,
                         ...InternalResponses.NO_AVAILABLE_MODELS,
@@ -498,27 +450,18 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 }
             }
 
-            const { candidate, availableProviderApiKeys } = available[0];
+            const selectedIndex =
+                filters?.strategy === "random"
+                    ? Math.floor(Math.random() * available.length)
+                    : 0;
+            const { candidate, availableProviderApiKeys } =
+                available[selectedIndex];
             const providerApiKey = selectRandomProviderApiKey(
                 availableProviderApiKeys,
             );
-            logger.log("Selected candidate for execution", {
-                iteration,
-                providerSelectionId: candidate.providerSelectionId,
-                modelSelectionId: candidate.modelSelectionId,
-                modelId: candidate.model.id,
-                providerApiKeyId: providerApiKey.id,
-                availableProviderApiKeyCount: availableProviderApiKeys.length,
-            });
             const result = await execute(candidate, providerApiKey);
 
             if (result.success) {
-                logger.log("Roundhouse execution succeeded", {
-                    iteration,
-                    providerSelectionId: candidate.providerSelectionId,
-                    modelSelectionId: candidate.modelSelectionId,
-                    providerApiKeyId: providerApiKey.id,
-                });
                 runInBackground(
                     prisma.lastError.deleteMany({
                         where: { apiKeyId },
@@ -545,12 +488,6 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 };
             }
 
-            logger.warn("Roundhouse execution failed for selected provider API key", {
-                iteration,
-                providerSelectionId: candidate.providerSelectionId,
-                modelSelectionId: candidate.modelSelectionId,
-                providerApiKeyId: providerApiKey.id,
-            });
             excluded.add(
                 createExcludedKey(
                     candidate.modelSelectionId,
@@ -569,10 +506,6 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
             );
         }
 
-        logger.warn("Roundhouse execution reached max iterations", {
-            maxIterations,
-            candidateCount: candidates.length,
-        });
         return {
             success: false,
             ...InternalResponses.MAX_ITERATIONS,

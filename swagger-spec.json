@@ -892,6 +892,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyProviderDto"
+              }
+            }
+          }
+        },
         "responses": {},
         "summary": "Select provider for API key",
         "tags": [
@@ -1743,6 +1753,9 @@
           "name": {
             "type": "string"
           },
+          "code": {
+            "type": "string"
+          },
           "description": {
             "type": "string"
           },
@@ -1779,6 +1792,9 @@
             ]
           },
           "name": {
+            "type": "string"
+          },
+          "code": {
             "type": "string"
           },
           "description": {
@@ -1843,6 +1859,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "thinking": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -1885,6 +1904,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "thinking": {
+            "type": "boolean"
           }
         }
       },
@@ -1971,6 +1993,20 @@
         },
         "required": [
           "active"
+        ]
+      },
+      "CreateApiKeyProviderDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key"
         ]
       },
       "UpdateApiKeyProviderModelsDto": {

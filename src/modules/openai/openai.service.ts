@@ -122,7 +122,7 @@ export class OpenaiService {
                 messageCount: body.messages?.length ?? 0,
             });
 
-            const { provider, modelKeys, maxIterations } =
+            const { provider, modelKeys, maxIterations, strategy } =
                 resolveRoundhouseFilters(req.headers);
             const mergedModelKeys = this.mergeBodyModelWithModelKeys(
                 body.model,
@@ -131,6 +131,7 @@ export class OpenaiService {
             this.logger.log("chatCompletions filters resolved", {
                 provider: provider ?? null,
                 maxIterations: maxIterations ?? null,
+                strategy,
                 mergedModelKeysCount: mergedModelKeys?.size ?? 0,
                 requestedModel: body.model ?? null,
             });
@@ -209,6 +210,7 @@ export class OpenaiService {
                     {
                         provider,
                         modelKeys: mergedModelKeys,
+                        strategy,
                     },
                 );
                 this.logger.log("chatCompletions stream selection finished", {
@@ -322,6 +324,7 @@ export class OpenaiService {
                 {
                     provider,
                     modelKeys: mergedModelKeys,
+                    strategy,
                 },
             );
             this.logger.log("chatCompletions selection finished", {
@@ -391,7 +394,7 @@ export class OpenaiService {
             const body = responsesBodySchema.parse(
                 req.body,
             ) as OpenAIResponsesRequest;
-            const { provider, modelKeys, maxIterations } =
+            const { provider, modelKeys, maxIterations, strategy } =
                 resolveRoundhouseFilters(req.headers);
             const mergedModelKeys = this.mergeBodyModelWithModelKeys(
                 body.model,
@@ -428,6 +431,7 @@ export class OpenaiService {
                 {
                     provider,
                     modelKeys: mergedModelKeys,
+                    strategy,
                 },
             );
 
@@ -487,10 +491,13 @@ export class OpenaiService {
             );
         }
 
-        const { provider, modelKeys } = resolveRoundhouseFilters(req.headers);
+        const { provider, modelKeys, strategy } = resolveRoundhouseFilters(
+            req.headers,
+        );
         const result = await this.listRoundhouseCandidates(apiKey, {
             provider,
             modelKeys,
+            strategy,
         });
 
         if ("code" in result) {
