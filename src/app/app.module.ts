@@ -6,7 +6,7 @@ import { ApikeysModule } from "@/modules/iv1/apikeys/apikeys.module";
 import { ModelsModule } from "@/modules/iv1/models/models.module";
 import { AdminModule } from "@/modules/iv1/admin/admin.module";
 import { GlobalExceptionFilter } from "@/common/filters/global_exception";
-import { Module } from "@nestjs/common";
+import { Module, MiddlewareConsumer, NestModule } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, RouterModule } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "./app.controller";
@@ -14,6 +14,7 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 import { AuthGuard } from "@/common/guards/auth.guard";
 import { CommonModule } from "@/common/common.module";
+import { RequestLoggingMiddleware } from "@/middlewares/request-logging.middleware";
 
 @Module({
     imports: [
@@ -92,4 +93,8 @@ import { CommonModule } from "@/common/common.module";
         { provide: APP_GUARD, useClass: AuthGuard },
     ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(RequestLoggingMiddleware).forRoutes("*");
+    }
+}

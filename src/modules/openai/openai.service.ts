@@ -4,9 +4,7 @@ import {
     createResponse,
 } from "@/core/api-wrapper/service";
 import {
-    type BoundRoundhouseCandidateLister,
     type BoundRoundhouseExecutor,
-    createListRoundhouseCandidates,
     createRoundhouseExecutor,
 } from "@/core/services/roundhouse/roundhouse.service";
 import type {
@@ -17,10 +15,11 @@ import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { createDevLogger } from "@/common/utils/logger";
 import { toOpenAIError } from "@/core/utils/openaiError.util";
 import {
-    resolveApiKey,
     resolveRoundhouseFilters,
+    resolveApiKey,
 } from "@/core/utils/roundhouseRequest.util";
 import { HttpStatus, Injectable } from "@nestjs/common";
+import { ContentStatus } from "@prisma/client";
 import type { Request } from "express";
 import { ZodError } from "zod";
 import {
@@ -32,14 +31,10 @@ import {
 @Injectable()
 export class OpenaiService {
     private readonly executor: BoundRoundhouseExecutor;
-    private readonly listRoundhouseCandidates: BoundRoundhouseCandidateLister;
     private readonly logger = createDevLogger("openai.chat");
 
     constructor(private readonly prisma: PrismaService) {
         this.executor = createRoundhouseExecutor(this.prisma);
-        this.listRoundhouseCandidates = createListRoundhouseCandidates(
-            this.prisma,
-        );
     }
 
     private toValidationMessage(error: ZodError) {
@@ -92,6 +87,31 @@ export class OpenaiService {
             merged.add(token),
         );
         return merged;
+    }
+
+    private matchesModelKeys(
+        providerCode: string,
+        providerType: string,
+        modelCode: string,
+        modelKeys: Set<string> | undefined,
+    ) {
+        if (!modelKeys || modelKeys.size === 0) {
+            return true;
+        }
+
+        const normalizedProvider = providerCode.toLowerCase();
+        const normalizedType = providerType.toLowerCase();
+        const normalizedModelCode = modelCode.toLowerCase();
+        const normalizedProviderKey = `${normalizedProvider}/${normalizedModelCode}`;
+        const normalizedTypeKey = `${normalizedType}/${normalizedModelCode}`;
+
+        return (
+            modelKeys.has(normalizedProviderKey) ||
+            modelKeys.has(normalizedTypeKey) ||
+            modelKeys.has(normalizedProvider) ||
+            modelKeys.has(normalizedType) ||
+            modelKeys.has(normalizedModelCode)
+        );
     }
 
     async chatCompletions(req: Request) {
@@ -380,8 +400,12 @@ export class OpenaiService {
     }
 
     async responses(req: Request) {
+        const startedAt = Date.now();
+        this.logger.log("responses request started");
+
         const apiKey = resolveApiKey(req);
         if (!apiKey) {
+            this.logger.warn("responses missing API key");
             return this.createErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 "Missing API key. Use Authorization: Bearer <key>.",
@@ -391,20 +415,42 @@ export class OpenaiService {
         }
 
         try {
+            const validationStartedAt = Date.now();
             const body = responsesBodySchema.parse(
                 req.body,
             ) as OpenAIResponsesRequest;
+            this.logger.log("responses body validated", {
+                durationMs: Date.now() - validationStartedAt,
+                requestedModel: body.model ?? null,
+            });
             const { provider, modelKeys, maxIterations, strategy } =
                 resolveRoundhouseFilters(req.headers);
             const mergedModelKeys = this.mergeBodyModelWithModelKeys(
                 body.model,
                 modelKeys,
             );
+            this.logger.log("responses filters resolved", {
+                provider: provider ?? null,
+                maxIterations: maxIterations ?? null,
+                strategy,
+                mergedModelKeysCount: mergedModelKeys?.size ?? 0,
+                requestedModel: body.model ?? null,
+            });
 
+            const selectionStartedAt = Date.now();
             const result = await this.executor(
                 apiKey,
                 async (candidate, providerApiKey) => {
+                    const providerCallStartedAt = Date.now();
+
                     try {
+                        this.logger.log("responses provider call started", {
+                            providerSelectionId: candidate.providerSelectionId,
+                            modelSelectionId: candidate.modelSelectionId,
+                            modelId: candidate.model.id,
+                            providerType: candidate.model.provider.type,
+                            providerApiKeyId: providerApiKey.id,
+                        });
                         const response = await createResponse(
                             {
                                 ...body,
@@ -416,12 +462,28 @@ export class OpenaiService {
                                 headers: req.headers,
                             },
                         );
+                        this.logger.log("responses provider call succeeded", {
+                            durationMs: Date.now() - providerCallStartedAt,
+                            providerSelectionId: candidate.providerSelectionId,
+                            modelSelectionId: candidate.modelSelectionId,
+                            providerApiKeyId: providerApiKey.id,
+                        });
 
                         return {
                             success: true as const,
                             data: response,
                         };
-                    } catch {
+                    } catch (error) {
+                        this.logger.warn("responses provider call failed", {
+                            durationMs: Date.now() - providerCallStartedAt,
+                            providerSelectionId: candidate.providerSelectionId,
+                            modelSelectionId: candidate.modelSelectionId,
+                            providerApiKeyId: providerApiKey.id,
+                            error:
+                                error instanceof Error
+                                    ? error.message
+                                    : "Unknown error",
+                        });
                         return {
                             success: false as const,
                         };
@@ -434,8 +496,16 @@ export class OpenaiService {
                     strategy,
                 },
             );
+            this.logger.log("responses selection finished", {
+                durationMs: Date.now() - selectionStartedAt,
+            });
 
             if ("code" in result) {
+                this.logger.warn("responses returned roundhouse error", {
+                    code: result.code,
+                    statusCode: result.status_code,
+                    totalDurationMs: Date.now() - startedAt,
+                });
                 return this.createErrorResponse(
                     result.status_code,
                     result.message,
@@ -444,12 +514,19 @@ export class OpenaiService {
                 );
             }
 
+            this.logger.log("responses request succeeded", {
+                totalDurationMs: Date.now() - startedAt,
+            });
             return {
                 statusCode: HttpStatus.OK,
                 body: result.data,
             };
         } catch (error) {
             if (error instanceof ZodError) {
+                this.logger.warn("responses validation failed", {
+                    totalDurationMs: Date.now() - startedAt,
+                    error: this.toValidationMessage(error),
+                });
                 return this.createErrorResponse(
                     HttpStatus.BAD_REQUEST,
                     `Validation failed: ${this.toValidationMessage(error)}`,
@@ -458,6 +535,10 @@ export class OpenaiService {
                 );
             }
 
+            this.logger.error("responses unexpected server error", {
+                totalDurationMs: Date.now() - startedAt,
+                error: error instanceof Error ? error.message : "Unknown error",
+            });
             return this.createErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Unexpected server error.",
@@ -481,57 +562,79 @@ export class OpenaiService {
             }
         }
 
-        const apiKey = resolveApiKey(req, { allowQueryApiKey: true });
-        if (!apiKey) {
-            return this.createErrorResponse(
-                HttpStatus.UNAUTHORIZED,
-                "Missing API key. Use query `apiKey`, `X-API-Key`, or Authorization Bearer.",
-                "api_key_missing",
-                "authentication_error",
-            );
-        }
-
         const { provider, modelKeys, strategy } = resolveRoundhouseFilters(
             req.headers,
         );
-        const result = await this.listRoundhouseCandidates(apiKey, {
-            provider,
-            modelKeys,
-            strategy,
+        const roundhouseCreated = Math.floor(Date.now() / 1000);
+        const providers = await this.prisma.provider.findMany({
+            where: {
+                status: ContentStatus.ACTIVE,
+                ...(provider ? { type: provider } : {}),
+            },
+            select: {
+                code: true,
+                type: true,
+            },
         });
 
-        if ("code" in result) {
-            return this.createErrorResponse(
-                result.status_code,
-                result.message,
-                result.code,
-                "invalid_request_error",
-            );
-        }
+        const providerMap = new Map(
+            providers.map((item) => [item.code, item.type] as const),
+        );
 
-        const unique = new Map<
-            string,
-            { id: string; object: "model"; created: number; owned_by: string }
-        >();
-
-        result.candidates.forEach((candidate) => {
-            const providerKey = candidate.model.provider.type.toLowerCase();
-            const modelId = `${providerKey}/${candidate.model.code}`;
-            if (!unique.has(modelId)) {
-                unique.set(modelId, {
-                    id: modelId,
-                    object: "model",
-                    created: Math.floor(Date.now() / 1000),
-                    owned_by: providerKey,
-                });
-            }
+        const models = await this.prisma.model.findMany({
+            where: {
+                status: ContentStatus.ACTIVE,
+                provider: {
+                    in: providers.map((item) => item.code),
+                },
+            },
+            select: {
+                code: true,
+                provider: true,
+                createdAt: true,
+            },
+            orderBy:
+                strategy === "random"
+                    ? undefined
+                    : [{ provider: "asc" }, { code: "asc" }],
         });
+
+        const data = models
+            .filter((model) => {
+                const providerType = providerMap.get(model.provider);
+                if (!providerType) {
+                    return false;
+                }
+
+                return this.matchesModelKeys(
+                    model.provider,
+                    providerType,
+                    model.code,
+                    modelKeys,
+                );
+            })
+            .map((model) => {
+                const providerType = providerMap.get(model.provider)!.toLowerCase();
+
+                return {
+                    id: `${providerType}/${model.code}`,
+                    object: "model" as const,
+                    created: Math.floor(model.createdAt.getTime() / 1000),
+                    owned_by: providerType,
+                };
+            });
+        const roundhouseModels = ["roundhouse", "auto"].map((id) => ({
+            id,
+            object: "model" as const,
+            created: roundhouseCreated,
+            owned_by: "roundhouse",
+        }));
 
         return {
             statusCode: HttpStatus.OK,
             body: {
                 object: "list",
-                data: [...unique.values()],
+                data: [...roundhouseModels, ...data],
             },
         };
     }
