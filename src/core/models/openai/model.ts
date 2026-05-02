@@ -17,7 +17,7 @@ const buildRequestBody = (params: ProviderCallParams) => {
         messages: request.messages,
         tools: request.tools,
         tool_choice: request.tool_choice,
-        stream: request.stream,
+        stream: false,
         ...request.params,
     };
 };
@@ -66,6 +66,7 @@ export const callOpenAIModel = async (
         | { error?: { message?: string } };
 
     if (!response.ok) {
+        console.error("OpenAI API error response:", data);
         throw new Error(
             ("error" in data && data.error?.message) ||
                 "OpenAI-compatible API request failed",

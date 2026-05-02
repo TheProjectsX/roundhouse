@@ -12,6 +12,8 @@ import type {
     OpenAIResponsesRequest,
 } from "@/core/models/types";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
+import { ModelSelectionService } from "@/common/services/modelSelection/model-selection.service";
+import { background } from "@/common/utils/background";
 import { createDevLogger } from "@/common/utils/logger";
 import { toOpenAIError } from "@/core/utils/openaiError.util";
 import {
@@ -33,8 +35,28 @@ export class OpenaiService {
     private readonly executor: BoundRoundhouseExecutor;
     private readonly logger = createDevLogger("openai.chat");
 
-    constructor(private readonly prisma: PrismaService) {
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly modelSelectionService: ModelSelectionService,
+    ) {
         this.executor = createRoundhouseExecutor(this.prisma);
+    }
+
+    private queueModelSelectionStats(
+        modelSelectionId: string,
+        tokenUsage: number,
+        successCount = 1,
+    ) {
+        background.add(async () => {
+            await this.modelSelectionService.updateModelSelectionStats(
+                modelSelectionId,
+                {
+                    tokenUsage,
+                    successCount,
+                    lastUsedAt: new Date(),
+                },
+            );
+        }, 1);
     }
 
     private toValidationMessage(error: ZodError) {
@@ -205,6 +227,7 @@ export class OpenaiService {
                                 data: chunks,
                             };
                         } catch (error) {
+                            console.error(error);
                             this.logger.warn(
                                 "chatCompletions stream provider call failed",
                                 {
@@ -365,8 +388,16 @@ export class OpenaiService {
                 );
             }
 
+            const tokenUsage = result.data.usage?.total_tokens ?? 0;
+            this.queueModelSelectionStats(
+                result.candidate.modelSelectionId,
+                tokenUsage,
+            );
+
             this.logger.log("chatCompletions request succeeded", {
                 totalDurationMs: Date.now() - startedAt,
+                modelSelectionId: result.candidate.modelSelectionId,
+                tokenUsage,
             });
             return {
                 statusCode: HttpStatus.OK,
@@ -514,8 +545,16 @@ export class OpenaiService {
                 );
             }
 
+            const tokenUsage = result.data.usage?.total_tokens ?? 0;
+            this.queueModelSelectionStats(
+                result.candidate.modelSelectionId,
+                tokenUsage,
+            );
+
             this.logger.log("responses request succeeded", {
                 totalDurationMs: Date.now() - startedAt,
+                modelSelectionId: result.candidate.modelSelectionId,
+                tokenUsage,
             });
             return {
                 statusCode: HttpStatus.OK,
@@ -614,7 +653,9 @@ export class OpenaiService {
                 );
             })
             .map((model) => {
-                const providerType = providerMap.get(model.provider)!.toLowerCase();
+                const providerType = providerMap
+                    .get(model.provider)!
+                    .toLowerCase();
 
                 return {
                     id: `${providerType}/${model.code}`,

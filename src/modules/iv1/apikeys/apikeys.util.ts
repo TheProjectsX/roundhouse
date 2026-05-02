@@ -1,28 +1,26 @@
-import { nanoid } from "nanoid";
 import crypto from "crypto";
 
-type ApiKeyOptions = {
-    length?: number;
-    prefix?: string;
-    env?: "dev" | "prod" | "test";
-};
+export const generateApiKey = (totalLength: number = 32): string => {
+    const ALPHABET = "23456789abcdefghjkmnpqrstuvwxyz";
+    const PREFIX = "rh_prod_";
+    const segCount = 3;
+    const dots = segCount - 1;
+    const available = totalLength - PREFIX.length - dots;
 
-export const generateApiKey = ({
-    length = 32,
-    prefix = "rh",
-    env = "prod",
-}: ApiKeyOptions = {}): string => {
-    const randomPart = nanoid(length);
+    if (available < segCount)
+        throw new Error(`totalLength ${totalLength} too short`);
 
-    // timestamp (base36 = shorter)
-    const timestamp = Date.now().toString(36);
+    const base = Math.floor(available / segCount);
+    const remainder = available % segCount;
 
-    // small hash for integrity / uniqueness
-    const hash = crypto
-        .createHash("sha256")
-        .update(randomPart + timestamp)
-        .digest("hex")
-        .slice(0, 8);
+    const randSeg = (len: number): string =>
+        Array.from(crypto.getRandomValues(new Uint8Array(len)))
+            .map((b) => ALPHABET[b % ALPHABET.length])
+            .join("");
 
-    return `${prefix}_${env}_${timestamp}_${randomPart}_${hash}`;
+    const segments = Array.from({ length: segCount }, (_, i) =>
+        randSeg(i < remainder ? base + 1 : base),
+    );
+
+    return `${PREFIX}${segments.join(".")}`;
 };

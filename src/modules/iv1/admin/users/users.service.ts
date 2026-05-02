@@ -12,8 +12,9 @@ type AdminUserDetails = Prisma.UserGetPayload<{
                 providerSelections: {
                     include: {
                         providerApiKeys: true;
-                        models: true;
-                        userModels: true;
+                        modelSelections: {
+                            include: { model: true; userModel: true };
+                        };
                     };
                 };
             };
@@ -22,8 +23,7 @@ type AdminUserDetails = Prisma.UserGetPayload<{
         providerSelections: {
             include: {
                 providerApiKeys: true;
-                models: true;
-                userModels: true;
+                modelSelections: { include: { model: true; userModel: true } };
             };
         };
     };
@@ -60,8 +60,9 @@ export class AdminUsersService {
                 providerSelections: {
                     include: {
                         providerApiKeys: true,
-                        models: true,
-                        userModels: true,
+                        modelSelections: {
+                            include: { model: true, userModel: true },
+                        },
                     },
                 },
             })
@@ -95,9 +96,7 @@ export class AdminUsersService {
                     ),
                     selectedModelCount: (user.providerSelections ?? []).reduce(
                         (sum, selection) =>
-                            sum +
-                            (selection.models?.length ?? 0) +
-                            (selection.userModels?.length ?? 0),
+                            sum + (selection.modelSelections?.length ?? 0),
                         0,
                     ),
                 },
@@ -118,8 +117,9 @@ export class AdminUsersService {
                         providerSelections: {
                             include: {
                                 providerApiKeys: true,
-                                models: true,
-                                userModels: true,
+                                modelSelections: {
+                                    include: { model: true, userModel: true },
+                                },
                             },
                         },
                     },
@@ -128,8 +128,9 @@ export class AdminUsersService {
                 providerSelections: {
                     include: {
                         providerApiKeys: true,
-                        models: true,
-                        userModels: true,
+                        modelSelections: {
+                            include: { model: true, userModel: true },
+                        },
                     },
                 },
             },
@@ -214,9 +215,7 @@ export class AdminUsersService {
             );
             const modelCount = providerSelections.reduce(
                 (sum, selection) =>
-                    sum +
-                    (selection.models?.length ?? 0) +
-                    (selection.userModels?.length ?? 0),
+                    sum + (selection.modelSelections?.length ?? 0),
                 0,
             );
 
@@ -284,10 +283,7 @@ export class AdminUsersService {
             0,
         );
         const totalSelectedModels = user.providerSelections.reduce(
-            (sum, selection) =>
-                sum +
-                (selection.models?.length ?? 0) +
-                (selection.userModels?.length ?? 0),
+            (sum, selection) => sum + (selection.modelSelections?.length ?? 0),
             0,
         );
 

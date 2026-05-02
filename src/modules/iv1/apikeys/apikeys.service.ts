@@ -21,8 +21,12 @@ type ApiKeyDetails = Prisma.ApiKeyGetPayload<{
                 provider: true;
                 userProvider: true;
                 providerApiKeys: true;
-                models: true;
-                userModels: true;
+                modelSelections: {
+                    include: {
+                        model: true;
+                        userModel: true;
+                    };
+                };
             };
         };
     };
@@ -48,8 +52,9 @@ export class ApikeysService {
                 providerSelections: {
                     include: {
                         providerApiKeys: true,
-                        models: true,
-                        userModels: true,
+                        modelSelections: {
+                            include: { model: true, userModel: true },
+                        },
                     },
                 },
             })
@@ -72,9 +77,7 @@ export class ApikeysService {
                     0,
                 );
 
-                modelCount +=
-                    (providerSelection.models?.length ?? 0) +
-                    (providerSelection.userModels?.length ?? 0);
+                modelCount += providerSelection.modelSelections?.length ?? 0;
             });
 
             return {
@@ -105,8 +108,9 @@ export class ApikeysService {
                         provider: true,
                         userProvider: true,
                         providerApiKeys: true,
-                        models: true,
-                        userModels: true,
+                        modelSelections: {
+                            include: { model: true, userModel: true },
+                        },
                     },
                 },
             },
@@ -224,12 +228,27 @@ export class ApikeysService {
                     providerEntity.kind === "custom"
                         ? providerEntity.id
                         : undefined,
-                modelIds: providerEntity.kind === "global" ? modelIds : [],
-                userModelIds: providerEntity.kind === "custom" ? modelIds : [],
-                inactiveModelIds: [],
-                inactiveUserModelIds: [],
             } satisfies Prisma.ProviderSelectionUncheckedCreateInput,
         });
+
+        // create model selections for the provider selection
+        if (modelIds.length) {
+            const createData = modelIds.map((id) =>
+                providerEntity.kind === "global"
+                    ? {
+                          providerSelectionId: providerSelection.id,
+                          modelId: id,
+                          active: true,
+                      }
+                    : {
+                          providerSelectionId: providerSelection.id,
+                          userModelId: id,
+                          active: true,
+                      },
+            );
+
+            await this.prisma.modelSelection.createMany({ data: createData });
+        }
 
         const providerApiKey = await this.prisma.providerApiKey.create({
             data: {
@@ -284,39 +303,44 @@ export class ApikeysService {
             payload.modelIds,
         );
 
-        if (selection.kind === "global") {
-            const currentIds = new Set(selection.providerSelection.modelIds);
-            validatedModelIds.forEach((id) => currentIds.add(id));
+        // ensure modelSelection records exist and are active
+        for (const id of validatedModelIds) {
+            const where: Prisma.ModelSelectionWhereInput = {
+                providerSelectionId: selection.providerSelection.id,
+            };
+            if (selection.kind === "global") {
+                where.modelId = id;
+            } else {
+                where.userModelId = id;
+            }
 
-            const updated = await this.prisma.providerSelection.update({
-                where: { id: selection.providerSelection.id },
-                data: {
-                    modelIds: [...currentIds],
-                    inactiveModelIds:
-                        selection.providerSelection.inactiveModelIds.filter(
-                            (id) => !validatedModelIds.includes(id),
-                        ),
-                },
+            const existing = await this.prisma.modelSelection.findFirst({
+                where,
+                select: { id: true },
             });
 
-            return { message: "Models selected", data: { id: updated.id } };
+            if (existing) {
+                await this.prisma.modelSelection.update({
+                    where: { id: existing.id },
+                    data: { active: true },
+                });
+            } else {
+                await this.prisma.modelSelection.create({
+                    data: {
+                        providerSelectionId: selection.providerSelection.id,
+                        active: true,
+                        ...(selection.kind === "global"
+                            ? { modelId: id }
+                            : { userModelId: id }),
+                    },
+                });
+            }
         }
 
-        const currentIds = new Set(selection.providerSelection.userModelIds);
-        validatedModelIds.forEach((id) => currentIds.add(id));
-
-        const updated = await this.prisma.providerSelection.update({
-            where: { id: selection.providerSelection.id },
-            data: {
-                userModelIds: [...currentIds],
-                inactiveUserModelIds:
-                    selection.providerSelection.inactiveUserModelIds.filter(
-                        (id) => !validatedModelIds.includes(id),
-                    ),
-            },
-        });
-
-        return { message: "Models selected", data: { id: updated.id } };
+        return {
+            message: "Models selected",
+            data: { id: selection.providerSelection.id },
+        };
     }
 
     async deselectApiKeyProviderModels(
@@ -336,32 +360,21 @@ export class ApikeysService {
         );
         const targetIds = new Set(validatedModelIds);
 
-        const updated = await this.prisma.providerSelection.update({
-            where: { id: selection.providerSelection.id },
-            data:
-                selection.kind === "global"
-                    ? {
-                          modelIds: selection.providerSelection.modelIds.filter(
-                              (id) => !targetIds.has(id),
-                          ),
-                          inactiveModelIds:
-                              selection.providerSelection.inactiveModelIds.filter(
-                                  (id) => !targetIds.has(id),
-                              ),
-                      }
-                    : {
-                          userModelIds:
-                              selection.providerSelection.userModelIds.filter(
-                                  (id) => !targetIds.has(id),
-                              ),
-                          inactiveUserModelIds:
-                              selection.providerSelection.inactiveUserModelIds.filter(
-                                  (id) => !targetIds.has(id),
-                              ),
-                      },
+        // mark modelSelections inactive for the provided model ids
+        await this.prisma.modelSelection.updateMany({
+            where: {
+                providerSelectionId: selection.providerSelection.id,
+                ...(selection.kind === "global"
+                    ? { modelId: { in: Array.from(targetIds) } }
+                    : { userModelId: { in: Array.from(targetIds) } }),
+            },
+            data: { active: false },
         });
 
-        return { message: "Models deselected", data: { id: updated.id } };
+        return {
+            message: "Models deselected",
+            data: { id: selection.providerSelection.id },
+        };
     }
 
     async updateApiKeyProviderStatus(
@@ -392,42 +405,23 @@ export class ApikeysService {
     ) {
         await this.ensureOwnedApiKey(apiKeyId, user.id);
 
-        const providerSelection = await this.prisma.providerSelection.findFirst(
-            {
-                where: {
-                    apiKeyId,
-                    apiKey: { userId: user.id },
-                    OR: [
-                        { modelIds: { has: modelId } },
-                        { userModelIds: { has: modelId } },
-                    ],
-                },
+        const modelSelection = await this.prisma.modelSelection.findFirst({
+            where: {
+                OR: [{ modelId }, { userModelId: modelId }],
+                providerSelection: { apiKeyId },
             },
-        );
+        });
 
-        if (!providerSelection) {
+        if (!modelSelection) {
             throw new ApiError(
                 HttpStatus.NOT_FOUND,
                 "Model selection not found",
             );
         }
 
-        const isGlobalModel = providerSelection.modelIds.includes(modelId);
-        const inactiveIds = isGlobalModel
-            ? new Set(providerSelection.inactiveModelIds)
-            : new Set(providerSelection.inactiveUserModelIds);
-
-        if (payload.active) {
-            inactiveIds.delete(modelId);
-        } else {
-            inactiveIds.add(modelId);
-        }
-
-        const updated = await this.prisma.providerSelection.update({
-            where: { id: providerSelection.id },
-            data: isGlobalModel
-                ? { inactiveModelIds: [...inactiveIds] }
-                : { inactiveUserModelIds: [...inactiveIds] },
+        const updated = await this.prisma.modelSelection.update({
+            where: { id: modelSelection.id },
+            data: { active: payload.active },
         });
 
         return { message: "Model status updated", data: { id: updated.id } };
@@ -572,36 +566,33 @@ export class ApikeysService {
             updatedAt: apiKey.updatedAt,
             providers: apiKey.providerSelections.map((selection) => {
                 const provider = selection.provider ?? selection.userProvider;
-                const models = [
-                    ...(selection.models ?? []).map((model) => ({
-                        id: model.id,
-                        name: model.name,
-                        code: model.code,
-                        maxTokens: model.maxTokens,
-                        tokenResetInterval: model.tokenResetInterval,
-                        efficiencyScore: model.efficiencyScore,
-                        bestFor: model.bestFor,
-                        thinking: model.thinking,
-                        status: model.status,
-                        active: !selection.inactiveModelIds.includes(model.id),
-                        isCustom: false,
-                    })),
-                    ...(selection.userModels ?? []).map((model) => ({
-                        id: model.id,
-                        name: model.name,
-                        code: model.code,
-                        maxTokens: model.maxTokens,
-                        tokenResetInterval: model.tokenResetInterval,
-                        efficiencyScore: model.efficiencyScore,
-                        bestFor: model.bestFor,
-                        thinking: model.thinking,
-                        status: model.status,
-                        active: !selection.inactiveUserModelIds.includes(
-                            model.id,
-                        ),
-                        isCustom: true,
-                    })),
-                ];
+                const models = (selection.modelSelections ?? []).map(
+                    (modelSelection) => {
+                        const modelData =
+                            modelSelection.model ?? modelSelection.userModel;
+                        const isCustom = Boolean(modelSelection.userModelId);
+                        return {
+                            id: modelData?.id,
+                            modelSelectionId: modelSelection.id,
+                            name: modelData?.name,
+                            code: modelData?.code,
+                            maxTokens: modelData?.maxTokens,
+                            tokenResetInterval: modelData?.tokenResetInterval,
+                            efficiencyScore: modelData?.efficiencyScore,
+                            bestFor: modelData?.bestFor,
+                            thinking: modelData?.thinking,
+                            status: modelData?.status,
+                            active: modelSelection.active,
+                            isCustom,
+                            stats: {
+                                tokenUsage: modelSelection.tokenUsage ?? 0,
+                                successCount: modelSelection.successCount ?? 0,
+                                failureCount: modelSelection.failureCount ?? 0,
+                                lastUsedAt: modelSelection.lastUsedAt,
+                            },
+                        };
+                    },
+                );
 
                 return {
                     id: selection.id,

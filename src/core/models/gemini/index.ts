@@ -46,6 +46,7 @@ const transformMessageToParts = (message: OpenAIChatMessage): GeminiPart[] => {
             functionCall: {
                 name: toolCall.function.name,
                 args: JSON.parse(toolCall.function.arguments || "{}"),
+                thought_signature: toolCall.thought_signature,
             },
         });
     });
@@ -119,6 +120,7 @@ const toOpenAIResponse = (
                 name: string;
                 arguments: string;
             };
+            thought_signature?: string;
         }>
     >((accumulator, part, index) => {
         if (!hasFunctionCall(part) || !part.functionCall?.name) {
@@ -132,6 +134,7 @@ const toOpenAIResponse = (
                 name: part.functionCall.name,
                 arguments: JSON.stringify(part.functionCall.args || {}),
             },
+            thought_signature: part.functionCall.thought_signature,
         });
 
         return accumulator;

@@ -35,6 +35,7 @@ export type OpenAIChatToolCall = {
         name: string;
         arguments: string;
     };
+    thought_signature?: string;
 };
 
 export type OpenAIChatMessage = {

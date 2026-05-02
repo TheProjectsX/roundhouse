@@ -32,6 +32,44 @@ const buildGenerationConfig = (params: ProviderCallParams) => {
     return generationConfig;
 };
 
+const normalizeSchemaForGemini = (schema: unknown): unknown => {
+    if (schema === null || schema === undefined) {
+        return schema;
+    }
+
+    if (Array.isArray(schema)) {
+        return schema.map(normalizeSchemaForGemini);
+    }
+
+    if (typeof schema === "object") {
+        const normalized: Record<string, unknown> = {};
+        const obj = schema as Record<string, unknown>;
+
+        for (const [key, value] of Object.entries(obj)) {
+            // Skip unsupported JSON Schema properties
+            if (
+                key === "$comment" ||
+                key === "enumDescriptions" ||
+                key === "additionalProperties" ||
+                key === "$schema"
+            ) {
+                continue;
+            }
+
+            // Recursively normalize nested objects and arrays
+            if (typeof value === "object" && value !== null) {
+                normalized[key] = normalizeSchemaForGemini(value);
+            } else {
+                normalized[key] = value;
+            }
+        }
+
+        return normalized;
+    }
+
+    return schema;
+};
+
 const buildToolConfig = (params: ProviderCallParams) => {
     if (!params.request.tools?.length) {
         return undefined;
@@ -102,10 +140,12 @@ export const callModel = async (
                                   (tool) => ({
                                       name: tool.function.name,
                                       description: tool.function.description,
-                                      parameters: tool.function.parameters || {
-                                          type: "object",
-                                          properties: {},
-                                      },
+                                      parameters: normalizeSchemaForGemini(
+                                          tool.function.parameters || {
+                                              type: "object",
+                                              properties: {},
+                                          },
+                                      ),
                                   }),
                               ),
                           },

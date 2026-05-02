@@ -104,8 +104,7 @@ model Model {
 
     status ContentStatus @default(ACTIVE)
 
-    providerSelections   ProviderSelection[] @relation("ProviderSelectionModels", fields: [providerSelectionIds], references: [id])
-    providerSelectionIds String[]            @db.ObjectId
+    modelSelections ModelSelection[] @relation("ModelSelections")
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -155,8 +154,7 @@ model UserModel {
 
     status ContentStatus @default(ACTIVE)
 
-    providerSelections   ProviderSelection[] @relation("ProviderSelectionUserModels", fields: [providerSelectionIds], references: [id])
-    providerSelectionIds String[]            @db.ObjectId
+    modelSelections ModelSelection[] @relation("UserModelSelections")
 
     userId String @db.ObjectId
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -180,13 +178,7 @@ model ProviderSelection {
     userProviderId String?       @db.ObjectId
     userProvider   UserProvider? @relation(fields: [userProviderId], references: [id], onDelete: Cascade)
 
-    modelIds         String[] @db.ObjectId
-    models           Model[]  @relation("ProviderSelectionModels", fields: [modelIds], references: [id])
-    inactiveModelIds String[] @db.ObjectId
-
-    userModelIds         String[]    @db.ObjectId
-    userModels           UserModel[] @relation("ProviderSelectionUserModels", fields: [userModelIds], references: [id])
-    inactiveUserModelIds String[]    @db.ObjectId
+    modelSelections ModelSelection[]
 
     userId String @db.ObjectId
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -219,6 +211,33 @@ model ProviderApiKey {
 
     @@unique([providerSelectionId, key])
     @@map("provider_api_keys")
+}
+
+model ModelSelection {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    providerSelectionId String            @db.ObjectId
+    providerSelection   ProviderSelection @relation(fields: [providerSelectionId], references: [id], onDelete: Cascade)
+
+    modelId String? @db.ObjectId
+    model   Model?  @relation("ModelSelections", fields: [modelId], references: [id], onDelete: Cascade)
+
+    userModelId String?    @db.ObjectId
+    userModel   UserModel? @relation("UserModelSelections", fields: [userModelId], references: [id], onDelete: Cascade)
+
+    // Statistics
+    tokenUsage  Int @default(0)
+    successCount Int @default(0)
+    failureCount Int @default(0)
+    lastUsedAt DateTime?
+
+    active Boolean @default(true)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([providerSelectionId, modelId, userModelId])
+    @@map("model_selections")
 }
 
 enum UserStatus {

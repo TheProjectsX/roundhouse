@@ -137,8 +137,6 @@ const buildCandidates = (
     providerSelections: Array<{
         id: string;
         active: boolean;
-        inactiveModelIds: string[];
-        inactiveUserModelIds: string[];
         providerApiKeys: RoundhouseProviderApiKey[];
         provider: {
             id: string;
@@ -154,8 +152,12 @@ const buildCandidates = (
             type: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
             baseApi: string;
         } | null;
-        models: Array<Omit<RoundhouseModel, "provider">>;
-        userModels: Array<Omit<RoundhouseModel, "provider">>;
+        modelSelections: Array<{
+            id: string;
+            active: boolean;
+            model?: Omit<RoundhouseModel, "provider"> | null;
+            userModel?: Omit<RoundhouseModel, "provider"> | null;
+        }>;
     }>,
     filters?: RoundhouseFilters,
 ): RoundhouseCandidate[] => {
@@ -186,24 +188,21 @@ const buildCandidates = (
             continue;
         }
 
-        const selectedModels = [
-            ...providerSelection.models
-                .filter(
-                    (model) =>
-                        !providerSelection.inactiveModelIds.includes(model.id),
-                )
-                .map((model) => ({ ...model, provider })),
-            ...providerSelection.userModels
-                .filter(
-                    (model) =>
-                        !providerSelection.inactiveUserModelIds.includes(
-                            model.id,
-                        ),
-                )
-                .map((model) => ({ ...model, provider })),
-        ];
+        const selectedModels = (providerSelection.modelSelections ?? [])
+            .filter((ms) => ms.active)
+            .map((ms) => {
+                const model = ms.model ?? ms.userModel;
+                return {
+                    modelSelectionId: ms.id,
+                    model: { ...model, provider } as Omit<
+                        RoundhouseModel,
+                        "provider"
+                    > & { provider: RoundhouseProvider },
+                };
+            });
 
-        for (const model of selectedModels) {
+        for (const entry of selectedModels) {
+            const model = entry.model;
             if (model.status !== "ACTIVE") {
                 continue;
             }
@@ -231,7 +230,7 @@ const buildCandidates = (
             }
 
             candidates.push({
-                modelSelectionId: model.id,
+                modelSelectionId: entry.modelSelectionId,
                 providerSelectionId: providerSelection.id,
                 model,
                 providerApiKeys: activeProviderApiKeys,
@@ -279,8 +278,9 @@ const getApiKeyWithSelections = async (
                     providerApiKeys: {
                         where: { active: true },
                     },
-                    models: true,
-                    userModels: true,
+                    modelSelections: {
+                        include: { model: true, userModel: true },
+                    },
                 },
             },
         },

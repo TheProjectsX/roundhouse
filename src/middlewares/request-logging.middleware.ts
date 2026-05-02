@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Injectable, NestMiddleware, Logger } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 
@@ -7,7 +9,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
 
     use(req: Request, res: Response, next: NextFunction) {
         const { method, originalUrl, ip } = req;
-        const userAgent = req.get("user-agent") || "Unknown";
+        // const userAgent = req.get("user-agent") || "Unknown";
         const startTime = Date.now();
         const logger = this.logger;
         const [path, queryString] = originalUrl.split("?");
@@ -20,7 +22,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
             const responseTime = Date.now() - startTime;
             const statusCode = res.statusCode;
             const contentLength = Buffer.byteLength(
-                typeof data === "string" ? data : JSON.stringify(data)
+                typeof data === "string" ? data : JSON.stringify(data),
             );
 
             const timestamp = new Date().toLocaleTimeString("en-US", {
@@ -43,7 +45,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
             const responseTimeFormatted = `${responseTime}ms`;
 
             console.log(
-                `${reset}[${timestamp}] ${method.padEnd(6)} ${statusColor}${statusCode}${reset} ${responseTimeFormatted.padEnd(8)} ${fullPath}`
+                `${reset}[${timestamp}] ${method.padEnd(6)} ${statusColor}${statusCode}${reset} ${responseTimeFormatted.padEnd(8)} ${fullPath}`,
             );
 
             // Also log detailed metadata for debugging
@@ -88,7 +90,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
             const fullPath = queryString ? `${path}?${queryString}` : path;
 
             console.log(
-                `${reset}[${timestamp}] ${method.padEnd(6)} ${statusColor}${res.statusCode}${reset} ${responseTime.toString().padEnd(8)}ms ${fullPath}`
+                `${reset}[${timestamp}] ${method.padEnd(6)} ${statusColor}${res.statusCode}${reset} ${`${responseTime.toString()}ms`.padEnd(8)} ${fullPath}`,
             );
         });
 

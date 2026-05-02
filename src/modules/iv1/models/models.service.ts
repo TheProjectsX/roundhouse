@@ -8,29 +8,23 @@ export class ModelsService {
     constructor(private prisma: PrismaService) {}
 
     async updateApiKeyModelSelectionStatus(modelId: string, user: UserPayload) {
-        const providerSelection = await this.ensureOwnedSelectionByModelId(
-            modelId,
-            user.id,
-        );
+        const modelSelection = await this.prisma.modelSelection.findFirst({
+            where: {
+                OR: [{ modelId }, { userModelId: modelId }],
+                providerSelection: { apiKey: { userId: user.id } },
+            },
+        });
 
-        const isGlobalModel = providerSelection.modelIds.includes(modelId);
-        const inactiveIds = new Set(
-            isGlobalModel
-                ? providerSelection.inactiveModelIds
-                : providerSelection.inactiveUserModelIds,
-        );
-
-        if (inactiveIds.has(modelId)) {
-            inactiveIds.delete(modelId);
-        } else {
-            inactiveIds.add(modelId);
+        if (!modelSelection) {
+            throw new ApiError(
+                HttpStatus.NOT_FOUND,
+                "Model selection not found",
+            );
         }
 
-        const updated = await this.prisma.providerSelection.update({
-            where: { id: providerSelection.id },
-            data: isGlobalModel
-                ? { inactiveModelIds: [...inactiveIds] }
-                : { inactiveUserModelIds: [...inactiveIds] },
+        const updated = await this.prisma.modelSelection.update({
+            where: { id: modelSelection.id },
+            data: { active: !modelSelection.active },
         });
 
         return { message: "Model status updated", data: { id: updated.id } };
@@ -40,27 +34,20 @@ export class ModelsService {
         modelId: string,
         userId: string,
     ) {
-        const providerSelection = await this.prisma.providerSelection.findFirst(
-            {
-                where: {
-                    apiKey: {
-                        userId,
-                    },
-                    OR: [
-                        { modelIds: { has: modelId } },
-                        { userModelIds: { has: modelId } },
-                    ],
-                },
+        const modelSelection = await this.prisma.modelSelection.findFirst({
+            where: {
+                OR: [{ modelId: modelId }, { userModelId: modelId }],
+                providerSelection: { apiKey: { userId } },
             },
-        );
+        });
 
-        if (!providerSelection) {
+        if (!modelSelection) {
             throw new ApiError(
                 HttpStatus.NOT_FOUND,
                 "Model selection not found",
             );
         }
 
-        return providerSelection;
+        return modelSelection;
     }
 }
