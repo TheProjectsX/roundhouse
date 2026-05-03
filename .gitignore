@@ -40,3 +40,6 @@ dbml
 uploads
 .vercel
 tsconfig.build.tsbuildinfo
+
+.github
+.vscode
