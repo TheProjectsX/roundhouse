@@ -2,6 +2,7 @@ import type {
     ModelProvider,
     OpenAIChatCompletionRequest,
     OpenAICompatibleResponse,
+    OpenAICompatibleUsage,
     OpenAIModelListResponse,
     OpenAIResponsesRequest,
     OpenAIResponsesResponse,
@@ -175,6 +176,11 @@ export const createChatCompletion = async (
     return toOpenAIChatCompletion(response);
 };
 
+export type OpenAIChatCompletionStreamResponse = {
+    chunks: string[];
+    usage?: OpenAICompatibleUsage;
+};
+
 export const createChatCompletionStream = async (
     body: OpenAIChatCompletionRequest,
     context: OpenAIWrapperContext = {},
@@ -183,6 +189,19 @@ export const createChatCompletionStream = async (
     const response = await callProviderChatCompletion(provider, params);
 
     return toSseChunks(response);
+};
+
+export const createChatCompletionStreamWithUsage = async (
+    body: OpenAIChatCompletionRequest,
+    context: OpenAIWrapperContext = {},
+): Promise<OpenAIChatCompletionStreamResponse> => {
+    const { provider, params } = buildProviderContext(body, context);
+    const response = await callProviderChatCompletion(provider, params);
+
+    return {
+        chunks: toSseChunks(response),
+        usage: response.usage,
+    };
 };
 
 export const createResponse = async (

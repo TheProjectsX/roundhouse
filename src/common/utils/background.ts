@@ -8,9 +8,8 @@ interface Job {
     retries: number;
 }
 
-class BackgroundQueue {
-    private queue: Job[] = [];
-    private running = 0;
+class BackgroundRunner {
+    private active = new Set<Promise<void>>();
 
     constructor(
         private concurrency = 2,
@@ -18,32 +17,39 @@ class BackgroundQueue {
     ) {}
 
     add(fn: Task, retries = this.defaultRetries) {
-        this.queue.push({ fn, retries });
-        this.process();
+        const job: Job = { fn, retries };
+        const promise = this.scheduleJob(job);
+
+        this.active.add(promise);
+        promise.finally(() => {
+            this.active.delete(promise);
+        });
     }
 
-    private process() {
-        while (this.running < this.concurrency && this.queue.length) {
-            const job = this.queue.shift()!;
-            this.running++;
+    private async scheduleJob(job: Job) {
+        if (this.active.size >= this.concurrency) {
+            await Promise.race(this.active);
+        }
 
-            setImmediate(async () => {
-                try {
-                    await job.fn();
-                } catch (err) {
-                    if (job.retries > 0) {
-                        job.retries--;
-                        this.queue.push(job);
-                    } else {
-                        console.error("Background job failed:", err);
-                    }
-                } finally {
-                    this.running--;
-                    this.process();
+        await this.runJob(job);
+    }
+
+    private async runJob(job: Job) {
+        while (true) {
+            try {
+                await job.fn();
+                return;
+            } catch (err) {
+                if (job.retries > 0) {
+                    job.retries--;
+                    continue;
                 }
-            });
+
+                console.error("Background job failed:", err);
+                return;
+            }
         }
     }
 }
 
-export const background = new BackgroundQueue(3, 1);
+export const background = new BackgroundRunner(3, 1);

@@ -1,6 +1,6 @@
 import {
     createChatCompletion,
-    createChatCompletionStream,
+    createChatCompletionStreamWithUsage,
     createResponse,
 } from "@/core/api-wrapper/service";
 import {
@@ -180,7 +180,10 @@ export class OpenaiService {
 
             if (body.stream) {
                 const streamSelectionStartedAt = Date.now();
-                const streamedResult = await this.executor<string[]>(
+                const streamedResult = await this.executor<{
+                    chunks: string[];
+                    usage?: { total_tokens: number };
+                }>(
                     apiKey,
                     async (candidate, providerApiKey) => {
                         const providerCallStartedAt = Date.now();
@@ -198,7 +201,7 @@ export class OpenaiService {
                                     providerApiKeyId: providerApiKey.id,
                                 },
                             );
-                            const chunks = await createChatCompletionStream(
+                            const streamResponse = await createChatCompletionStreamWithUsage(
                                 {
                                     ...body,
                                     model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
@@ -218,13 +221,13 @@ export class OpenaiService {
                                         candidate.providerSelectionId,
                                     modelSelectionId:
                                         candidate.modelSelectionId,
-                                    chunkCount: chunks.length,
+                                    chunkCount: streamResponse.chunks.length,
                                 },
                             );
 
                             return {
                                 success: true as const,
-                                data: chunks,
+                                data: streamResponse,
                             };
                         } catch (error) {
                             console.error(error);
@@ -277,14 +280,23 @@ export class OpenaiService {
                     );
                 }
 
+                const tokenUsage =
+                    streamedResult.data.usage?.total_tokens ?? 0;
+
+                this.queueModelSelectionStats(
+                    streamedResult.candidate.modelSelectionId,
+                    tokenUsage,
+                );
+
                 this.logger.log("chatCompletions stream request succeeded", {
                     totalDurationMs: Date.now() - startedAt,
-                    chunkCount: streamedResult.data.length,
+                    chunkCount: streamedResult.data.chunks.length,
+                    tokenUsage,
                 });
                 return {
                     statusCode: HttpStatus.OK,
                     stream: true,
-                    chunks: streamedResult.data,
+                    chunks: streamedResult.data.chunks,
                 };
             }
 
