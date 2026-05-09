@@ -35,33 +35,11 @@ export class UpdateApiKeyStatusDto {
     active: boolean;
 }
 
-export class CreateProviderApiKeyDto {
-    @IsString()
-    key: string;
-
-    @IsOptional()
-    @toBoolean()
-    @IsBoolean()
-    active?: boolean;
-}
-
-export class CreateApiKeyProviderDto extends CreateProviderApiKeyDto {}
-
-export class UpdateProviderApiKeyDto {
-    @IsOptional()
-    @IsString()
-    key?: string;
-
-    @IsOptional()
-    @toBoolean()
-    @IsBoolean()
-    active?: boolean;
-}
-
-export class UpdateProviderApiKeyStatusDto {
-    @toBoolean()
-    @IsBoolean()
-    active: boolean;
+export class CreateApiKeyProviderDto {
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsString({ each: true })
+    apiKeysManagerIds: string[];
 }
 
 export class UpdateApiKeyProviderModelsDto {

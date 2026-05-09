@@ -5,29 +5,42 @@ import { ApiError } from "@/common/errors/api_error";
 import QueryBuilder from "@/common/utils/queryBuilder";
 import { UpdateUserDto, UpdateUserStatusDto } from "./dto/body.dto";
 
-type AdminUserDetails = Prisma.UserGetPayload<{
-    include: {
-        apiKeys: {
-            include: {
-                providerSelections: {
-                    include: {
-                        providerApiKeys: true;
-                        modelSelections: {
-                            include: { model: true; userModel: true };
+type AdminUserDetails = Omit<
+    Prisma.UserGetPayload<{
+        include: {
+            apiKeys: {
+                include: {
+                    providerSelections: {
+                        include: {
+                            provider: true;
+                            userProvider: true;
+                            apiKeysManagers: {
+                                include: { apiKeysManager: true };
+                            };
+                            modelSelections: {
+                                include: { model: true; userModel: true };
+                            };
                         };
                     };
                 };
             };
-        };
-        userProviders: true;
-        providerSelections: {
-            include: {
-                providerApiKeys: true;
-                modelSelections: { include: { model: true; userModel: true } };
+            userProviders: true;
+            providerSelections: {
+                include: {
+                    provider: true;
+                    userProvider: true;
+                    apiKeysManagers: {
+                        include: { apiKeysManager: true };
+                    };
+                    modelSelections: {
+                        include: { model: true; userModel: true };
+                    };
+                };
             };
         };
-    };
-}>;
+    }>,
+    "password"
+>;
 
 @Injectable()
 export class AdminUsersService {
@@ -49,9 +62,14 @@ export class AdminUsersService {
                     include: {
                         providerSelections: {
                             include: {
-                                providerApiKeys: true,
-                                models: true,
-                                userModels: true,
+                                provider: true,
+                                userProvider: true,
+                                apiKeysManagers: {
+                                    include: { apiKeysManager: true },
+                                },
+                                modelSelections: {
+                                    include: { model: true, userModel: true },
+                                },
                             },
                         },
                     },
@@ -59,7 +77,11 @@ export class AdminUsersService {
                 userProviders: true,
                 providerSelections: {
                     include: {
-                        providerApiKeys: true,
+                        provider: true,
+                        userProvider: true,
+                        apiKeysManagers: {
+                            include: { apiKeysManager: true },
+                        },
                         modelSelections: {
                             include: { model: true, userModel: true },
                         },
@@ -89,9 +111,9 @@ export class AdminUsersService {
                     ).filter((provider) => provider.status === "ACTIVE").length,
                     providerSelectionCount: (user.providerSelections ?? [])
                         .length,
-                    providerApiKeyCount: (user.providerSelections ?? []).reduce(
+                    apiKeysManagerCount: (user.providerSelections ?? []).reduce(
                         (sum, selection) =>
-                            sum + (selection.providerApiKeys?.length ?? 0),
+                            sum + (selection.apiKeysManagers?.length ?? 0),
                         0,
                     ),
                     selectedModelCount: (user.providerSelections ?? []).reduce(
@@ -116,7 +138,11 @@ export class AdminUsersService {
                     include: {
                         providerSelections: {
                             include: {
-                                providerApiKeys: true,
+                                provider: true,
+                                userProvider: true,
+                                apiKeysManagers: {
+                                    include: { apiKeysManager: true },
+                                },
                                 modelSelections: {
                                     include: { model: true, userModel: true },
                                 },
@@ -127,7 +153,11 @@ export class AdminUsersService {
                 userProviders: true,
                 providerSelections: {
                     include: {
-                        providerApiKeys: true,
+                        provider: true,
+                        userProvider: true,
+                        apiKeysManagers: {
+                            include: { apiKeysManager: true },
+                        },
                         modelSelections: {
                             include: { model: true, userModel: true },
                         },
@@ -198,17 +228,18 @@ export class AdminUsersService {
     private async formatUserDetails(user: AdminUserDetails) {
         const apiKeys = user.apiKeys.map((apiKey) => {
             const providerSelections = apiKey.providerSelections ?? [];
-            const providerApiKeyCount = providerSelections.reduce(
+            const apiKeysManagerCount = providerSelections.reduce(
                 (sum, selection) =>
-                    sum + (selection.providerApiKeys?.length ?? 0),
+                    sum + (selection.apiKeysManagers?.length ?? 0),
                 0,
             );
             const successfulRequests = providerSelections.reduce(
                 (sum, selection) =>
                     sum +
-                    (selection.providerApiKeys ?? []).reduce(
-                        (selectionSum, providerApiKey) =>
-                            selectionSum + (providerApiKey.successCount ?? 0),
+                    (selection.apiKeysManagers ?? []).reduce(
+                        (selectionSum, managerEntry) =>
+                            selectionSum +
+                            (managerEntry.apiKeysManager?.successCount ?? 0),
                         0,
                     ),
                 0,
@@ -227,7 +258,7 @@ export class AdminUsersService {
                 updatedAt: apiKey.updatedAt,
                 stats: {
                     providerCount: providerSelections.length,
-                    providerApiKeyCount,
+                    apiKeysManagerCount,
                     modelCount,
                     successfulRequests,
                 },
@@ -268,16 +299,17 @@ export class AdminUsersService {
             }),
         );
 
-        const totalProviderApiKeys = user.providerSelections.reduce(
-            (sum, selection) => sum + (selection.providerApiKeys?.length ?? 0),
+        const totalApiKeysManagers = user.providerSelections.reduce(
+            (sum, selection) => sum + (selection.apiKeysManagers?.length ?? 0),
             0,
         );
         const totalSuccessfulRequests = user.providerSelections.reduce(
             (sum, selection) =>
                 sum +
-                (selection.providerApiKeys ?? []).reduce(
-                    (selectionSum, providerApiKey) =>
-                        selectionSum + (providerApiKey.successCount ?? 0),
+                (selection.apiKeysManagers ?? []).reduce(
+                    (selectionSum, managerEntry) =>
+                        selectionSum +
+                        (managerEntry.apiKeysManager?.successCount ?? 0),
                     0,
                 ),
             0,
@@ -306,7 +338,7 @@ export class AdminUsersService {
                     (provider) => provider.status === "ACTIVE",
                 ).length,
                 providerSelectionCount: user.providerSelections.length,
-                providerApiKeyCount: totalProviderApiKeys,
+                apiKeysManagerCount: totalApiKeysManagers,
                 successfulRequests: totalSuccessfulRequests,
                 selectedModelCount: totalSelectedModels,
             },

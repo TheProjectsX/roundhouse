@@ -14,7 +14,7 @@ export class AdminAnalyticsService {
             models,
             userModels,
             providerSelections,
-            providerApiKeys,
+            providerSelectionApiKeysManagers,
         ] = await Promise.all([
             this.prisma.user.count(),
             this.prisma.apiKey.count(),
@@ -23,7 +23,7 @@ export class AdminAnalyticsService {
             this.prisma.model.count(),
             this.prisma.userModel.count(),
             this.prisma.providerSelection.count(),
-            this.prisma.providerApiKey.count(),
+            this.prisma.providerSelectionApiKeysManager.count(),
         ]);
 
         return {
@@ -36,7 +36,7 @@ export class AdminAnalyticsService {
                 models,
                 userModels,
                 providerSelections,
-                providerApiKeys,
+                providerSelectionApiKeysManagers,
             },
         };
     }

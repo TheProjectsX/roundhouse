@@ -185,7 +185,7 @@ export class OpenaiService {
                     usage?: { total_tokens: number };
                 }>(
                     apiKey,
-                    async (candidate, providerApiKey) => {
+                    async (candidate, apiKeysManager) => {
                         const providerCallStartedAt = Date.now();
 
                         try {
@@ -198,20 +198,22 @@ export class OpenaiService {
                                         candidate.modelSelectionId,
                                     modelId: candidate.model.id,
                                     providerType: candidate.model.provider.type,
-                                    providerApiKeyId: providerApiKey.id,
+                                    apiKeysManagerId: apiKeysManager.id,
                                 },
                             );
-                            const streamResponse = await createChatCompletionStreamWithUsage(
-                                {
-                                    ...body,
-                                    model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
-                                },
-                                {
-                                    baseApi: candidate.model.provider.baseApi,
-                                    apiKey: providerApiKey.key,
-                                    headers: req.headers,
-                                },
-                            );
+                            const streamResponse =
+                                await createChatCompletionStreamWithUsage(
+                                    {
+                                        ...body,
+                                        model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
+                                    },
+                                    {
+                                        baseApi:
+                                            candidate.model.provider.baseApi,
+                                        apiKey: apiKeysManager.key,
+                                        headers: req.headers,
+                                    },
+                                );
                             this.logger.log(
                                 "chatCompletions stream provider call succeeded",
                                 {
@@ -240,7 +242,7 @@ export class OpenaiService {
                                         candidate.providerSelectionId,
                                     modelSelectionId:
                                         candidate.modelSelectionId,
-                                    providerApiKeyId: providerApiKey.id,
+                                    apiKeysManagerId: apiKeysManager.id,
                                     error:
                                         error instanceof Error
                                             ? error.message
@@ -280,8 +282,7 @@ export class OpenaiService {
                     );
                 }
 
-                const tokenUsage =
-                    streamedResult.data.usage?.total_tokens ?? 0;
+                const tokenUsage = streamedResult.data.usage?.total_tokens ?? 0;
 
                 this.queueModelSelectionStats(
                     streamedResult.candidate.modelSelectionId,
@@ -303,7 +304,7 @@ export class OpenaiService {
             const selectionStartedAt = Date.now();
             const result = await this.executor(
                 apiKey,
-                async (candidate, providerApiKey) => {
+                async (candidate, apiKeysManager) => {
                     const providerCallStartedAt = Date.now();
 
                     try {
@@ -315,7 +316,7 @@ export class OpenaiService {
                                 modelSelectionId: candidate.modelSelectionId,
                                 modelId: candidate.model.id,
                                 providerType: candidate.model.provider.type,
-                                providerApiKeyId: providerApiKey.id,
+                                apiKeysManagerId: apiKeysManager.id,
                             },
                         );
                         this.logger.log(
@@ -325,7 +326,7 @@ export class OpenaiService {
                                 model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
 
                                 baseApi: candidate.model.provider.baseApi,
-                                apiKey: providerApiKey.key,
+                                apiKey: apiKeysManager.key,
                                 headers: req.headers,
                             },
                         );
@@ -336,7 +337,7 @@ export class OpenaiService {
                             },
                             {
                                 baseApi: candidate.model.provider.baseApi,
-                                apiKey: providerApiKey.key,
+                                apiKey: apiKeysManager.key,
                                 headers: req.headers,
                             },
                         );
@@ -347,7 +348,7 @@ export class OpenaiService {
                                 providerSelectionId:
                                     candidate.providerSelectionId,
                                 modelSelectionId: candidate.modelSelectionId,
-                                providerApiKeyId: providerApiKey.id,
+                                apiKeysManagerId: apiKeysManager.id,
                             },
                         );
 
@@ -363,7 +364,7 @@ export class OpenaiService {
                                 providerSelectionId:
                                     candidate.providerSelectionId,
                                 modelSelectionId: candidate.modelSelectionId,
-                                providerApiKeyId: providerApiKey.id,
+                                apiKeysManagerId: apiKeysManager.id,
                                 error:
                                     error instanceof Error
                                         ? error.message
@@ -483,7 +484,7 @@ export class OpenaiService {
             const selectionStartedAt = Date.now();
             const result = await this.executor(
                 apiKey,
-                async (candidate, providerApiKey) => {
+                async (candidate, apiKeysManager) => {
                     const providerCallStartedAt = Date.now();
 
                     try {
@@ -492,7 +493,7 @@ export class OpenaiService {
                             modelSelectionId: candidate.modelSelectionId,
                             modelId: candidate.model.id,
                             providerType: candidate.model.provider.type,
-                            providerApiKeyId: providerApiKey.id,
+                            apiKeysManagerId: apiKeysManager.id,
                         });
                         const response = await createResponse(
                             {
@@ -501,7 +502,7 @@ export class OpenaiService {
                             },
                             {
                                 baseApi: candidate.model.provider.baseApi,
-                                apiKey: providerApiKey.key,
+                                apiKey: apiKeysManager.key,
                                 headers: req.headers,
                             },
                         );
@@ -509,7 +510,7 @@ export class OpenaiService {
                             durationMs: Date.now() - providerCallStartedAt,
                             providerSelectionId: candidate.providerSelectionId,
                             modelSelectionId: candidate.modelSelectionId,
-                            providerApiKeyId: providerApiKey.id,
+                            apiKeysManagerId: apiKeysManager.id,
                         });
 
                         return {
@@ -521,7 +522,7 @@ export class OpenaiService {
                             durationMs: Date.now() - providerCallStartedAt,
                             providerSelectionId: candidate.providerSelectionId,
                             modelSelectionId: candidate.modelSelectionId,
-                            providerApiKeyId: providerApiKey.id,
+                            apiKeysManagerId: apiKeysManager.id,
                             error:
                                 error instanceof Error
                                     ? error.message
