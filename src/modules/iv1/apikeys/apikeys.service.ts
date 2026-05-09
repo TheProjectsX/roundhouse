@@ -8,8 +8,10 @@ import {
     CreateApiKeyDto,
     CreateApiKeyProviderDto,
     UpdateApiKeyDto,
+    UpdateApiKeyModelSelectionPriorityDto,
     UpdateApiKeyProviderModelsDto,
     UpdateApiKeyProviderModelsStatusDto,
+    UpdateApiKeySettingsDto,
     UpdateApiKeyStatusDto,
 } from "./dto/body.dto";
 import { generateApiKey } from "./apikeys.util";
@@ -85,6 +87,8 @@ export class ApikeysService {
                 name: apiKey.name,
                 active: apiKey.active,
                 key: apiKey.key,
+                maxIterations: apiKey.maxIterations,
+                roundhouseMethod: apiKey.roundhouseMethod,
                 createdAt: apiKey.createdAt,
                 updatedAt: apiKey.updatedAt,
                 stats: {
@@ -107,7 +111,14 @@ export class ApikeysService {
                     include: {
                         provider: true,
                         userProvider: true,
-                        providerApiKeys: true,
+                        providerApiKeys: {
+                            select:{
+                                id: true,
+                                key: true,
+                                active: true,
+                                successCount: true,
+                            }
+                        },
                         modelSelections: {
                             include: { model: true, userModel: true },
                         },
@@ -126,12 +137,145 @@ export class ApikeysService {
         };
     }
 
+    async fetchApiKeyModelSelections(id: string, user: UserPayload) {
+        const apiKey = await this.ensureOwnedApiKey(id, user.id);
+
+        const selections = await this.prisma.modelSelection.findMany({
+            where: {
+                providerSelection: { apiKeyId: apiKey.id },
+            },
+            include: {
+                model: true,
+                userModel: true,
+                providerSelection: {
+                    include: {
+                        provider: true,
+                        userProvider: true,
+                    },
+                },
+            },
+            orderBy: {
+                priority: "asc",
+            },
+        });
+
+        const data = selections.map((selection) => {
+            const modelData = selection.model ?? selection.userModel;
+            const provider =
+                selection.providerSelection.provider ??
+                selection.providerSelection.userProvider;
+
+            return {
+                id: selection.id,
+                modelSelectionId: selection.id,
+                priority: selection.priority,
+                active: selection.active,
+                model: {
+                    id: modelData?.id,
+                    name: modelData?.name,
+                    code: modelData?.code,
+                    maxTokens: modelData?.maxTokens,
+                    tokenResetInterval: modelData?.tokenResetInterval,
+                    efficiencyScore: modelData?.efficiencyScore,
+                    bestFor: modelData?.bestFor,
+                    thinking: modelData?.thinking,
+                    status: modelData?.status,
+                },
+                provider: {
+                    id: provider?.id,
+                    name: provider?.name,
+                    code: provider?.code,
+                    type: provider?.type,
+                    baseApi: provider?.baseApi,
+                },
+                stats: {
+                    tokenUsage: selection.tokenUsage,
+                    successCount: selection.successCount,
+                    failureCount: selection.failureCount,
+                    lastUsedAt: selection.lastUsedAt,
+                },
+            };
+        });
+
+        return {
+            message: "API key model selections fetched",
+            data,
+        };
+    }
+
+    async reorderApiKeyModelSelections(
+        id: string,
+        payload: UpdateApiKeyModelSelectionPriorityDto,
+        user: UserPayload,
+    ) {
+        const apiKey = await this.ensureOwnedApiKey(id, user.id);
+
+        const selections = await this.prisma.modelSelection.findMany({
+            where: {
+                providerSelection: { apiKeyId: apiKey.id },
+            },
+            select: { id: true },
+        });
+
+        const validIds = new Set(selections.map((selection) => selection.id));
+        const payloadIds = new Set(
+            payload.items.map((item) => item.modelSelectionId),
+        );
+
+        if (payloadIds.size !== payload.items.length) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Duplicate model selection ids are not allowed",
+            );
+        }
+
+        if (
+            payload.items.some(
+                (item) => !validIds.has(item.modelSelectionId),
+            )
+        ) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "One or more model selections do not belong to this API key",
+            );
+        }
+
+        const priorityValues = payload.items.map((item) => item.priority);
+        const prioritySet = new Set(priorityValues);
+        if (prioritySet.size !== priorityValues.length) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Duplicate priority values are not allowed",
+            );
+        }
+
+        await this.prisma.$transaction(
+            payload.items.map((item) =>
+                this.prisma.modelSelection.update({
+                    where: { id: item.modelSelectionId },
+                    data: { priority: item.priority },
+                }),
+            ),
+        );
+
+        return {
+            message: "Model selection priorities updated",
+            data: { updated: payload.items.length },
+        };
+    }
+
     async createApiKey(payload: CreateApiKeyDto, user: UserPayload) {
         const created = await this.prisma.apiKey.create({
             data: {
                 name: payload.name,
                 key: generateApiKey(),
                 user: { connect: { id: user.id } },
+                ...(payload.maxIterations !== undefined
+                    ? { maxIterations: payload.maxIterations }
+                    : {}),
+                ...(payload.roundhouseMethod !== undefined
+                    ? { roundhouseMethod: payload.roundhouseMethod }
+                    : {}),
             },
         });
 
@@ -171,6 +315,28 @@ export class ApikeysService {
         });
 
         return { message: "API key status updated", data: { id: updated.id } };
+    }
+
+    async updateApiKeySettings(
+        id: string,
+        payload: UpdateApiKeySettingsDto,
+        user: UserPayload,
+    ) {
+        const apiKey = await this.ensureOwnedApiKey(id, user.id);
+
+        const updated = await this.prisma.apiKey.update({
+            where: { id: apiKey.id },
+            data: {
+                ...(payload.maxIterations !== undefined
+                    ? { maxIterations: payload.maxIterations }
+                    : {}),
+                ...(payload.roundhouseMethod !== undefined
+                    ? { roundhouseMethod: payload.roundhouseMethod }
+                    : {}),
+            },
+        });
+
+        return { message: "API key settings updated", data: { id: updated.id } };
     }
 
     async deleteApiKey(id: string, user: UserPayload) {
@@ -562,6 +728,8 @@ export class ApikeysService {
             name: apiKey.name,
             active: apiKey.active,
             key: apiKey.key,
+            maxIterations: apiKey.maxIterations,
+            roundhouseMethod: apiKey.roundhouseMethod,
             createdAt: apiKey.createdAt,
             updatedAt: apiKey.updatedAt,
             providers: apiKey.providerSelections.map((selection) => {
@@ -583,6 +751,7 @@ export class ApikeysService {
                             thinking: modelData?.thinking,
                             status: modelData?.status,
                             active: modelSelection.active,
+                            priority: modelSelection.priority,
                             isCustom,
                             stats: {
                                 tokenUsage: modelSelection.tokenUsage ?? 0,

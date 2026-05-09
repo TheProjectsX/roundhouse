@@ -35,6 +35,7 @@ export type RoundhouseCandidate = {
     model: RoundhouseModel;
     providerApiKeys: RoundhouseProviderApiKey[];
     score: number;
+    priority: number;
 };
 
 type RoundhouseProviderApiKey = {
@@ -80,7 +81,7 @@ type SelectProviderResponse<T> = SelectProviderError | SelectProviderSuccess<T>;
 export type RoundhouseFilters = {
     provider?: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
     modelKeys?: Set<string>;
-    strategy?: "random" | "efficiency";
+    strategy?: "random" | "efficiency" | "priority";
 };
 
 type BoundRoundhouseExecutor = <T>(
@@ -155,6 +156,7 @@ const buildCandidates = (
         modelSelections: Array<{
             id: string;
             active: boolean;
+            priority: number;
             model?: Omit<RoundhouseModel, "provider"> | null;
             userModel?: Omit<RoundhouseModel, "provider"> | null;
         }>;
@@ -194,6 +196,7 @@ const buildCandidates = (
                 const model = ms.model ?? ms.userModel;
                 return {
                     modelSelectionId: ms.id,
+                    priority: ms.priority,
                     model: { ...model, provider } as Omit<
                         RoundhouseModel,
                         "provider"
@@ -235,20 +238,34 @@ const buildCandidates = (
                 model,
                 providerApiKeys: activeProviderApiKeys,
                 score: model.efficiencyScore ?? DEFAULT_SCORE,
+                priority: entry.priority ?? 1,
             });
         }
     }
 
-    if (filters?.strategy === "random") {
-        for (let index = candidates.length - 1; index > 0; index -= 1) {
+    const sortByEfficiency = (list: RoundhouseCandidate[]) =>
+        list.sort((a, b) => b.score - a.score);
+
+    const sortByPriority = (list: RoundhouseCandidate[]) =>
+        list.sort((a, b) =>
+            a.priority === b.priority
+                ? b.score - a.score
+                : a.priority - b.priority,
+        );
+
+    const shuffle = (list: RoundhouseCandidate[]) => {
+        for (let index = list.length - 1; index > 0; index -= 1) {
             const swapIndex = Math.floor(Math.random() * (index + 1));
-            [candidates[index], candidates[swapIndex]] = [
-                candidates[swapIndex],
-                candidates[index],
-            ];
+            [list[index], list[swapIndex]] = [list[swapIndex], list[index]];
         }
+    };
+
+    if (filters?.strategy === "random") {
+        shuffle(candidates);
+    } else if (filters?.strategy === "priority") {
+        sortByPriority(candidates);
     } else {
-        candidates.sort((a, b) => b.score - a.score);
+        sortByEfficiency(candidates);
     }
 
     logger.log("Finished building candidates", {
@@ -293,6 +310,8 @@ type CandidatePoolResult =
           apiKeyId: string;
           candidates: RoundhouseCandidate[];
           excluded: Set<string>;
+          apiKeyMaxIterations?: number;
+          apiKeyRoundhouseMethod?: RoundhouseFilters["strategy"];
       }
     | {
           success: false;
@@ -324,7 +343,19 @@ const getCandidatePool = async (
         };
     }
 
-    const candidates = buildCandidates(apiKeyData.providerSelections, filters);
+    const apiKeyRoundhouseMethod =
+        apiKeyData.roundhouseMethod === "RANDOM"
+            ? "random"
+            : apiKeyData.roundhouseMethod === "EFFICIENCY"
+            ? "efficiency"
+            : apiKeyData.roundhouseMethod === "PRIORITY"
+            ? "priority"
+            : undefined;
+    const effectiveFilters = {
+        ...filters,
+        strategy: filters?.strategy ?? apiKeyRoundhouseMethod,
+    };
+    const candidates = buildCandidates(apiKeyData.providerSelections, effectiveFilters);
 
     if (candidates.length === 0) {
         const requestedFilters = Boolean(filters?.modelKeys?.size);
@@ -351,6 +382,8 @@ const getCandidatePool = async (
         apiKeyId: apiKeyData.id,
         candidates,
         excluded,
+        apiKeyMaxIterations: apiKeyData.maxIterations ?? undefined,
+        apiKeyRoundhouseMethod,
     };
 };
 
@@ -408,9 +441,13 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
         }
 
         const { apiKeyId, candidates, excluded } = candidatePool;
+        const effectiveMaxIterations =
+            maxIterations ?? candidatePool.apiKeyMaxIterations ?? DEFAULT_MAX_ITERATIONS;
+        const effectiveStrategy =
+            filters?.strategy ?? candidatePool.apiKeyRoundhouseMethod;
         let iteration = 0;
 
-        while (iteration < maxIterations) {
+        while (iteration < effectiveMaxIterations) {
             iteration += 1;
 
             let available = candidates
@@ -451,7 +488,7 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
             }
 
             const selectedIndex =
-                filters?.strategy === "random"
+                effectiveStrategy === "random"
                     ? Math.floor(Math.random() * available.length)
                     : 0;
             const { candidate, availableProviderApiKeys } =

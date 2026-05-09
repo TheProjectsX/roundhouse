@@ -836,6 +836,101 @@
         ]
       }
     },
+    "/api/iv1/apikeys/{id}/models": {
+      "get": {
+        "operationId": "ApikeysController_fetchApiKeyModelSelections",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "summary": "Get all model selections for an API key",
+        "tags": [
+          "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
+    "/api/iv1/apikeys/{id}/models/priority": {
+      "patch": {
+        "operationId": "ApikeysController_reorderApiKeyModelSelections",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyModelSelectionPriorityDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Update model selection priorities for an API key",
+        "tags": [
+          "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
+    "/api/iv1/apikeys/{id}/settings": {
+      "patch": {
+        "operationId": "ApikeysController_updateApiKeySettings",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeySettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Update API key settings",
+        "tags": [
+          "ApiKeys"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
     "/api/iv1/apikeys/{id}/status": {
       "patch": {
         "operationId": "ApikeysController_updateApiKeyStatus",
@@ -1967,6 +2062,13 @@
         "properties": {
           "name": {
             "type": "string"
+          },
+          "maxIterations": {
+            "type": "number",
+            "minimum": 1
+          },
+          "roundhouseMethod": {
+            "type": "object"
           }
         },
         "required": [
@@ -1981,6 +2083,49 @@
           },
           "active": {
             "type": "boolean"
+          }
+        }
+      },
+      "ModelSelectionPriorityItemDto": {
+        "type": "object",
+        "properties": {
+          "modelSelectionId": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "modelSelectionId",
+          "priority"
+        ]
+      },
+      "UpdateApiKeyModelSelectionPriorityDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelSelectionPriorityItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "UpdateApiKeySettingsDto": {
+        "type": "object",
+        "properties": {
+          "maxIterations": {
+            "type": "number",
+            "minimum": 1
+          },
+          "roundhouseMethod": {
+            "type": "object"
           }
         }
       },

@@ -17,8 +17,10 @@ import {
     CreateApiKeyDto,
     CreateApiKeyProviderDto,
     UpdateApiKeyDto,
+    UpdateApiKeyModelSelectionPriorityDto,
     UpdateApiKeyProviderModelsDto,
     UpdateApiKeyProviderModelsStatusDto,
+    UpdateApiKeySettingsDto,
     UpdateApiKeyStatusDto,
 } from "./dto/body.dto";
 import { ApikeysService } from "./apikeys.service";
@@ -82,6 +84,64 @@ export class ApikeysController {
         @ReqField("user") user: UserPayload,
     ) {
         const result = await this.apikeysService.updateApiKey(
+            id,
+            payload,
+            user,
+        );
+
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Get(":id/models")
+    @ApiOperation({ summary: "Get all model selections for an API key" })
+    async fetchApiKeyModelSelections(
+        @Param("id") id: string,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.apikeysService.fetchApiKeyModelSelections(
+            id,
+            user,
+        );
+
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Patch(":id/models/priority")
+    @ApiOperation({ summary: "Update model selection priorities for an API key" })
+    async reorderApiKeyModelSelections(
+        @Param("id") id: string,
+        @Body() payload: UpdateApiKeyModelSelectionPriorityDto,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.apikeysService.reorderApiKeyModelSelections(
+            id,
+            payload,
+            user,
+        );
+
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Patch(":id/settings")
+    @ApiOperation({ summary: "Update API key settings" })
+    async updateApiKeySettings(
+        @Param("id") id: string,
+        @Body() payload: UpdateApiKeySettingsDto,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.apikeysService.updateApiKeySettings(
             id,
             payload,
             user,

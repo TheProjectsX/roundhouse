@@ -126,7 +126,7 @@ model ProviderSelection {
 
 
 ## NEW:
-Add `x-roundhouse-type` optional header with value of "random" and "efficiency".
+Add `x-roundhouse-method` optional header with value of "random" and "efficiency".
 Based on the type, change the roundhouse model selection. By default it is "efficiency" (Current)
 
 ## Final:
@@ -135,3 +135,14 @@ Based on the type, change the roundhouse model selection. By default it is "effi
 - Roundhouse will only change in getting the models and providers, and the new header control
 - Remove any unused utils or codes
 - Plan before execution
+
+
+<!-- ----------- NEW ----------- -->
+## Goal:
+Currently our project uses the term "roundhouse type" everywhere for defining roundhouse method. In prisma, headers, internally, everywhere.
+Your goal is to migrate everywhere, where it is using "roundhouse type" term and use "roundhouse method" term.
+
+So:
+- RoundhouseType -> RoundhouseMethod
+- "x-roundhouse-type" -> "x-roundhouse-method"
+etc

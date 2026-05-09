@@ -59,7 +59,7 @@ export const resolveRoundhouseFilters = (
     provider?: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
     modelKeys?: Set<string>;
     maxIterations?: number;
-    strategy?: "random" | "efficiency";
+    strategy?: "random" | "efficiency" | "priority";
 } => {
     const rawProviders = normalizeHeaderValue(headers["x-providers"]);
     const providerTokens = rawProviders
@@ -95,10 +95,19 @@ export const resolveRoundhouseFilters = (
         Number.isFinite(parsedIterations) && parsedIterations > 0
             ? Math.floor(parsedIterations)
             : undefined;
-    const rawRoundhouseType = normalizeHeaderValue(headers["x-roundhouse-type"])
+    const rawRoundhouseMethod = normalizeHeaderValue(
+        headers["x-roundhouse-method"],
+    )
         ?.trim()
         .toLowerCase();
-    const strategy = rawRoundhouseType === "random" ? "random" : "efficiency";
+    const strategy =
+        rawRoundhouseMethod === "random"
+            ? "random"
+            : rawRoundhouseMethod === "efficiency"
+            ? "efficiency"
+            : rawRoundhouseMethod === "priority"
+            ? "priority"
+            : undefined;
 
     return {
         provider:
