@@ -22,7 +22,9 @@ type ApiKeyDetails = Prisma.ApiKeyGetPayload<{
             include: {
                 provider: true;
                 userProvider: true;
-                providerApiKeys: true;
+                apiKeysManagers: {
+                    include: { apiKeysManager: true };
+                };
                 modelSelections: {
                     include: {
                         model: true;
@@ -53,7 +55,11 @@ export class ApikeysService {
             .include({
                 providerSelections: {
                     include: {
-                        providerApiKeys: true,
+                        provider: true,
+                        userProvider: true,
+                        apiKeysManagers: {
+                            include: { apiKeysManager: true },
+                        },
                         modelSelections: {
                             include: { model: true, userModel: true },
                         },
@@ -66,16 +72,18 @@ export class ApikeysService {
         const formatted = data.map((apiKey) => {
             const providerSelections = apiKey.providerSelections ?? [];
             const providerCount = providerSelections.length;
-            let providerApiKeyCount = 0;
+            let apiKeysManagerCount = 0;
             let successfulRequests = 0;
             let modelCount = 0;
 
             providerSelections.forEach((providerSelection) => {
-                const providerApiKeys = providerSelection.providerApiKeys ?? [];
-                providerApiKeyCount += providerApiKeys.length;
-                successfulRequests += providerApiKeys.reduce(
-                    (sum, providerApiKey) =>
-                        sum + (providerApiKey.successCount ?? 0),
+                const apiKeysManagerEntries =
+                    providerSelection.apiKeysManagers ?? [];
+                apiKeysManagerCount += apiKeysManagerEntries.length;
+                successfulRequests += apiKeysManagerEntries.reduce(
+                    (sum, apiKeyManagerEntry) =>
+                        sum +
+                        (apiKeyManagerEntry.apiKeysManager?.successCount ?? 0),
                     0,
                 );
 
@@ -93,7 +101,7 @@ export class ApikeysService {
                 updatedAt: apiKey.updatedAt,
                 stats: {
                     providerCount,
-                    providerApiKeyCount,
+                    apiKeysManagerCount,
                     modelCount,
                     successfulRequests,
                 },
@@ -111,13 +119,8 @@ export class ApikeysService {
                     include: {
                         provider: true,
                         userProvider: true,
-                        providerApiKeys: {
-                            select:{
-                                id: true,
-                                key: true,
-                                active: true,
-                                successCount: true,
-                            }
+                        apiKeysManagers: {
+                            include: { apiKeysManager: true },
                         },
                         modelSelections: {
                             include: { model: true, userModel: true },
@@ -230,9 +233,7 @@ export class ApikeysService {
         }
 
         if (
-            payload.items.some(
-                (item) => !validIds.has(item.modelSelectionId),
-            )
+            payload.items.some((item) => !validIds.has(item.modelSelectionId))
         ) {
             throw new ApiError(
                 HttpStatus.BAD_REQUEST,
@@ -336,7 +337,10 @@ export class ApikeysService {
             },
         });
 
-        return { message: "API key settings updated", data: { id: updated.id } };
+        return {
+            message: "API key settings updated",
+            data: { id: updated.id },
+        };
     }
 
     async deleteApiKey(id: string, user: UserPayload) {
@@ -379,6 +383,33 @@ export class ApikeysService {
             );
         }
 
+        const apiKeysManagerIds = Array.from(
+            new Set(payload.apiKeysManagerIds ?? []),
+        );
+        if (apiKeysManagerIds.length === 0) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "At least one ApiKeysManager id must be provided",
+            );
+        }
+
+        const apiKeysManagerRecords = await this.prisma.apiKeysManager.findMany(
+            {
+                where: {
+                    id: { in: apiKeysManagerIds },
+                    userId: user.id,
+                },
+                select: { id: true },
+            },
+        );
+
+        if (apiKeysManagerRecords.length !== apiKeysManagerIds.length) {
+            throw new ApiError(
+                HttpStatus.NOT_FOUND,
+                "One or more ApiKeysManager ids are invalid or do not belong to the user",
+            );
+        }
+
         const modelIds = await this.fetchProviderModelIds(providerEntity);
 
         const providerSelection = await this.prisma.providerSelection.create({
@@ -416,19 +447,22 @@ export class ApikeysService {
             await this.prisma.modelSelection.createMany({ data: createData });
         }
 
-        const providerApiKey = await this.prisma.providerApiKey.create({
-            data: {
+        const providerSelectionApiKeyManagers = apiKeysManagerIds.map(
+            (apiKeysManagerId) => ({
                 providerSelectionId: providerSelection.id,
-                key: payload.key.trim(),
-                active: payload.active ?? true,
-            },
+                apiKeysManagerId,
+            }),
+        );
+
+        await this.prisma.providerSelectionApiKeysManager.createMany({
+            data: providerSelectionApiKeyManagers,
         });
 
         return {
             message: "Provider selected",
             data: {
                 id: providerSelection.id,
-                providerApiKeyId: providerApiKey.id,
+                apiKeysManagerIds,
             },
         };
     }
@@ -775,9 +809,18 @@ export class ApikeysService {
                     status: provider?.status,
                     active: selection.active,
                     isCustom: Boolean(selection.userProviderId),
-                    providerApiKeys: selection.providerApiKeys.map(
-                        (providerApiKey) =>
-                            this.formatProviderApiKey(providerApiKey),
+                    apiKeysManagers: (selection.apiKeysManagers ?? []).map(
+                        (entry) =>
+                            this.formatApiKeysManager(
+                                entry.apiKeysManager as {
+                                    id: string;
+                                    key: string;
+                                    active: boolean;
+                                    successCount: number;
+                                    createdAt: Date;
+                                    updatedAt: Date;
+                                },
+                            ),
                     ),
                     models,
                     createdAt: selection.createdAt,
@@ -787,7 +830,7 @@ export class ApikeysService {
         };
     }
 
-    private formatProviderApiKey(providerApiKey: {
+    private formatApiKeysManager(apiKeysManager: {
         id: string;
         key: string;
         active: boolean;
@@ -796,16 +839,16 @@ export class ApikeysService {
         updatedAt: Date;
     }) {
         return {
-            id: providerApiKey.id,
-            maskedKey: this.maskProviderApiKey(providerApiKey.key),
-            active: providerApiKey.active,
-            successCount: providerApiKey.successCount,
-            createdAt: providerApiKey.createdAt,
-            updatedAt: providerApiKey.updatedAt,
+            id: apiKeysManager.id,
+            maskedKey: this.maskApiKeysManagerKey(apiKeysManager.key),
+            active: apiKeysManager.active,
+            successCount: apiKeysManager.successCount,
+            createdAt: apiKeysManager.createdAt,
+            updatedAt: apiKeysManager.updatedAt,
         };
     }
 
-    private maskProviderApiKey(key: string) {
+    private maskApiKeysManagerKey(key: string) {
         if (key.length <= 8) {
             return `${key.slice(0, 2)}***${key.slice(-2)}`;
         }

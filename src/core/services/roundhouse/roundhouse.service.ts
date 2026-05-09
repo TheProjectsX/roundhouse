@@ -33,19 +33,19 @@ export type RoundhouseCandidate = {
     modelSelectionId: string;
     providerSelectionId: string;
     model: RoundhouseModel;
-    providerApiKeys: RoundhouseProviderApiKey[];
+    apiKeysManagers: RoundhouseApiKeysManagerRecord[];
     score: number;
     priority: number;
 };
 
-type RoundhouseProviderApiKey = {
+type RoundhouseApiKeysManagerRecord = {
     id: string;
     key: string;
     active: boolean;
     successCount: number;
 };
 
-export type RoundhouseSelectedProviderApiKey = {
+export type RoundhouseSelectedApiKeysManager = {
     id: string;
     key: string;
 };
@@ -65,14 +65,14 @@ type RoundhouseExecutionResult<T> =
 
 type RoundhouseExecute<T> = (
     candidate: RoundhouseCandidate,
-    providerApiKey: RoundhouseSelectedProviderApiKey,
+    apiKeysManager: RoundhouseSelectedApiKeysManager,
 ) => Promise<RoundhouseExecutionResult<T>>;
 
 export type SelectProviderSuccess<T> = {
     success: true;
     data: T;
     candidate: RoundhouseCandidate;
-    providerApiKey: RoundhouseSelectedProviderApiKey;
+    apiKeysManager: RoundhouseSelectedApiKeysManager;
     iteration: number;
 };
 
@@ -138,7 +138,9 @@ const buildCandidates = (
     providerSelections: Array<{
         id: string;
         active: boolean;
-        providerApiKeys: RoundhouseProviderApiKey[];
+        apiKeysManagers: Array<{
+            apiKeysManager: RoundhouseApiKeysManagerRecord | null;
+        }>;
         provider: {
             id: string;
             code: string;
@@ -183,10 +185,15 @@ const buildCandidates = (
             continue;
         }
 
-        const activeProviderApiKeys = providerSelection.providerApiKeys.filter(
-            (providerApiKey) => providerApiKey.active,
-        );
-        if (activeProviderApiKeys.length === 0) {
+        const activeApiKeysManagers = providerSelection.apiKeysManagers
+            .map((entry) => entry.apiKeysManager)
+            .filter(
+                (
+                    apiKeysManager,
+                ): apiKeysManager is RoundhouseApiKeysManagerRecord =>
+                    Boolean(apiKeysManager && apiKeysManager.active),
+            );
+        if (activeApiKeysManagers.length === 0) {
             continue;
         }
 
@@ -236,7 +243,7 @@ const buildCandidates = (
                 modelSelectionId: entry.modelSelectionId,
                 providerSelectionId: providerSelection.id,
                 model,
-                providerApiKeys: activeProviderApiKeys,
+                apiKeysManagers: activeApiKeysManagers,
                 score: model.efficiencyScore ?? DEFAULT_SCORE,
                 priority: entry.priority ?? 1,
             });
@@ -292,8 +299,8 @@ const getApiKeyWithSelections = async (
                 include: {
                     provider: true,
                     userProvider: true,
-                    providerApiKeys: {
-                        where: { active: true },
+                    apiKeysManagers: {
+                        include: { apiKeysManager: true },
                     },
                     modelSelections: {
                         include: { model: true, userModel: true },
@@ -347,15 +354,18 @@ const getCandidatePool = async (
         apiKeyData.roundhouseMethod === "RANDOM"
             ? "random"
             : apiKeyData.roundhouseMethod === "EFFICIENCY"
-            ? "efficiency"
-            : apiKeyData.roundhouseMethod === "PRIORITY"
-            ? "priority"
-            : undefined;
+              ? "efficiency"
+              : apiKeyData.roundhouseMethod === "PRIORITY"
+                ? "priority"
+                : undefined;
     const effectiveFilters = {
         ...filters,
         strategy: filters?.strategy ?? apiKeyRoundhouseMethod,
     };
-    const candidates = buildCandidates(apiKeyData.providerSelections, effectiveFilters);
+    const candidates = buildCandidates(
+        apiKeyData.providerSelections,
+        effectiveFilters,
+    );
 
     if (candidates.length === 0) {
         const requestedFilters = Boolean(filters?.modelKeys?.size);
@@ -372,8 +382,8 @@ const getCandidatePool = async (
 
     const excluded = new Set<string>(
         apiKeyData.lastErrors.map(
-            (lastError: { modelId: string; providerApiKeyId: string }) =>
-                `${lastError.modelId}:${lastError.providerApiKeyId}`,
+            (lastError: { modelId: string; apiKeysManagerId: string }) =>
+                `${lastError.modelId}:${lastError.apiKeysManagerId}`,
         ),
     );
 
@@ -387,18 +397,18 @@ const getCandidatePool = async (
     };
 };
 
-const createExcludedKey = (modelId: string, providerApiKeyId: string) =>
-    `${modelId}:${providerApiKeyId}`;
+const createExcludedKey = (modelId: string, apiKeysManagerId: string) =>
+    `${modelId}:${apiKeysManagerId}`;
 
-const selectRandomProviderApiKey = (
-    providerApiKeys: RoundhouseProviderApiKey[],
+const selectRandomApiKeysManager = (
+    apiKeysManagers: RoundhouseApiKeysManagerRecord[],
 ) => {
-    const index = Math.floor(Math.random() * providerApiKeys.length);
-    const providerApiKey = providerApiKeys[index];
+    const index = Math.floor(Math.random() * apiKeysManagers.length);
+    const apiKeysManager = apiKeysManagers[index];
 
     return {
-        id: providerApiKey.id,
-        key: providerApiKey.key,
+        id: apiKeysManager.id,
+        key: apiKeysManager.key,
     };
 };
 
@@ -442,7 +452,9 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
 
         const { apiKeyId, candidates, excluded } = candidatePool;
         const effectiveMaxIterations =
-            maxIterations ?? candidatePool.apiKeyMaxIterations ?? DEFAULT_MAX_ITERATIONS;
+            maxIterations ??
+            candidatePool.apiKeyMaxIterations ??
+            DEFAULT_MAX_ITERATIONS;
         const effectiveStrategy =
             filters?.strategy ?? candidatePool.apiKeyRoundhouseMethod;
         let iteration = 0;
@@ -453,17 +465,17 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
             let available = candidates
                 .map((candidate) => ({
                     candidate,
-                    availableProviderApiKeys: candidate.providerApiKeys.filter(
-                        (providerApiKey) =>
+                    availableApiKeysManagers: candidate.apiKeysManagers.filter(
+                        (apiKeysManager) =>
                             !excluded.has(
                                 createExcludedKey(
                                     candidate.modelSelectionId,
-                                    providerApiKey.id,
+                                    apiKeysManager.id,
                                 ),
                             ),
                     ),
                 }))
-                .filter((entry) => entry.availableProviderApiKeys.length > 0);
+                .filter((entry) => entry.availableApiKeysManagers.length > 0);
 
             if (available.length === 0) {
                 excluded.clear();
@@ -476,7 +488,7 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
 
                 available = candidates.map((candidate) => ({
                     candidate,
-                    availableProviderApiKeys: [...candidate.providerApiKeys],
+                    availableApiKeysManagers: [...candidate.apiKeysManagers],
                 }));
 
                 if (available.length === 0) {
@@ -491,12 +503,12 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 effectiveStrategy === "random"
                     ? Math.floor(Math.random() * available.length)
                     : 0;
-            const { candidate, availableProviderApiKeys } =
+            const { candidate, availableApiKeysManagers } =
                 available[selectedIndex];
-            const providerApiKey = selectRandomProviderApiKey(
-                availableProviderApiKeys,
+            const apiKeysManager = selectRandomApiKeysManager(
+                availableApiKeysManagers,
             );
-            const result = await execute(candidate, providerApiKey);
+            const result = await execute(candidate, apiKeysManager);
 
             if (result.success) {
                 runInBackground(
@@ -506,8 +518,8 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                 );
 
                 runInBackground(
-                    prisma.providerApiKey.update({
-                        where: { id: providerApiKey.id },
+                    prisma.apiKeysManager.update({
+                        where: { id: apiKeysManager.id },
                         data: {
                             successCount: {
                                 increment: 1,
@@ -520,7 +532,7 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                     success: true,
                     data: result.data,
                     candidate,
-                    providerApiKey,
+                    apiKeysManager,
                     iteration,
                 };
             }
@@ -528,7 +540,7 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
             excluded.add(
                 createExcludedKey(
                     candidate.modelSelectionId,
-                    providerApiKey.id,
+                    apiKeysManager.id,
                 ),
             );
 
@@ -537,7 +549,7 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                     data: {
                         apiKeyId,
                         modelId: candidate.modelSelectionId,
-                        providerApiKeyId: providerApiKey.id,
+                        apiKeysManagerId: apiKeysManager.id,
                     },
                 }),
             );

@@ -104,10 +104,10 @@ export const resolveRoundhouseFilters = (
         rawRoundhouseMethod === "random"
             ? "random"
             : rawRoundhouseMethod === "efficiency"
-            ? "efficiency"
-            : rawRoundhouseMethod === "priority"
-            ? "priority"
-            : undefined;
+              ? "efficiency"
+              : rawRoundhouseMethod === "priority"
+                ? "priority"
+                : undefined;
 
     return {
         provider:

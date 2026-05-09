@@ -106,8 +106,6 @@ export class CreateProviderApiKeyDto {
     active?: boolean;
 }
 
-export class CreateApiKeyProviderDto extends CreateProviderApiKeyDto {}
-
 export class UpdateProviderApiKeyDto {
     @IsOptional()
     @IsString()
@@ -123,6 +121,13 @@ export class UpdateProviderApiKeyStatusDto {
     @toBoolean()
     @IsBoolean()
     active: boolean;
+}
+
+export class CreateApiKeyProviderDto {
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsString({ each: true })
+    apiKeysManagerIds: string[];
 }
 
 export class UpdateApiKeyProviderModelsDto {

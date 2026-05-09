@@ -115,7 +115,9 @@ export class ApikeysController {
     }
 
     @Patch(":id/models/priority")
-    @ApiOperation({ summary: "Update model selection priorities for an API key" })
+    @ApiOperation({
+        summary: "Update model selection priorities for an API key",
+    })
     async reorderApiKeyModelSelections(
         @Param("id") id: string,
         @Body() payload: UpdateApiKeyModelSelectionPriorityDto,

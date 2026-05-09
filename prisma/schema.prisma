@@ -23,6 +23,7 @@ model User {
     userProviders      UserProvider[]
     userModels         UserModel[]
     providerSelections ProviderSelection[]
+    apiKeysManagers    ApiKeysManager[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -53,6 +54,28 @@ model ApiKey {
     @@map("api_keys")
 }
 
+model ApiKeysManager {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    name     String
+    provider String?
+    key      String
+
+    active       Boolean @default(true)
+    successCount Int     @default(0)
+
+    lastErrors LastError[]
+    providerSelections ProviderSelectionApiKeysManager[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String? @db.ObjectId
+
+    @@map("user__apikeys_managers")
+}
+
 model LastError {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
@@ -61,8 +84,8 @@ model LastError {
 
     modelId String
 
-    providerApiKeyId String         @db.ObjectId
-    providerApiKey   ProviderApiKey @relation(fields: [providerApiKeyId], references: [id], onDelete: Cascade)
+    apiKeysManagerId String         @db.ObjectId
+    apiKeysManager   ApiKeysManager @relation(fields: [apiKeysManagerId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -186,7 +209,7 @@ model ProviderSelection {
     userId String @db.ObjectId
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    providerApiKeys ProviderApiKey[]
+    apiKeysManagers ProviderSelectionApiKeysManager[]
 
     active Boolean @default(true)
 
@@ -196,24 +219,20 @@ model ProviderSelection {
     @@map("user__provider_selections")
 }
 
-model ProviderApiKey {
+model ProviderSelectionApiKeysManager {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
     providerSelectionId String            @db.ObjectId
     providerSelection   ProviderSelection @relation(fields: [providerSelectionId], references: [id], onDelete: Cascade)
 
-    key String
-
-    active       Boolean @default(true)
-    successCount Int     @default(0)
-
-    lastErrors LastError[]
+    apiKeysManagerId String            @db.ObjectId
+    apiKeysManager   ApiKeysManager   @relation(fields: [apiKeysManagerId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@unique([providerSelectionId, key])
-    @@map("provider_api_keys")
+    @@unique([providerSelectionId, apiKeysManagerId])
+    @@map("provider_selection_api_keys_managers")
 }
 
 model ModelSelection {

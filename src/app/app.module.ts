@@ -3,6 +3,7 @@ import { OpenaiModule } from "@/modules/openai/openai.module";
 import { MeModule } from "@/modules/iv1/me/me.module";
 import { ProvidersModule } from "@/modules/iv1/providers/providers.module";
 import { ApikeysModule } from "@/modules/iv1/apikeys/apikeys.module";
+import { ApikeysManagerModule } from "@/modules/iv1/me/modules/apikeys/apikeys.module";
 import { ModelsModule } from "@/modules/iv1/models/models.module";
 import { AdminModule } from "@/modules/iv1/admin/admin.module";
 import { GlobalExceptionFilter } from "@/common/filters/global_exception";
@@ -46,6 +47,7 @@ import { RequestLoggingMiddleware } from "@/middlewares/request-logging.middlewa
         OpenaiModule,
         ProvidersModule,
         ApikeysModule,
+        ApikeysManagerModule,
         ModelsModule,
         AdminModule,
         CommonModule,
