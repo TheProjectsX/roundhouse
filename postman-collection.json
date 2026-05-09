@@ -1,11 +1,11 @@
 {
   "info": {
-    "_postman_id": "5055c9e0-6fe2-442d-8bdc-03a1ab55eb5a",
+    "_postman_id": "875849e9-59dc-4080-bd37-a3484a41f369",
     "name": "Roundhouse Backend",
     "description": "The API Description for Roundhouse Backend - A platform for managing AI providers and API keys.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "44921584",
-    "_collection_link": "https://go.postman.co/collection/44921584-5055c9e0-6fe2-442d-8bdc-03a1ab55eb5a?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/44921584-875849e9-59dc-4080-bd37-a3484a41f369?source=collection_link"
   },
   "item": [
     {
@@ -215,7 +215,123 @@
                           ]
                         }
                       },
-                      "response": []
+                      "response": [
+                        {
+                          "name": "Success",
+                          "originalRequest": {
+                            "method": "POST",
+                            "header": [
+                              {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                              }
+                            ],
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"123456\"\n}",
+                              "options": {
+                                "raw": {
+                                  "headerFamily": "json",
+                                  "language": "json"
+                                }
+                              }
+                            },
+                            "url": {
+                              "raw": "{{baseUrl}}/api/iv1/auth/login",
+                              "host": [
+                                "{{baseUrl}}"
+                              ],
+                              "path": [
+                                "api",
+                                "iv1",
+                                "auth",
+                                "login"
+                              ]
+                            }
+                          },
+                          "status": "Created",
+                          "code": 201,
+                          "_postman_previewlanguage": "json",
+                          "header": [
+                            {
+                              "key": "X-Powered-By",
+                              "value": "Express"
+                            },
+                            {
+                              "key": "Vary",
+                              "value": "Origin"
+                            },
+                            {
+                              "key": "Access-Control-Allow-Credentials",
+                              "value": "true"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-short",
+                              "value": "100"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-short",
+                              "value": "99"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-short",
+                              "value": "1"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-medium",
+                              "value": "1000"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-medium",
+                              "value": "999"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-medium",
+                              "value": "10"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-long",
+                              "value": "1000"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-long",
+                              "value": "999"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-long",
+                              "value": "600"
+                            },
+                            {
+                              "key": "Content-Type",
+                              "value": "application/json",
+                              "description": "",
+                              "type": "text"
+                            },
+                            {
+                              "key": "Content-Length",
+                              "value": "525"
+                            },
+                            {
+                              "key": "ETag",
+                              "value": "W/\"20d-grqDRh864nM+Niu8ODJosnJ1Q4s\""
+                            },
+                            {
+                              "key": "Date",
+                              "value": "Sat, 09 May 2026 15:00:02 GMT"
+                            },
+                            {
+                              "key": "Connection",
+                              "value": "keep-alive"
+                            },
+                            {
+                              "key": "Keep-Alive",
+                              "value": "timeout=5"
+                            }
+                          ],
+                          "cookie": [],
+                          "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"User Login successful\",\n    \"data\": {\n        \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZjQ5MWQ4YWEzMmRiM2UxNDhjMzQ1MSIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsImlhdCI6MTc3ODMzODgwMiwiZXhwIjoxNzgwOTMwODAyfQ.Kp6plHgndHH_SH58htqPektUHQEcq314osbUn6KctOw\",\n        \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZjQ5MWQ4YWEzMmRiM2UxNDhjMzQ1MSIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsImlhdCI6MTc3ODMzODgwMiwiZXhwIjoxNzc4OTQzNjAyfQ.zLha9_77Z7olHbyoYJWshQqp_e3amLdePAhIOthOb7w\"\n    }\n}"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -809,6 +925,508 @@
                   ]
                 },
                 {
+                  "name": "apikeys",
+                  "item": [
+                    {
+                      "name": "{id}",
+                      "item": [
+                        {
+                          "name": "Update API key manager",
+                          "request": {
+                            "auth": {
+                              "type": "bearer",
+                              "bearer": [
+                                {
+                                  "key": "token",
+                                  "value": "{{userToken}}",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "method": "PATCH",
+                            "header": [
+                              {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                              }
+                            ],
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"active\": false\n}",
+                              "options": {
+                                "raw": {
+                                  "headerFamily": "json",
+                                  "language": "json"
+                                }
+                              }
+                            },
+                            "url": {
+                              "raw": "{{baseUrl}}/api/iv1/me/apikeys/:id",
+                              "host": [
+                                "{{baseUrl}}"
+                              ],
+                              "path": [
+                                "api",
+                                "iv1",
+                                "me",
+                                "apikeys",
+                                ":id"
+                              ],
+                              "variable": [
+                                {
+                                  "key": "id",
+                                  "value": "69ff4d0b58c17ec95fb9ef17",
+                                  "description": "(Required) "
+                                }
+                              ]
+                            }
+                          },
+                          "response": []
+                        },
+                        {
+                          "name": "Delete API key manager",
+                          "request": {
+                            "auth": {
+                              "type": "bearer",
+                              "bearer": [
+                                {
+                                  "key": "token",
+                                  "value": "{{userToken}}",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "method": "DELETE",
+                            "header": [],
+                            "url": {
+                              "raw": "{{baseUrl}}/api/iv1/me/apikeys/:id",
+                              "host": [
+                                "{{baseUrl}}"
+                              ],
+                              "path": [
+                                "api",
+                                "iv1",
+                                "me",
+                                "apikeys",
+                                ":id"
+                              ],
+                              "variable": [
+                                {
+                                  "key": "id",
+                                  "value": "69ff4cd358c17ec95fb9ef16",
+                                  "description": "(Required) "
+                                }
+                              ]
+                            }
+                          },
+                          "response": [
+                            {
+                              "name": "Success",
+                              "originalRequest": {
+                                "method": "DELETE",
+                                "header": [],
+                                "url": {
+                                  "raw": "{{baseUrl}}/api/iv1/me/apikeys/:id",
+                                  "host": [
+                                    "{{baseUrl}}"
+                                  ],
+                                  "path": [
+                                    "api",
+                                    "iv1",
+                                    "me",
+                                    "apikeys",
+                                    ":id"
+                                  ],
+                                  "variable": [
+                                    {
+                                      "key": "id",
+                                      "value": "69ff4c3fe25ec4b36abe171e",
+                                      "description": "(Required) "
+                                    }
+                                  ]
+                                }
+                              },
+                              "status": "OK",
+                              "code": 200,
+                              "_postman_previewlanguage": "json",
+                              "header": [
+                                {
+                                  "key": "X-Powered-By",
+                                  "value": "Express"
+                                },
+                                {
+                                  "key": "Vary",
+                                  "value": "Origin"
+                                },
+                                {
+                                  "key": "Access-Control-Allow-Credentials",
+                                  "value": "true"
+                                },
+                                {
+                                  "key": "X-RateLimit-Limit-short",
+                                  "value": "100"
+                                },
+                                {
+                                  "key": "X-RateLimit-Remaining-short",
+                                  "value": "99"
+                                },
+                                {
+                                  "key": "X-RateLimit-Reset-short",
+                                  "value": "1"
+                                },
+                                {
+                                  "key": "X-RateLimit-Limit-medium",
+                                  "value": "1000"
+                                },
+                                {
+                                  "key": "X-RateLimit-Remaining-medium",
+                                  "value": "999"
+                                },
+                                {
+                                  "key": "X-RateLimit-Reset-medium",
+                                  "value": "10"
+                                },
+                                {
+                                  "key": "X-RateLimit-Limit-long",
+                                  "value": "1000"
+                                },
+                                {
+                                  "key": "X-RateLimit-Remaining-long",
+                                  "value": "999"
+                                },
+                                {
+                                  "key": "X-RateLimit-Reset-long",
+                                  "value": "600"
+                                },
+                                {
+                                  "key": "Content-Type",
+                                  "value": "application/json",
+                                  "description": "",
+                                  "type": "text"
+                                },
+                                {
+                                  "key": "Content-Length",
+                                  "value": "102"
+                                },
+                                {
+                                  "key": "ETag",
+                                  "value": "W/\"66-GKK5WDuEthTxQdRCJHbG0nhrVfE\""
+                                },
+                                {
+                                  "key": "Date",
+                                  "value": "Sat, 09 May 2026 15:02:25 GMT"
+                                },
+                                {
+                                  "key": "Connection",
+                                  "value": "keep-alive"
+                                },
+                                {
+                                  "key": "Keep-Alive",
+                                  "value": "timeout=5"
+                                }
+                              ],
+                              "cookie": [],
+                              "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Api Key deleted\",\n    \"data\": {\n        \"id\": \"69ff4c3fe25ec4b36abe171e\"\n    }\n}"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "name": "List API key",
+                      "request": {
+                        "auth": {
+                          "type": "bearer",
+                          "bearer": [
+                            {
+                              "key": "token",
+                              "value": "{{userToken}}",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                          "raw": "{{baseUrl}}/api/iv1/me/apikeys",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "api",
+                            "iv1",
+                            "me",
+                            "apikeys"
+                          ]
+                        }
+                      },
+                      "response": [
+                        {
+                          "name": "Success",
+                          "originalRequest": {
+                            "method": "GET",
+                            "header": [],
+                            "url": {
+                              "raw": "{{baseUrl}}/api/iv1/me/apikeys",
+                              "host": [
+                                "{{baseUrl}}"
+                              ],
+                              "path": [
+                                "api",
+                                "iv1",
+                                "me",
+                                "apikeys"
+                              ]
+                            }
+                          },
+                          "status": "OK",
+                          "code": 200,
+                          "_postman_previewlanguage": "json",
+                          "header": [
+                            {
+                              "key": "X-Powered-By",
+                              "value": "Express"
+                            },
+                            {
+                              "key": "Vary",
+                              "value": "Origin"
+                            },
+                            {
+                              "key": "Access-Control-Allow-Credentials",
+                              "value": "true"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-short",
+                              "value": "100"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-short",
+                              "value": "99"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-short",
+                              "value": "1"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-medium",
+                              "value": "1000"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-medium",
+                              "value": "999"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-medium",
+                              "value": "10"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-long",
+                              "value": "1000"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-long",
+                              "value": "999"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-long",
+                              "value": "600"
+                            },
+                            {
+                              "key": "Content-Type",
+                              "value": "application/json",
+                              "description": "",
+                              "type": "text"
+                            },
+                            {
+                              "key": "Content-Length",
+                              "value": "910"
+                            },
+                            {
+                              "key": "ETag",
+                              "value": "W/\"38e-8wnnsCzlCFmHLke5pwq+PQASERw\""
+                            },
+                            {
+                              "key": "Date",
+                              "value": "Sat, 09 May 2026 15:17:31 GMT"
+                            },
+                            {
+                              "key": "Connection",
+                              "value": "keep-alive"
+                            },
+                            {
+                              "key": "Keep-Alive",
+                              "value": "timeout=5"
+                            }
+                          ],
+                          "cookie": [],
+                          "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Api Keys fetched\",\n    \"pagination\": {\n        \"page\": 1,\n        \"limit\": 10,\n        \"total\": 3,\n        \"totalPage\": 1\n    },\n    \"data\": [\n        {\n            \"id\": \"69ff4d0b58c17ec95fb9ef17\",\n            \"name\": \"OpenRounter Api Key\",\n            \"provider\": \"OpenRouter\",\n            \"key\": \"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\",\n            \"active\": true,\n            \"successCount\": 0,\n            \"createdAt\": \"2026-05-09T15:04:43.777Z\",\n            \"updatedAt\": \"2026-05-09T15:04:43.777Z\"\n        },\n        {\n            \"id\": \"69ff4cbe58c17ec95fb9ef15\",\n            \"name\": \"Ollama Cloud API Key\",\n            \"provider\": \"Ollama\",\n            \"key\": \"f1238a3c0c1b456faaaaa11af170e733.1yQn5FQBTW7ML7ZMSrsQDJqG\",\n            \"active\": true,\n            \"successCount\": 0,\n            \"createdAt\": \"2026-05-09T15:03:26.414Z\",\n            \"updatedAt\": \"2026-05-09T15:03:26.414Z\"\n        },\n        {\n            \"id\": \"69ff4ca358c17ec95fb9ef14\",\n            \"name\": \"Gemini API Key Premium\",\n            \"provider\": \"Gemini\",\n            \"key\": \"AIzaSyDT6BG67ukAuh7OawhRLE1wyXnocbagXgQ\",\n            \"active\": true,\n            \"successCount\": 0,\n            \"createdAt\": \"2026-05-09T15:02:59.654Z\",\n            \"updatedAt\": \"2026-05-09T15:02:59.654Z\"\n        }\n    ]\n}"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Create API key",
+                      "request": {
+                        "auth": {
+                          "type": "bearer",
+                          "bearer": [
+                            {
+                              "key": "token",
+                              "value": "{{userToken}}",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"name\": \"OpenRounter Api Key\",\n  \"key\": \"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\",\n  \"provider\": \"OpenRouter\"\n}",
+                          "options": {
+                            "raw": {
+                              "headerFamily": "json",
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/iv1/me/apikeys",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "api",
+                            "iv1",
+                            "me",
+                            "apikeys"
+                          ]
+                        }
+                      },
+                      "response": [
+                        {
+                          "name": "Success",
+                          "originalRequest": {
+                            "method": "POST",
+                            "header": [
+                              {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                              }
+                            ],
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"name\": \"OpenRounter Api Key\",\n  \"key\": \"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\",\n  \"provider\": \"OpenRouter\"\n}",
+                              "options": {
+                                "raw": {
+                                  "headerFamily": "json",
+                                  "language": "json"
+                                }
+                              }
+                            },
+                            "url": {
+                              "raw": "{{baseUrl}}/api/iv1/me/apikeys",
+                              "host": [
+                                "{{baseUrl}}"
+                              ],
+                              "path": [
+                                "api",
+                                "iv1",
+                                "me",
+                                "apikeys"
+                              ]
+                            }
+                          },
+                          "status": "Created",
+                          "code": 201,
+                          "_postman_previewlanguage": "json",
+                          "header": [
+                            {
+                              "key": "X-Powered-By",
+                              "value": "Express"
+                            },
+                            {
+                              "key": "Vary",
+                              "value": "Origin"
+                            },
+                            {
+                              "key": "Access-Control-Allow-Credentials",
+                              "value": "true"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-short",
+                              "value": "100"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-short",
+                              "value": "99"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-short",
+                              "value": "1"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-medium",
+                              "value": "1000"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-medium",
+                              "value": "999"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-medium",
+                              "value": "10"
+                            },
+                            {
+                              "key": "X-RateLimit-Limit-long",
+                              "value": "1000"
+                            },
+                            {
+                              "key": "X-RateLimit-Remaining-long",
+                              "value": "997"
+                            },
+                            {
+                              "key": "X-RateLimit-Reset-long",
+                              "value": "553"
+                            },
+                            {
+                              "key": "Content-Type",
+                              "value": "application/json",
+                              "description": "",
+                              "type": "text"
+                            },
+                            {
+                              "key": "Content-Length",
+                              "value": "102"
+                            },
+                            {
+                              "key": "ETag",
+                              "value": "W/\"66-XGwT+oNXAVjr1jtZxyscry8is7o\""
+                            },
+                            {
+                              "key": "Date",
+                              "value": "Sat, 09 May 2026 15:03:47 GMT"
+                            },
+                            {
+                              "key": "Connection",
+                              "value": "keep-alive"
+                            },
+                            {
+                              "key": "Keep-Alive",
+                              "value": "timeout=5"
+                            }
+                          ],
+                          "cookie": [],
+                          "body": "{\n    \"success\": true,\n    \"statusCode\": 201,\n    \"message\": \"Api Key created\",\n    \"data\": {\n        \"id\": \"69ff4cd358c17ec95fb9ef16\"\n    }\n}"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
                   "name": "Get user profile",
                   "request": {
                     "auth": {
@@ -980,220 +1598,6 @@
                     }
                   },
                   "response": []
-                },
-                {
-                  "name": "apikeys",
-                  "description": "",
-                  "item": [
-                    {
-                      "id": "4c015759-7cdf-46a4-994a-e06d83ebd4f3",
-                      "name": "List API key managers",
-                      "request": {
-                        "name": "List API key managers",
-                        "description": {},
-                        "url": {
-                          "path": [
-                            "api",
-                            "iv1",
-                            "me",
-                            "apikeys"
-                          ],
-                          "host": [
-                            "{{baseUrl}}"
-                          ],
-                          "query": [],
-                          "variable": []
-                        },
-                        "method": "GET",
-                        "body": {},
-                        "auth": {
-                          "type": "bearer",
-                          "bearer": [
-                            {
-                              "key": "token",
-                              "value": "{{bearerToken}}"
-                            }
-                          ]
-                        }
-                      },
-                      "response": [],
-                      "event": [],
-                      "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                      }
-                    },
-                    {
-                      "id": "d8a98070-c576-43dd-9c5b-d7184bdf7704",
-                      "name": "Create API key manager",
-                      "request": {
-                        "name": "Create API key manager",
-                        "description": {},
-                        "url": {
-                          "path": [
-                            "api",
-                            "iv1",
-                            "me",
-                            "apikeys"
-                          ],
-                          "host": [
-                            "{{baseUrl}}"
-                          ],
-                          "query": [],
-                          "variable": []
-                        },
-                        "header": [
-                          {
-                            "key": "Content-Type",
-                            "value": "application/json"
-                          }
-                        ],
-                        "method": "POST",
-                        "body": {
-                          "mode": "raw",
-                          "raw": "{\n  \"name\": \"<string>\",\n  \"key\": \"<string>\",\n  \"provider\": \"<string>\"\n}",
-                          "options": {
-                            "raw": {
-                              "headerFamily": "json",
-                              "language": "json"
-                            }
-                          }
-                        },
-                        "auth": {
-                          "type": "bearer",
-                          "bearer": [
-                            {
-                              "key": "token",
-                              "value": "{{bearerToken}}"
-                            }
-                          ]
-                        }
-                      },
-                      "response": [],
-                      "event": [],
-                      "protocolProfileBehavior": {
-                        "disableBodyPruning": true
-                      }
-                    },
-                    {
-                      "name": "{id}",
-                      "description": "",
-                      "item": [
-                        {
-                          "id": "238cc214-f83d-4862-b4c3-0329c0beb65f",
-                          "name": "Update API key manager",
-                          "request": {
-                            "name": "Update API key manager",
-                            "description": {},
-                            "url": {
-                              "path": [
-                                "api",
-                                "iv1",
-                                "me",
-                                "apikeys",
-                                ":id"
-                              ],
-                              "host": [
-                                "{{baseUrl}}"
-                              ],
-                              "query": [],
-                              "variable": [
-                                {
-                                  "type": "any",
-                                  "value": "<string>",
-                                  "key": "id",
-                                  "disabled": false,
-                                  "description": {
-                                    "content": "(Required) ",
-                                    "type": "text/plain"
-                                  }
-                                }
-                              ]
-                            },
-                            "header": [
-                              {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                              }
-                            ],
-                            "method": "PATCH",
-                            "body": {
-                              "mode": "raw",
-                              "raw": "{\n  \"name\": \"<string>\",\n  \"active\": \"<boolean>\"\n}",
-                              "options": {
-                                "raw": {
-                                  "headerFamily": "json",
-                                  "language": "json"
-                                }
-                              }
-                            },
-                            "auth": {
-                              "type": "bearer",
-                              "bearer": [
-                                {
-                                  "key": "token",
-                                  "value": "{{bearerToken}}"
-                                }
-                              ]
-                            }
-                          },
-                          "response": [],
-                          "event": [],
-                          "protocolProfileBehavior": {
-                            "disableBodyPruning": true
-                          }
-                        },
-                        {
-                          "id": "baf6360a-39cb-4612-9418-0f453eedf8f6",
-                          "name": "Delete API key manager",
-                          "request": {
-                            "name": "Delete API key manager",
-                            "description": {},
-                            "url": {
-                              "path": [
-                                "api",
-                                "iv1",
-                                "me",
-                                "apikeys",
-                                ":id"
-                              ],
-                              "host": [
-                                "{{baseUrl}}"
-                              ],
-                              "query": [],
-                              "variable": [
-                                {
-                                  "type": "any",
-                                  "value": "<string>",
-                                  "key": "id",
-                                  "disabled": false,
-                                  "description": {
-                                    "content": "(Required) ",
-                                    "type": "text/plain"
-                                  }
-                                }
-                              ]
-                            },
-                            "method": "DELETE",
-                            "body": {},
-                            "auth": {
-                              "type": "bearer",
-                              "bearer": [
-                                {
-                                  "key": "token",
-                                  "value": "{{bearerToken}}"
-                                }
-                              ]
-                            }
-                          },
-                          "response": [],
-                          "event": [],
-                          "protocolProfileBehavior": {
-                            "disableBodyPruning": true
-                          }
-                        }
-                      ]
-                    }
-                  ]
                 }
               ]
             },
@@ -1808,7 +2212,7 @@
                                 ],
                                 "body": {
                                   "mode": "raw",
-                                  "raw": "{\n  \"key\": \"AIzaSyDT6BG67ukAuh7OawhRLE1wyXnocbagXgQ\",\n  \"active\": true\n}",
+                                  "raw": "{\n    \"apiKeysManagerIds\": [\"69ff4ca358c17ec95fb9ef14\"]\n}",
                                   "options": {
                                     "raw": {
                                       "headerFamily": "json",
@@ -1832,7 +2236,7 @@
                                   "variable": [
                                     {
                                       "key": "id",
-                                      "value": "69f60075b9944a1e86320e2d",
+                                      "value": "69ff4f79327735319b507d59",
                                       "description": "(Required) "
                                     },
                                     {
@@ -1972,6 +2376,135 @@
                                   ],
                                   "cookie": [],
                                   "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Provider selected\",\n    \"data\": {\n        \"id\": \"69f49438aa32db3e148c3457\",\n        \"providerApiKeyId\": \"69f49438aa32db3e148c3458\"\n    }\n}"
+                                },
+                                {
+                                  "name": "Success",
+                                  "originalRequest": {
+                                    "method": "POST",
+                                    "header": [
+                                      {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                      }
+                                    ],
+                                    "body": {
+                                      "mode": "raw",
+                                      "raw": "{\n    \"apiKeysManagerIds\": [\"69ff4cbe58c17ec95fb9ef15\"]\n}",
+                                      "options": {
+                                        "raw": {
+                                          "headerFamily": "json",
+                                          "language": "json"
+                                        }
+                                      }
+                                    },
+                                    "url": {
+                                      "raw": "{{baseUrl}}/api/iv1/apikeys/:id/providers/:providerId",
+                                      "host": [
+                                        "{{baseUrl}}"
+                                      ],
+                                      "path": [
+                                        "api",
+                                        "iv1",
+                                        "apikeys",
+                                        ":id",
+                                        "providers",
+                                        ":providerId"
+                                      ],
+                                      "variable": [
+                                        {
+                                          "key": "id",
+                                          "value": "69ff4f79327735319b507d59",
+                                          "description": "(Required) "
+                                        },
+                                        {
+                                          "key": "providerId",
+                                          "value": "69f49068aa32db3e148c344e",
+                                          "description": "(Required) "
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "status": "Created",
+                                  "code": 201,
+                                  "_postman_previewlanguage": "json",
+                                  "header": [
+                                    {
+                                      "key": "X-Powered-By",
+                                      "value": "Express"
+                                    },
+                                    {
+                                      "key": "Vary",
+                                      "value": "Origin"
+                                    },
+                                    {
+                                      "key": "Access-Control-Allow-Credentials",
+                                      "value": "true"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Limit-short",
+                                      "value": "100"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Remaining-short",
+                                      "value": "99"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Reset-short",
+                                      "value": "1"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Limit-medium",
+                                      "value": "1000"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Remaining-medium",
+                                      "value": "999"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Reset-medium",
+                                      "value": "10"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Limit-long",
+                                      "value": "1000"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Remaining-long",
+                                      "value": "999"
+                                    },
+                                    {
+                                      "key": "X-RateLimit-Reset-long",
+                                      "value": "600"
+                                    },
+                                    {
+                                      "key": "Content-Type",
+                                      "value": "application/json",
+                                      "description": "",
+                                      "type": "text"
+                                    },
+                                    {
+                                      "key": "Content-Length",
+                                      "value": "153"
+                                    },
+                                    {
+                                      "key": "ETag",
+                                      "value": "W/\"99-NU+rM9sqPjjB939QTxW1s3gYMRU\""
+                                    },
+                                    {
+                                      "key": "Date",
+                                      "value": "Sat, 09 May 2026 15:17:48 GMT"
+                                    },
+                                    {
+                                      "key": "Connection",
+                                      "value": "keep-alive"
+                                    },
+                                    {
+                                      "key": "Keep-Alive",
+                                      "value": "timeout=5"
+                                    }
+                                  ],
+                                  "cookie": [],
+                                  "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"Provider selected\",\n    \"data\": {\n        \"id\": \"69ff501c327735319b507d5a\",\n        \"apiKeysManagerIds\": [\n            \"69ff4cbe58c17ec95fb9ef15\"\n        ]\n    }\n}"
                                 }
                               ]
                             }
@@ -2107,97 +2640,28 @@
                           ]
                         },
                         {
-                          "id": "0ae8bdfb-9dff-4ab3-bb38-e298f74dc845",
-                          "name": "Get all model selections for an API key",
-                          "request": {
-                            "name": "Get all model selections for an API key",
-                            "description": {},
-                            "url": {
-                              "path": [
-                                "api",
-                                "iv1",
-                                "apikeys",
-                                ":id",
-                                "models"
-                              ],
-                              "host": [
-                                "{{baseUrl}}"
-                              ],
-                              "query": [],
-                              "variable": [
-                                {
-                                  "type": "any",
-                                  "value": "<string>",
-                                  "key": "id",
-                                  "disabled": false,
-                                  "description": {
-                                    "content": "(Required) ",
-                                    "type": "text/plain"
-                                  }
-                                }
-                              ]
-                            },
-                            "method": "GET",
-                            "body": {},
-                            "auth": {
-                              "type": "bearer",
-                              "bearer": [
-                                {
-                                  "key": "token",
-                                  "value": "{{bearerToken}}"
-                                }
-                              ]
-                            }
-                          },
-                          "response": [],
-                          "event": [],
-                          "protocolProfileBehavior": {
-                            "disableBodyPruning": true
-                          }
-                        },
-                        {
                           "name": "priority",
-                          "description": "",
                           "item": [
                             {
-                              "id": "13db1c75-6b97-4153-99a5-5b45f662a8c0",
                               "name": "Update model selection priorities for an API key",
                               "request": {
-                                "name": "Update model selection priorities for an API key",
-                                "description": {},
-                                "url": {
-                                  "path": [
-                                    "api",
-                                    "iv1",
-                                    "apikeys",
-                                    ":id",
-                                    "models",
-                                    "priority"
-                                  ],
-                                  "host": [
-                                    "{{baseUrl}}"
-                                  ],
-                                  "query": [],
-                                  "variable": [
+                                "auth": {
+                                  "type": "bearer",
+                                  "bearer": [
                                     {
-                                      "type": "any",
-                                      "value": "<string>",
-                                      "key": "id",
-                                      "disabled": false,
-                                      "description": {
-                                        "content": "(Required) ",
-                                        "type": "text/plain"
-                                      }
+                                      "key": "token",
+                                      "value": "{{bearerToken}}",
+                                      "type": "string"
                                     }
                                   ]
                                 },
+                                "method": "PATCH",
                                 "header": [
                                   {
                                     "key": "Content-Type",
                                     "value": "application/json"
                                   }
                                 ],
-                                "method": "PATCH",
                                 "body": {
                                   "mode": "raw",
                                   "raw": "{\n  \"items\": [\n    {\n      \"modelSelectionId\": \"<string>\",\n      \"priority\": \"<number>\"\n    }\n  ]\n}",
@@ -2208,23 +2672,127 @@
                                     }
                                   }
                                 },
-                                "auth": {
-                                  "type": "bearer",
-                                  "bearer": [
+                                "url": {
+                                  "raw": "{{baseUrl}}/api/iv1/apikeys/:id/models/priority",
+                                  "host": [
+                                    "{{baseUrl}}"
+                                  ],
+                                  "path": [
+                                    "api",
+                                    "iv1",
+                                    "apikeys",
+                                    ":id",
+                                    "models",
+                                    "priority"
+                                  ],
+                                  "variable": [
                                     {
-                                      "key": "token",
-                                      "value": "{{bearerToken}}"
+                                      "key": "id",
+                                      "value": "<string>",
+                                      "description": "(Required) "
                                     }
                                   ]
                                 }
                               },
-                              "response": [],
-                              "event": [],
-                              "protocolProfileBehavior": {
-                                "disableBodyPruning": true
-                              }
+                              "response": []
                             }
                           ]
+                        },
+                        {
+                          "name": "Get all model selections for an API key",
+                          "request": {
+                            "auth": {
+                              "type": "bearer",
+                              "bearer": [
+                                {
+                                  "key": "token",
+                                  "value": "{{bearerToken}}",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "method": "GET",
+                            "header": [],
+                            "url": {
+                              "raw": "{{baseUrl}}/api/iv1/apikeys/:id/models",
+                              "host": [
+                                "{{baseUrl}}"
+                              ],
+                              "path": [
+                                "api",
+                                "iv1",
+                                "apikeys",
+                                ":id",
+                                "models"
+                              ],
+                              "variable": [
+                                {
+                                  "key": "id",
+                                  "value": "<string>",
+                                  "description": "(Required) "
+                                }
+                              ]
+                            }
+                          },
+                          "response": []
+                        }
+                      ]
+                    },
+                    {
+                      "name": "settings",
+                      "item": [
+                        {
+                          "name": "Update API key settings",
+                          "request": {
+                            "auth": {
+                              "type": "bearer",
+                              "bearer": [
+                                {
+                                  "key": "token",
+                                  "value": "{{bearerToken}}",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "method": "PATCH",
+                            "header": [
+                              {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                              }
+                            ],
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"maxIterations\": \"<number>\",\n  \"roundhouseMethod\": {}\n}",
+                              "options": {
+                                "raw": {
+                                  "headerFamily": "json",
+                                  "language": "json"
+                                }
+                              }
+                            },
+                            "url": {
+                              "raw": "{{baseUrl}}/api/iv1/apikeys/:id/settings",
+                              "host": [
+                                "{{baseUrl}}"
+                              ],
+                              "path": [
+                                "api",
+                                "iv1",
+                                "apikeys",
+                                ":id",
+                                "settings"
+                              ],
+                              "variable": [
+                                {
+                                  "key": "id",
+                                  "value": "<string>",
+                                  "description": "(Required) "
+                                }
+                              ]
+                            }
+                          },
+                          "response": []
                         }
                       ]
                     },
@@ -2257,7 +2825,7 @@
                           "variable": [
                             {
                               "key": "id",
-                              "value": "69f60075b9944a1e86320e2d",
+                              "value": "69ff4f79327735319b507d59",
                               "description": "(Required) "
                             }
                           ]
@@ -2569,76 +3137,6 @@
                           "body": "{\n    \"success\": true,\n    \"statusCode\": 200,\n    \"message\": \"API key deleted\"\n}"
                         }
                       ]
-                    },
-                    {
-                      "name": "settings",
-                      "description": "",
-                      "item": [
-                        {
-                          "id": "4d8cd4eb-dcad-4fb5-82f8-0ffa37e3a781",
-                          "name": "Update API key settings",
-                          "request": {
-                            "name": "Update API key settings",
-                            "description": {},
-                            "url": {
-                              "path": [
-                                "api",
-                                "iv1",
-                                "apikeys",
-                                ":id",
-                                "settings"
-                              ],
-                              "host": [
-                                "{{baseUrl}}"
-                              ],
-                              "query": [],
-                              "variable": [
-                                {
-                                  "type": "any",
-                                  "value": "<string>",
-                                  "key": "id",
-                                  "disabled": false,
-                                  "description": {
-                                    "content": "(Required) ",
-                                    "type": "text/plain"
-                                  }
-                                }
-                              ]
-                            },
-                            "header": [
-                              {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                              }
-                            ],
-                            "method": "PATCH",
-                            "body": {
-                              "mode": "raw",
-                              "raw": "{\n  \"maxIterations\": \"<number>\",\n  \"roundhouseMethod\": {}\n}",
-                              "options": {
-                                "raw": {
-                                  "headerFamily": "json",
-                                  "language": "json"
-                                }
-                              }
-                            },
-                            "auth": {
-                              "type": "bearer",
-                              "bearer": [
-                                {
-                                  "key": "token",
-                                  "value": "{{bearerToken}}"
-                                }
-                              ]
-                            }
-                          },
-                          "response": [],
-                          "event": [],
-                          "protocolProfileBehavior": {
-                            "disableBodyPruning": true
-                          }
-                        }
-                      ]
                     }
                   ]
                 },
@@ -2813,7 +3311,122 @@
                       ]
                     }
                   },
-                  "response": []
+                  "response": [
+                    {
+                      "name": "Success",
+                      "originalRequest": {
+                        "method": "POST",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                          }
+                        ],
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"name\": \"Beta Testing\"\n}",
+                          "options": {
+                            "raw": {
+                              "headerFamily": "json",
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "url": {
+                          "raw": "{{baseUrl}}/api/iv1/apikeys",
+                          "host": [
+                            "{{baseUrl}}"
+                          ],
+                          "path": [
+                            "api",
+                            "iv1",
+                            "apikeys"
+                          ]
+                        }
+                      },
+                      "status": "Created",
+                      "code": 201,
+                      "_postman_previewlanguage": "json",
+                      "header": [
+                        {
+                          "key": "X-Powered-By",
+                          "value": "Express"
+                        },
+                        {
+                          "key": "Vary",
+                          "value": "Origin"
+                        },
+                        {
+                          "key": "Access-Control-Allow-Credentials",
+                          "value": "true"
+                        },
+                        {
+                          "key": "X-RateLimit-Limit-short",
+                          "value": "100"
+                        },
+                        {
+                          "key": "X-RateLimit-Remaining-short",
+                          "value": "99"
+                        },
+                        {
+                          "key": "X-RateLimit-Reset-short",
+                          "value": "1"
+                        },
+                        {
+                          "key": "X-RateLimit-Limit-medium",
+                          "value": "1000"
+                        },
+                        {
+                          "key": "X-RateLimit-Remaining-medium",
+                          "value": "999"
+                        },
+                        {
+                          "key": "X-RateLimit-Reset-medium",
+                          "value": "10"
+                        },
+                        {
+                          "key": "X-RateLimit-Limit-long",
+                          "value": "1000"
+                        },
+                        {
+                          "key": "X-RateLimit-Remaining-long",
+                          "value": "999"
+                        },
+                        {
+                          "key": "X-RateLimit-Reset-long",
+                          "value": "600"
+                        },
+                        {
+                          "key": "Content-Type",
+                          "value": "application/json",
+                          "description": "",
+                          "type": "text"
+                        },
+                        {
+                          "key": "Content-Length",
+                          "value": "102"
+                        },
+                        {
+                          "key": "ETag",
+                          "value": "W/\"66-JMWv1rPQgOJMqLAafjS3ZzDueWI\""
+                        },
+                        {
+                          "key": "Date",
+                          "value": "Sat, 09 May 2026 15:15:05 GMT"
+                        },
+                        {
+                          "key": "Connection",
+                          "value": "keep-alive"
+                        },
+                        {
+                          "key": "Keep-Alive",
+                          "value": "timeout=5"
+                        }
+                      ],
+                      "cookie": [],
+                      "body": "{\n    \"success\": true,\n    \"statusCode\": 201,\n    \"message\": \"API key created\",\n    \"data\": {\n        \"id\": \"69ff4f79327735319b507d59\"\n    }\n}"
+                    }
+                  ]
                 }
               ]
             },
@@ -4352,7 +4965,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\r\n    \"model\": \"roundhouse\",\r\n    \"messages\": [\r\n        {\r\n            \"role\": \"user\",\r\n            \"content\": \"The best local ai model. Just the name and 1 line\"\r\n        }\r\n    ],\r\n    \"stream\": true\r\n}",
+                      "raw": "{\r\n    \"model\": \"roundhouse\",\r\n    \"messages\": [\r\n        {\r\n            \"role\": \"user\",\r\n            \"content\": \"Who are you?\"\r\n        }\r\n    ]\r\n}",
                       "options": {
                         "raw": {
                           "language": "json"
