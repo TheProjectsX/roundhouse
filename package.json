@@ -18,7 +18,7 @@
         "g:s": "npm run generate:swagger",
         "generate:postman": "npx openapi-to-postmanv2@latest -s swagger-spec.json -o postman-collection.json -p",
         "g:p": "npm run generate:postman",
-        "g:sp": "npm run generate:swagger && npm run generate:postman",
+        "g:spec": "npm run generate:swagger && npm run generate:postman",
         "check": "eslint src && npx prettier --write src && npm run build && echo [✓] All checks passed!"
     },
     "dependencies": {

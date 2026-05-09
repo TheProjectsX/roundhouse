@@ -20,12 +20,12 @@ import {
 } from "./dto/body.dto";
 
 @ApiTags("ApiKeysManager")
-@Controller("")
+@Controller("apikeys")
 export class ApikeysManagerController {
     constructor(private service: ApikeysManagerService) {}
 
     @Get()
-    @ApiOperation({ summary: "List API key managers" })
+    @ApiOperation({ summary: "List API keys" })
     async fetchAllApiKeys(
         @Query() query: Record<string, string>,
         @ReqField("user") user: UserPayload,
@@ -41,7 +41,7 @@ export class ApikeysManagerController {
     }
 
     @Post()
-    @ApiOperation({ summary: "Create API key manager" })
+    @ApiOperation({ summary: "Create API key" })
     async createApiKey(
         @Body() payload: CreateApiKeysManagerDto,
         @ReqField("user") user: UserPayload,
@@ -56,7 +56,7 @@ export class ApikeysManagerController {
     }
 
     @Patch(":id")
-    @ApiOperation({ summary: "Update API key manager" })
+    @ApiOperation({ summary: "Update API key" })
     async updateApiKey(
         @Param("id") id: string,
         @Body() payload: UpdateApiKeysManagerDto,
@@ -72,7 +72,7 @@ export class ApikeysManagerController {
     }
 
     @Delete(":id")
-    @ApiOperation({ summary: "Delete API key manager" })
+    @ApiOperation({ summary: "Delete API key" })
     async deleteApiKey(
         @Param("id") id: string,
         @ReqField("user") user: UserPayload,

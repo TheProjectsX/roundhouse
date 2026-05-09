@@ -426,6 +426,104 @@
         ]
       }
     },
+    "/api/iv1/me/apikeys": {
+      "get": {
+        "operationId": "ApikeysManagerController_fetchAllApiKeys",
+        "parameters": [],
+        "responses": {},
+        "summary": "List API key managers",
+        "tags": [
+          "ApiKeysManager"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ApikeysManagerController_createApiKey",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeysManagerDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Create API key manager",
+        "tags": [
+          "ApiKeysManager"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
+    "/api/iv1/me/apikeys/{id}": {
+      "patch": {
+        "operationId": "ApikeysManagerController_updateApiKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeysManagerDto"
+              }
+            }
+          }
+        },
+        "responses": {},
+        "summary": "Update API key manager",
+        "tags": [
+          "ApiKeysManager"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ApikeysManagerController_deleteApiKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {},
+        "summary": "Delete API key manager",
+        "tags": [
+          "ApiKeysManager"
+        ],
+        "security": [
+          {
+            "accessToken": []
+          }
+        ]
+      }
+    },
     "/v1/chat/completions": {
       "post": {
         "operationId": "OpenaiController_chatCompletions",
@@ -537,41 +635,6 @@
         ]
       }
     },
-    "/api/iv1/providers/selections/{providerSelectionId}/keys": {
-      "post": {
-        "operationId": "ProviderSelectionsController_createProviderApiKeyByProviderSelection",
-        "parameters": [
-          {
-            "name": "providerSelectionId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateProviderApiKeyDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Create provider API key by provider selection",
-        "tags": [
-          "Provider Selections"
-        ],
-        "security": [
-          {
-            "accessToken": []
-          }
-        ]
-      }
-    },
     "/api/iv1/providers/selections/{providerSelectionId}": {
       "delete": {
         "operationId": "ProviderSelectionsController_deleteProviderSelectionById",
@@ -612,99 +675,6 @@
         ],
         "responses": {},
         "summary": "Toggle provider selection status by id",
-        "tags": [
-          "Provider Selections"
-        ],
-        "security": [
-          {
-            "accessToken": []
-          }
-        ]
-      }
-    },
-    "/api/iv1/providers/keys/{providerApiKeyId}": {
-      "patch": {
-        "operationId": "ProviderSelectionsController_updateProviderApiKeyById",
-        "parameters": [
-          {
-            "name": "providerApiKeyId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProviderApiKeyDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Update provider API key by id",
-        "tags": [
-          "Provider Selections"
-        ],
-        "security": [
-          {
-            "accessToken": []
-          }
-        ]
-      },
-      "delete": {
-        "operationId": "ProviderSelectionsController_deleteProviderApiKeyById",
-        "parameters": [
-          {
-            "name": "providerApiKeyId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {},
-        "summary": "Delete provider API key by id",
-        "tags": [
-          "Provider Selections"
-        ],
-        "security": [
-          {
-            "accessToken": []
-          }
-        ]
-      }
-    },
-    "/api/iv1/providers/keys/{providerApiKeyId}/status": {
-      "patch": {
-        "operationId": "ProviderSelectionsController_updateProviderApiKeyStatusById",
-        "parameters": [
-          {
-            "name": "providerApiKeyId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProviderApiKeyStatusDto"
-              }
-            }
-          }
-        },
-        "responses": {},
-        "summary": "Update provider API key status by id",
         "tags": [
           "Provider Selections"
         ],
@@ -2021,41 +1991,34 @@
           "status"
         ]
       },
-      "CreateProviderApiKeyDto": {
+      "CreateApiKeysManagerDto": {
         "type": "object",
         "properties": {
-          "key": {
+          "name": {
             "type": "string"
           },
-          "active": {
-            "type": "boolean"
+          "provider": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
           }
         },
         "required": [
+          "name",
           "key"
         ]
       },
-      "UpdateProviderApiKeyDto": {
+      "UpdateApiKeysManagerDto": {
         "type": "object",
         "properties": {
-          "key": {
+          "name": {
             "type": "string"
           },
           "active": {
             "type": "boolean"
           }
         }
-      },
-      "UpdateProviderApiKeyStatusDto": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "active"
-        ]
       },
       "CreateApiKeyDto": {
         "type": "object",
@@ -2143,15 +2106,16 @@
       "CreateApiKeyProviderDto": {
         "type": "object",
         "properties": {
-          "key": {
-            "type": "string"
-          },
-          "active": {
-            "type": "boolean"
+          "apiKeysManagerIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
-          "key"
+          "apiKeysManagerIds"
         ]
       },
       "UpdateApiKeyProviderModelsDto": {
