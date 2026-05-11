@@ -27,9 +27,15 @@ export class ApikeysManagerService {
             return "*".repeat(value.length);
         }
 
-        return `${value.slice(0, visibleChars)}${"*".repeat(
-            value.length - visibleChars * 2,
-        )}${value.slice(-visibleChars)}`;
+        return `${value.slice(0, visibleChars)}*****${value.slice(-visibleChars)}`;
+    }
+
+    private isPlainObject(item: unknown): item is Record<string, unknown> {
+        return (
+            item !== null &&
+            typeof item === "object" &&
+            item.constructor === Object
+        );
     }
 
     private censorApiKeys(item: unknown): unknown {
@@ -37,7 +43,7 @@ export class ApikeysManagerService {
             return item.map((entry) => this.censorApiKeys(entry));
         }
 
-        if (item && typeof item === "object") {
+        if (this.isPlainObject(item)) {
             return Object.fromEntries(
                 Object.entries(item).map(([key, value]) => {
                     if (key === "key" && typeof value === "string") {

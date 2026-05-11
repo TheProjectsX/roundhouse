@@ -17,6 +17,7 @@ export class MeService {
                 id: true,
                 email: true,
                 status: true,
+                role: true,
                 name: true,
                 avatar: true,
             },

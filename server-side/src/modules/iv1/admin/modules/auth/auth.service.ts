@@ -17,7 +17,7 @@ export class AdminAuthService {
     async createAdminSession(payload: AdminLoginDto) {
         const user = await this.prisma.user.findFirst({
             where: { email: payload.email, role: "ADMIN" },
-            select: { id: true, email: true, password: true },
+            select: { id: true, email: true, password: true, name: true, avatar: true, role: true, status: true },
         });
 
         if (!user || !user.password) {
@@ -41,6 +41,9 @@ export class AdminAuthService {
             },
         );
 
-        return { message: "Admin login successful", data: { accessToken } };
+        const { password, ...profile } = user;
+        void password;
+
+        return { message: "Admin login successful", data: { accessToken, user: profile } };
     }
 }

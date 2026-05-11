@@ -105,6 +105,14 @@ export class AuthService {
             data: {
                 refreshToken,
                 accessToken,
+                user: {
+                    id: userData.id,
+                    email: userData.email,
+                    name: userData.name,
+                    avatar: userData.avatar,
+                    role: userData.role,
+                    status: userData.status,
+                },
             },
         };
     }
