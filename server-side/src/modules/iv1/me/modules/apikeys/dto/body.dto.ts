@@ -21,3 +21,8 @@ export class UpdateApiKeysManagerDto {
     @IsBoolean()
     active?: boolean;
 }
+
+export class UnlockApiKeysDto {
+    @IsString()
+    password: string;
+}

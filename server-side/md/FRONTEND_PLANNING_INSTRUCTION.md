@@ -1,31 +1,192 @@
-We will be planning the Frontend of this entire codebase. The Postman Doc JSON will be provided to the Agent to use while creating the interface. Your Job is to create the perfect plan to create the Frontend with the design structure, color schema, premium look, clean interface and everything.
+# AI Service Platform Frontend Planning Prompt
 
-<rules>
-- The frontend will be created with the updated version on Next JS, Tailwind CSS, Redux and additional packages and animation libraries.
-- You can use any design package if you need to design better.
-- The webpage will have 2 roles, user dashboard and admin dashboard
-- Guards will be used to validate the roles of access
-- Modular approach will be taken to design the webpage. Create modular files, folders, components, utils to design the webpages.
-- The color contrast needs to be clear. This will be a Default dark with Toggle-able white mode design. The colors need to be clear.
-- There are some nested routes which needs human guidance to clarify, but you plan the proper structure which will be resolved later.
-- The dark mode should not be fully black and white shouldn't be fully white. Needs a bit of blue-ish effect.
-- There will be many places where we will need pop-up input, the colors, animations need to be perfect for that.
-- The dashboard routing will be based on the direct path. So, if a path is `/api/iv1/users`, everything comes after that needs to be under a "Users" tab / sidebar option.
-- The dashboard needs to be professional.
-- The Analytics routes are not created yet, but based on what analytics are possible to give based on DB schema, you can plan the design
-- DO Not write any code, just plan.
-</rules>
+You are a Senior Frontend Architect, Product UX Strategist, and Design Systems Engineer.
 
-- Your Job is to plan a full fledged Design with everything in it. I shouldn't need to input anything to the Agent except for that prompt. No need to think about the routes, as the agent will get the routes as json with example success request response.
-- You can ask me to feed _you_ the JSON doc if it is better for you.
-- I Will also provide you with some design SKILLS which you will take instructions from too.
-- The Full Plan will be written in [FRONTEND_PLANNING.md](./FRONTEND_PLANNING.md) [STRICT MUST]
-- Feel free to ask anything if you need more info.
-- You DO NOT need to specify any route. Your JOB is just to Create the PLANNING. [STRICT]
+Your task is to create a COMPLETE frontend architecture and UI/UX planning document for an AI-based service platform by analyzing:
 
-## Color schema Example:
+- Backend API structure
+- Postman Collection JSON
+- Response schemas
+- Request payloads
+- Authentication flow
+- Prisma/DB relationships (if provided)
 
-You might take inspiration from this color schema, but you can change based on requirement::
+You are NOT writing implementation code.
+
+You are creating a production-grade frontend planning document for another AI Agent that will later build the entire frontend automatically.
+
+The final output MUST be written in:
+
+`./md/FRONTEND_PLANNING.md`
+
+---
+
+# CORE OBJECTIVE
+
+Create a COMPLETE frontend planning blueprint for a modern premium SaaS AI platform.
+
+The planning must include:
+
+- Frontend architecture
+- Folder structure
+- Route hierarchy
+- Component architecture
+- UI system
+- Design system
+- State management strategy
+- SSR strategy
+- API integration strategy
+- Authentication flow
+- Role based architecture
+- Modal systems
+- Dashboard layouts
+- Data visualization planning
+- Responsive behavior
+- Animation philosophy
+- UX interaction behavior
+- Theme system
+- Accessibility considerations
+- Error handling strategy
+- Empty states
+- Loading states
+- Data fetching patterns
+- Modularization strategy
+- Reusable component patterns
+- Form system planning
+- Table/card rendering strategies
+- Analytics planning
+- Notification/toast behavior
+- Security UX handling
+- Markdown docs rendering strategy
+- Future scalability planning
+
+The planning must be EXTREMELY detailed and production-grade.
+
+Do NOT generate code.
+
+Do NOT generate example components.
+
+Do NOT generate implementation snippets.
+
+ONLY generate planning, structure, architecture, and UX specifications.
+
+---
+
+# IMPORTANT CONTEXT
+
+This platform is an AI service management system.
+
+The frontend will consume backend APIs directly from the provided Postman Collection JSON.
+
+The frontend must be designed intelligently based on:
+
+- API structures
+- Payloads
+- Nested entities
+- Relations
+- Authentication requirements
+- Role permissions
+- Possible analytics opportunities
+- Entity relationships
+
+You must infer missing UX behavior intelligently from backend architecture.
+
+---
+
+# FRONTEND STACK
+
+The frontend architecture MUST assume the latest stable ecosystem versions.
+
+## Core Stack
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+- Redux Toolkit
+- RTK Query OR TanStack Query (choose and justify)
+- Framer Motion
+- React Hook Form
+- Zod
+- Axios/fetch abstraction layer
+- Theme management system
+- Modern charting library
+- Modern data table library
+- Markdown renderer
+- Toast/notification system
+- Command palette support
+- Modal/dialog system
+- Skeleton loading system
+
+You may introduce additional libraries if they improve:
+
+- UX
+- scalability
+- maintainability
+- accessibility
+- performance
+- developer experience
+
+Every major package choice MUST include reasoning.
+
+---
+
+# DESIGN DIRECTION
+
+The application must feel:
+
+- Premium
+- Futuristic
+- Modern SaaS
+- Clean
+- Intelligent
+- Minimal but powerful
+- Enterprise ready
+- AI-native
+- Professional
+
+The UI should feel similar in quality level to:
+
+- Vercel
+- Linear
+- Stripe Dashboard
+- Raycast
+- OpenAI Platform
+- Clerk
+- Supabase
+- Notion
+- Resend
+
+DO NOT copy them directly.
+
+---
+
+# THEME & VISUAL LANGUAGE
+
+## Theme System
+
+- Default Dark Mode
+- Toggle-able Light Mode
+- System Theme Detection
+- Theme persistence
+
+## Theme Rules
+
+- Dark mode must NOT use pure black
+- Light mode must NOT use pure white
+- Use subtle blue/cyan/purple undertones
+- High readability contrast
+- Premium glassmorphism where appropriate
+- Soft shadows
+- Soft borders
+- Elegant depth hierarchy
+
+## Color Philosophy
+
+Use the provided color system as inspiration only.
+
+You may evolve or improve it if needed.
+
+### Example Palette
 
 ```json
 {
@@ -37,9 +198,7 @@ You might take inspiration from this color schema, but you can change based on r
         "bg_card": "#172033",
         "text_primary": "#F8FAFC",
         "text_secondary": "#94A3B8",
-        "border": "rgba(255,255,255,0.08)",
-        "shadow_primary": "rgba(34,211,238,0.22)",
-        "shadow_secondary": "rgba(99,102,241,0.18)"
+        "border": "rgba(255,255,255,0.08)"
     },
     "light": {
         "primary": "#0891B2",
@@ -49,12 +208,513 @@ You might take inspiration from this color schema, but you can change based on r
         "bg_card": "#EEF2FF",
         "text_primary": "#0F172A",
         "text_secondary": "#475569",
-        "border": "rgba(15,23,42,0.08)",
-        "shadow_primary": "rgba(8,145,178,0.10)",
-        "shadow_secondary": "rgba(79,70,229,0.08)"
+        "border": "rgba(15,23,42,0.08)"
     }
 }
 ```
+
+---
+
+# APPLICATION STRUCTURE
+
+The platform contains TWO major application roles:
+
+1. User Dashboard
+2. Admin Dashboard
+
+Role Guards MUST be planned.
+
+Access architecture MUST be included.
+
+Protected routes MUST be planned.
+
+Unauthorized access behavior MUST be planned.
+
+Session expiration handling MUST be planned.
+
+---
+
+# FRONTEND ARCHITECTURE REQUIREMENTS
+
+You MUST plan:
+
+- Modular architecture
+- Scalable folder structure
+- Feature-first organization
+- Shared component strategy
+- Shared hook strategy
+- Shared utility strategy
+- Shared service layer strategy
+- Shared types strategy
+- Theme architecture
+- API abstraction layer
+- Error abstraction layer
+- Logging strategy
+- Environment variable strategy
+- Dynamic routing strategy
+- Layout nesting strategy
+- State normalization strategy
+
+---
+
+# ROUTING STRATEGY
+
+The dashboard navigation should intelligently infer categories from API route structures.
+
+Example:
+If an API route is:
+`/api/v1/users/...`
+
+Then the frontend planning should categorize it under:
+`Users`
+
+Nested route behavior should be planned carefully.
+
+Some backend routes may be ambiguous or incomplete.
+
+If ambiguity exists:
+
+- Mention assumptions clearly
+- Suggest future extensibility
+- Plan scalable nesting structures anyway
+
+DO NOT hardcode final route assumptions unless clearly inferable.
+
+---
+
+# SSR / PERFORMANCE RULES
+
+Plan aggressive optimization strategy.
+
+You MUST include:
+
+- SSR where appropriate
+- Server Components strategy
+- Client Components strategy
+- Streaming possibilities
+- Suspense boundaries
+- Partial hydration planning
+- Lazy loading
+- Route level code splitting
+- Dynamic imports
+- Cache strategies
+- Prefetching strategies
+- Image optimization strategy
+- Data revalidation planning
+- SEO planning for public pages
+
+---
+
+# UX REQUIREMENTS
+
+The frontend MUST feel polished.
+
+You MUST plan:
+
+- Empty states
+- Skeleton states
+- Error states
+- Retry UX
+- Confirmation dialogs
+- Keyboard navigation
+- Accessibility
+- Search UX
+- Filter UX
+- Sort UX
+- Pagination UX
+- Infinite loading considerations
+- Toast systems
+- Loading overlays
+- Global progress indicators
+- Mobile responsiveness
+- Tablet responsiveness
+- Desktop optimization
+- Hover interactions
+- Focus states
+- Motion design language
+
+---
+
+# MODAL / POPUP SYSTEM
+
+The application will heavily use popups/modals/dialogs.
+
+You MUST define:
+
+- Modal hierarchy
+- Global modal manager strategy
+- Animation behavior
+- Blur/backdrop behavior
+- Nested modal handling
+- Form modal patterns
+- Confirmation modal patterns
+- Secure modal patterns
+- Mobile modal behavior
+
+The popup system must feel premium and smooth.
+
+---
+
+# USER DASHBOARD PLANNING
+
+## Analytics
+
+The analytics backend may not exist yet.
+
+You MUST intelligently infer possible analytics from:
+
+- Database structure
+- API entities
+- AI usage patterns
+- Token systems
+- API key usage
+- Providers
+- Models
+- Requests
+- Success/failure rates
+
+Plan:
+
+- Dashboard widgets
+- Graphs
+- KPI cards
+- Usage charts
+- Cost analysis
+- Latency analysis
+- Success metrics
+- Trend visualization
+- Time filtering
+- Realtime possibilities
+
+---
+
+## API Key Manager
+
+This is highly security sensitive.
+
+Requirements:
+
+- Card-based layout
+- Masked API key display by default
+- Secure unlock workflow
+- Global unlock action
+- Password confirmation popup
+- Secure temporary reveal behavior
+- State synchronization behavior
+- Clipboard UX
+- Copy animations
+- Security indicators
+- Expiration handling
+- Search/filter behavior
+
+Unlocked responses only return:
+
+```json
+{
+    "id": "...",
+    "key": "..."
+}
+```
+
+The frontend must intelligently merge unlocked data into existing UI state.
+
+Plan this behavior carefully.
+
+---
+
+## Providers
+
+This page contains:
+
+- My Providers
+- Global Providers
+
+You MUST define:
+
+- Layout structure
+- Segmentation UX
+- Provider card system
+- Model rendering strategy
+- Expand/collapse behavior
+- Nested card strategy
+- Inline management UX
+- Popup-based CRUD flows
+- Provider detail visualization
+- Model capability indicators
+- Tags/badges
+- Search/filter/sort UX
+
+IMPORTANT:
+Models contain large amounts of data but MUST NOT become standalone pages.
+
+You must architect an elegant nested visualization strategy.
+
+Use CARD-based UI.
+Avoid tables unless absolutely necessary.
+
+---
+
+## API Keys (Core System)
+
+This is the MOST COMPLEX part of the user dashboard.
+
+The API Key settings page is deeply configurable.
+
+You MUST plan:
+
+- Complex settings UX
+- Progressive disclosure UX
+- Advanced settings sections
+- Multi-provider selection UX
+- Model selection UX
+- Provider-specific configuration UI
+- Expandable configuration groups
+- Dynamic forms
+- Validation architecture
+- Nested settings behavior
+- Performance handling for large configs
+- State persistence
+- Save/discard workflows
+- Unsaved changes handling
+- Version/future extensibility planning
+
+This page should feel enterprise-grade.
+
+---
+
+# ADMIN DASHBOARD PLANNING
+
+## Admin Analytics
+
+Infer analytics possibilities from:
+
+- User activity
+- Provider usage
+- System growth
+- Request traffic
+- Error rates
+- API usage
+- Token usage
+- Platform health
+- Revenue potential indicators
+
+Plan:
+
+- Admin KPI systems
+- Monitoring dashboards
+- System health cards
+- Alert visualization
+- Traffic graphs
+- Growth charts
+- Usage heatmaps
+
+---
+
+## Admin Providers
+
+Plan:
+
+- Global provider management
+- Provider moderation UX
+- Model management UX
+- Filtering architecture
+- Bulk actions
+- Audit possibilities
+- Version management possibilities
+
+The backend already contains filtering logic.
+
+The frontend planning should account for advanced filtering UX.
+
+---
+
+## Users Management
+
+Plan:
+
+- User overview cards/tables
+- Detail drawers/modals
+- Usage visibility
+- API key visibility
+- Status indicators
+- Filtering/searching
+- Pagination
+- Role management possibilities
+- Ban/suspension UX
+- Activity insights
+
+---
+
+# DOCS SYSTEM
+
+A `/docs` section must exist.
+
+Plan:
+
+- Markdown rendering
+- Sidebar navigation
+- Search system
+- Syntax highlighting
+- Copy code UX
+- Table of contents
+- Responsive docs layout
+- Versioning possibilities
+- Future DB-powered docs architecture
+- Admin editable docs possibilities
+
+The initial implementation may be static.
+
+But architecture must support future dynamic docs.
+
+---
+
+# RESPONSIVE DESIGN
+
+The application MUST be fully responsive.
+
+Plan behavior for:
+
+- Mobile
+- Tablet
+- Desktop
+- Ultrawide
+
+Define:
+
+- Sidebar collapse behavior
+- Mobile navigation
+- Touch interactions
+- Responsive grids
+- Modal responsiveness
+- Chart responsiveness
+
+---
+
+# ANIMATION LANGUAGE
+
+Animations should feel:
+
+- Fast
+- Smooth
+- Intelligent
+- Premium
+- Subtle
+
+Avoid excessive motion.
+
+Define:
+
+- Page transitions
+- Hover animations
+- Modal animations
+- Sidebar animations
+- Loading animations
+- Skeleton shimmer behavior
+- Chart animations
+- Toast animations
+
+Use modern motion principles.
+
+---
+
+# SECURITY UX
+
+Plan UX behavior for:
+
+- Auth expiration
+- Session timeout
+- Unauthorized access
+- Sensitive data reveal
+- Password confirmations
+- Dangerous actions
+- Destructive confirmations
+- Secure clipboard behavior
+- API key masking
+- Rate limit feedback
+
+---
+
+# ACCESSIBILITY
+
+Plan:
+
+- Keyboard navigation
+- ARIA considerations
+- Contrast accessibility
+- Screen reader support
+- Focus management
+- Reduced motion support
+
+---
+
+# REQUIRED OUTPUT STRUCTURE
+
+The generated `FRONTEND_PLANNING.md` MUST contain:
+
+1. Executive Overview
+2. Product Vision
+3. Frontend Tech Stack
+4. Architecture Decisions
+5. Folder Structure Planning
+6. Routing Architecture
+7. State Management Strategy
+8. API Integration Strategy
+9. Authentication & Authorization Flow
+10. Theme System
+11. Design System
+12. Typography System
+13. Color System
+14. Spacing & Layout System
+15. Animation System
+16. Shared Component Planning
+17. Shared Hook Planning
+18. Modal System Architecture
+19. Form Architecture
+20. Data Fetching Strategy
+21. SSR & Performance Strategy
+22. User Dashboard Planning
+23. Admin Dashboard Planning
+24. Analytics Planning
+25. Docs System Planning
+26. Responsive Design Strategy
+27. Accessibility Planning
+28. Error Handling Strategy
+29. Empty/Loading State Strategy
+30. Notification System
+31. Security UX Planning
+32. Scalability Considerations
+33. Future Extensibility
+34. Final UX Philosophy
+
+---
+
+# STRICT RULES
+
+- DO NOT WRITE CODE
+- DO NOT GENERATE IMPLEMENTATION
+- DO NOT GENERATE COMPONENT CODE
+- DO NOT GENERATE API CODE
+- DO NOT GENERATE ROUTES UNLESS INFERABLE
+- DO NOT SKIP DETAILS
+- DO NOT WRITE VAGUE PLANS
+- DO NOT WRITE SHORT OUTPUT
+- DO NOT SUMMARIZE
+- DO NOT OMIT EDGE CASES
+- DO NOT IGNORE MODULARITY
+- DO NOT IGNORE SCALABILITY
+- DO NOT IGNORE UX DETAILS
+
+You MUST think like:
+
+- a Staff Frontend Engineer
+- a SaaS Product Designer
+- a UX Architect
+- a Design Systems Engineer
+- a Performance Engineer
+
+The planning document must be detailed enough that another AI Agent can implement the entire frontend without needing further architectural decisions.
+
+The Postman Collection JSON and additional backend context will be provided separately.
 
 ### ---------- EXTRA SKILLS ----------
 

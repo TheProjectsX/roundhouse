@@ -16,6 +16,7 @@ import { UserPayload } from "@/common/guards/auth.guard";
 import { ApikeysManagerService } from "./apikeys.service";
 import {
     CreateApiKeysManagerDto,
+    UnlockApiKeysDto,
     UpdateApiKeysManagerDto,
 } from "./dto/body.dto";
 
@@ -37,6 +38,21 @@ export class ApikeysManagerController {
             message: result.message,
             data: result.data,
             pagination: result.pagination,
+        });
+    }
+
+    @Post("unlock")
+    @ApiOperation({ summary: "Unlock API keys" })
+    async unlockApiKeys(
+        @Body() payload: UnlockApiKeysDto,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.service.unlockApiKeys(payload, user);
+
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
         });
     }
 

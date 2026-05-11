@@ -3,14 +3,54 @@ import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
+import { BcryptService } from "@/common/utils/bcrypt.service";
 import {
     CreateApiKeysManagerDto,
+    UnlockApiKeysDto,
     UpdateApiKeysManagerDto,
 } from "./dto/body.dto";
 
 @Injectable()
 export class ApikeysManagerService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private bcryptService: BcryptService,
+    ) {}
+
+    private maskApiKey(value: string): string {
+        if (!value) {
+            return value;
+        }
+
+        const visibleChars = 4;
+        if (value.length <= visibleChars * 2) {
+            return "*".repeat(value.length);
+        }
+
+        return `${value.slice(0, visibleChars)}${"*".repeat(
+            value.length - visibleChars * 2,
+        )}${value.slice(-visibleChars)}`;
+    }
+
+    private censorApiKeys(item: unknown): unknown {
+        if (Array.isArray(item)) {
+            return item.map((entry) => this.censorApiKeys(entry));
+        }
+
+        if (item && typeof item === "object") {
+            return Object.fromEntries(
+                Object.entries(item).map(([key, value]) => {
+                    if (key === "key" && typeof value === "string") {
+                        return [key, this.maskApiKey(value)];
+                    }
+
+                    return [key, this.censorApiKeys(value)];
+                }),
+            );
+        }
+
+        return item;
+    }
 
     async fetchAllApiKeys(query: Record<string, string>, user: UserPayload) {
         const queryBuilder = new QueryBuilder(
@@ -28,8 +68,43 @@ export class ApikeysManagerService {
             .execute();
 
         const pagination = await queryBuilder.countTotal();
+        const censoredData = this.censorApiKeys(data);
 
-        return { message: "Api Keys fetched", data, pagination };
+        return { message: "Api Keys fetched", data: censoredData, pagination };
+    }
+
+    async unlockApiKeys(payload: UnlockApiKeysDto, user: UserPayload) {
+        if (!payload.password) {
+            throw new ApiError(HttpStatus.BAD_REQUEST, "Password is required");
+        }
+
+        const userData = await this.prisma.user.findUnique({
+            where: { id: user.id },
+            select: { password: true },
+        });
+
+        if (!userData?.password) {
+            throw new ApiError(HttpStatus.UNAUTHORIZED, "Unauthorized Request");
+        }
+
+        const passwordMatched = await this.bcryptService.compare(
+            payload.password,
+            userData.password,
+        );
+
+        if (!passwordMatched) {
+            throw new ApiError(HttpStatus.UNAUTHORIZED, "Incorrect Password");
+        }
+
+        const data = await this.prisma.apiKeysManager.findMany({
+            where: { userId: user.id },
+            select: {
+                id: true,
+                key: true,
+            },
+        });
+
+        return { message: "Api Keys unlocked", data };
     }
 
     async createApiKey(payload: CreateApiKeysManagerDto, user: UserPayload) {
