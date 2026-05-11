@@ -4,14 +4,14 @@ import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/shared/lib/utils";
 
 const buttonVariants = cva(
-    "inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-md)] px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focused)] disabled:opacity-50 active:scale-[0.98]",
+    "inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--color-border-focused) disabled:opacity-50 active:scale-[0.98]",
     {
         variants: {
             variant: {
-                primary: "bg-[var(--color-accent-primary)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent-primary-hover)]",
-                secondary: "border border-[var(--color-border-primary)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-card-hover)]",
-                ghost: "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-card-hover)] hover:text-[var(--color-text-primary)]",
-                danger: "bg-[var(--color-status-error)] text-white hover:opacity-90",
+                primary: "bg-(--color-accent-primary) text-(--color-text-inverse) hover:bg-(--color-accent-primary-hover)",
+                secondary: "border border-(--color-border-primary) bg-(--color-bg-card) text-(--color-text-primary) hover:bg-(--color-bg-card-hover)",
+                ghost: "text-(--color-text-secondary) hover:bg-(--color-bg-card-hover) hover:text-(--color-text-primary)",
+                danger: "bg-(--color-status-error) text-white hover:opacity-90",
             },
             size: {
                 sm: "min-h-9 px-3 text-xs",

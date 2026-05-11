@@ -11,7 +11,7 @@ const docs = [
 
 export default function DocsPage() {
     return (
-        <main className="mx-auto grid min-h-dvh max-w-[1100px] gap-8 bg-[var(--color-bg-primary)] px-4 py-8 lg:px-6">
+        <main className="mx-auto grid min-h-dvh max-w-[1100px] gap-8 bg-(--color-bg-primary) px-4 py-8 lg:px-6">
             <PageHeader title="Documentation" description="Guides for the OpenAI-compatible Roundhouse API surface." />
             <section className="grid gap-5 md:grid-cols-2">
                 {docs.map((item) => {
@@ -19,12 +19,12 @@ export default function DocsPage() {
                     return (
                         <Card key={item.title}>
                             <CardContent className="flex gap-4 pt-5">
-                                <div className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-[var(--color-accent-primary)]">
+                                <div className="grid size-10 shrink-0 place-items-center rounded-md bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-(--color-accent-primary)">
                                     <Icon size={20} weight="duotone" />
                                 </div>
                                 <div>
                                     <h2 className="font-semibold tracking-tight">{item.title}</h2>
-                                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{item.body}</p>
+                                    <p className="mt-1 text-sm text-(--color-text-secondary)">{item.body}</p>
                                 </div>
                             </CardContent>
                         </Card>

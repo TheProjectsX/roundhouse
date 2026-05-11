@@ -1,6 +1,13 @@
 "use client";
 
-import { Copy, DotsThree, Gear, GitBranch, Power, Trash } from "@phosphor-icons/react";
+import {
+    CopyIcon,
+    DotsThreeIcon,
+    GearIcon,
+    GitBranchIcon,
+    PowerIcon,
+    TrashIcon,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,7 +17,12 @@ import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
-import { useCreateApiKeyMutation, useDeleteApiKeyMutation, useGetApiKeysQuery, useUpdateApiKeyStatusMutation } from "@/shared/store/api";
+import {
+    useCreateApiKeyMutation,
+    useDeleteApiKeyMutation,
+    useGetApiKeysQuery,
+    useUpdateApiKeyStatusMutation,
+} from "@/shared/store/api";
 import { formatDate, formatNumber } from "@/shared/lib/utils";
 import { RoundhouseMethod } from "@/shared/types/enums";
 import { routes } from "@/shared/constants/routes";
@@ -26,7 +38,15 @@ export default function ApiKeysPage() {
 
     return (
         <>
-            <PageHeader title="API Keys" description="Manage Roundhouse API keys and their provider configurations." actions={<Button onClick={() => setShowCreate((value) => !value)}>Create API Key</Button>} />
+            <PageHeader
+                title="API Keys"
+                description="Manage Roundhouse API keys and their provider configurations."
+                actions={
+                    <Button onClick={() => setShowCreate((value) => !value)}>
+                        Create API Key
+                    </Button>
+                }
+            />
             {showCreate ? (
                 <Card>
                     <CardContent className="pt-5">
@@ -35,11 +55,17 @@ export default function ApiKeysPage() {
                             onSubmit={async (event) => {
                                 event.preventDefault();
                                 if (isSubmitting) return;
-                                
+
                                 const form = new FormData(event.currentTarget);
-                                const name = String(form.get("name") ?? "").trim();
-                                const maxIterations = Number(form.get("maxIterations") ?? 3);
-                                const roundhouseMethod = String(form.get("roundhouseMethod")) as RoundhouseMethod;
+                                const name = String(
+                                    form.get("name") ?? "",
+                                ).trim();
+                                const maxIterations = Number(
+                                    form.get("maxIterations") ?? 3,
+                                );
+                                const roundhouseMethod = String(
+                                    form.get("roundhouseMethod"),
+                                ) as RoundhouseMethod;
 
                                 if (!name) {
                                     toast.error("API key name is required");
@@ -48,7 +74,11 @@ export default function ApiKeysPage() {
 
                                 setIsSubmitting(true);
                                 try {
-                                    await createApiKey({ name, maxIterations, roundhouseMethod }).unwrap();
+                                    await createApiKey({
+                                        name,
+                                        maxIterations,
+                                        roundhouseMethod,
+                                    }).unwrap();
                                     toast.success("API key created");
                                     event.currentTarget.reset();
                                     setShowCreate(false);
@@ -59,18 +89,37 @@ export default function ApiKeysPage() {
                                 }
                             }}
                         >
-                            <Input name="name" placeholder="Production gateway" required />
-                            <Input name="maxIterations" type="number" min={1} defaultValue={3} aria-label="Max retries" />
+                            <Input
+                                name="name"
+                                placeholder="Production gateway"
+                                required
+                            />
+                            <Input
+                                name="maxIterations"
+                                type="number"
+                                min={1}
+                                defaultValue={3}
+                                aria-label="Max retries"
+                            />
                             <select
                                 name="roundhouseMethod"
                                 defaultValue={RoundhouseMethod.EFFICIENCY}
-                                className="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-3 text-sm text-[var(--color-text-primary)] outline-none"
+                                className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none"
                             >
-                                {Object.values(RoundhouseMethod).map((method) => (
-                                    <option key={method} value={method}>{method}</option>
-                                ))}
+                                {Object.values(RoundhouseMethod).map(
+                                    (method) => (
+                                        <option key={method} value={method}>
+                                            {method}
+                                        </option>
+                                    ),
+                                )}
                             </select>
-                            <Button type="submit" disabled={createState.isLoading || isSubmitting}>Create</Button>
+                            <Button
+                                type="submit"
+                                disabled={createState.isLoading || isSubmitting}
+                            >
+                                Create
+                            </Button>
                         </form>
                     </CardContent>
                 </Card>
@@ -78,25 +127,34 @@ export default function ApiKeysPage() {
             <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {isLoading ? <ApiKeySkeletons /> : null}
                 {apiKeys.map((item) => (
-                    <Card key={item.id} className="transition-colors hover:bg-[var(--color-bg-card-hover)]">
+                    <Card
+                        key={item.id}
+                        className="transition-colors hover:bg-(--color-bg-card-hover)"
+                    >
                         <CardHeader className="relative">
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <h2 className="font-semibold tracking-tight">{item.name}</h2>
+                                    <h2 className="font-semibold tracking-tight">
+                                        {item.name}
+                                    </h2>
                                     <StatusBadge status={item.active} />
                                 </div>
-                                <div className="mt-3 flex min-h-11 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-3">
-                                    <code className="min-w-0 flex-1 truncate font-mono text-sm font-semibold text-[var(--color-text-primary)]">{item.key}</code>
+                                <div className="mt-3 flex min-h-11 items-center gap-2 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3">
+                                    <code className="min-w-0 flex-1 truncate font-mono text-sm font-semibold text-(--color-text-primary)">
+                                        {item.key}
+                                    </code>
                                     <Button
                                         variant="ghost"
                                         size="icon"
                                         aria-label="Copy key"
                                         onClick={async () => {
-                                            await navigator.clipboard.writeText(item.key);
+                                            await navigator.clipboard.writeText(
+                                                item.key,
+                                            );
                                             toast.success("API key copied");
                                         }}
                                     >
-                                        <Copy size={18} />
+                                        <CopyIcon size={18} />
                                     </Button>
                                 </div>
                             </div>
@@ -105,44 +163,69 @@ export default function ApiKeysPage() {
                                 size="icon"
                                 aria-label="Open key actions"
                                 aria-expanded={openMenuId === item.id}
-                                onClick={() => setOpenMenuId((value) => (value === item.id ? null : item.id))}
+                                onClick={() =>
+                                    setOpenMenuId((value) =>
+                                        value === item.id ? null : item.id,
+                                    )
+                                }
                             >
-                                <DotsThree size={20} weight="bold" />
+                                <DotsThreeIcon size={20} weight="bold" />
                             </Button>
                             {openMenuId === item.id ? (
-                                <div className="absolute right-5 top-14 z-10 grid min-w-44 gap-1 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-1 shadow-lg shadow-[var(--color-shadow)]">
+                                <div className="absolute right-5 top-14 z-10 grid min-w-44 gap-1 rounded-md border border-(--color-border-primary) bg-(--color-bg-secondary) p-1 shadow-(--color-shadow)">
                                     <button
                                         type="button"
-                                        className="flex min-h-9 cursor-pointer items-center gap-2 rounded-[var(--radius-sm)] px-3 text-left text-sm hover:bg-[var(--color-bg-card-hover)]"
+                                        className="flex min-h-9 cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-sm hover:bg-(--color-bg-card-hover)"
                                         disabled={updateStatusState.isLoading}
                                         onClick={async () => {
                                             try {
-                                                await updateStatus({ id: item.id, active: !item.active }).unwrap();
+                                                await updateStatus({
+                                                    id: item.id,
+                                                    active: !item.active,
+                                                }).unwrap();
                                                 setOpenMenuId(null);
-                                                toast.success(item.active ? "API key disabled" : "API key enabled");
+                                                toast.success(
+                                                    item.active
+                                                        ? "API key disabled"
+                                                        : "API key enabled",
+                                                );
                                             } catch {
-                                                toast.error("Could not update API key");
+                                                toast.error(
+                                                    "Could not update API key",
+                                                );
                                             }
                                         }}
                                     >
-                                        <Power size={16} /> {item.active ? "Disable" : "Enable"}
+                                        <PowerIcon size={16} />{" "}
+                                        {item.active ? "Disable" : "Enable"}
                                     </button>
                                     <button
                                         type="button"
-                                        className="flex min-h-9 cursor-pointer items-center gap-2 rounded-[var(--radius-sm)] px-3 text-left text-sm text-[var(--color-status-error)] hover:bg-[var(--color-bg-card-hover)]"
+                                        className="flex min-h-9 cursor-pointer items-center gap-2 rounded-sm px-3 text-left text-sm text-(--color-status-error) hover:bg-(--color-bg-card-hover)"
                                         disabled={deleteState.isLoading}
                                         onClick={async () => {
-                                            if (!window.confirm(`Delete ${item.name}?`)) return;
+                                            if (
+                                                !window.confirm(
+                                                    `Delete ${item.name}?`,
+                                                )
+                                            )
+                                                return;
                                             try {
-                                                await deleteApiKey(item.id).unwrap();
+                                                await deleteApiKey(
+                                                    item.id,
+                                                ).unwrap();
                                                 setOpenMenuId(null);
-                                                toast.success("API key deleted");
+                                                toast.success(
+                                                    "API key deleted",
+                                                );
                                             } catch {
-                                                toast.error("Could not delete API key");
+                                                toast.error(
+                                                    "Could not delete API key",
+                                                );
                                             }
                                         }}
                                     >
-                                        <Trash size={16} /> Delete
+                                        <TrashIcon size={16} /> Delete
                                     </button>
                                 </div>
                             ) : null}
@@ -153,16 +236,41 @@ export default function ApiKeysPage() {
                                 <Badge>{item.maxIterations} retries</Badge>
                             </div>
                             <div className="grid grid-cols-2 gap-3 text-sm">
-                                <Metric label="Providers" value={item.stats.providerCount} />
-                                <Metric label="Models" value={item.stats.modelCount} />
-                                <Metric label="Vault Keys" value={item.stats.apiKeysManagerCount} />
-                                <Metric label="Success" value={formatNumber(item.stats.successfulRequests)} />
+                                <Metric
+                                    label="Providers"
+                                    value={item.stats.providerCount}
+                                />
+                                <Metric
+                                    label="Models"
+                                    value={item.stats.modelCount}
+                                />
+                                <Metric
+                                    label="Vault Keys"
+                                    value={item.stats.apiKeysManagerCount}
+                                />
+                                <Metric
+                                    label="Success"
+                                    value={formatNumber(
+                                        item.stats.successfulRequests,
+                                    )}
+                                />
                             </div>
-                            <div className="flex items-center justify-between border-t border-[var(--color-border-subtle)] pt-4 text-xs text-[var(--color-text-secondary)]">
-                                <span>Updated {formatDate(item.updatedAt)}</span>
+                            <div className="flex items-center justify-between border-t border-(--color-border-subtle) pt-4 text-xs text-(--color-text-secondary)">
+                                <span>
+                                    Updated {formatDate(item.updatedAt)}
+                                </span>
                                 <div className="flex gap-1">
-                                    <Button asChild variant="ghost" size="icon" aria-label="Open API key settings">
-                                        <Link href={`${routes.apiKeys}/${item.id}`}><Gear size={18} /></Link>
+                                    <Button
+                                        asChild
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label="Open API key settings"
+                                    >
+                                        <Link
+                                            href={`${routes.apiKeys}/${item.id}`}
+                                        >
+                                            <GearIcon size={18} />
+                                        </Link>
                                     </Button>
                                 </div>
                             </div>
@@ -172,11 +280,20 @@ export default function ApiKeysPage() {
             </section>
             <Card>
                 <CardContent className="flex items-start gap-4 pt-5">
-                    <GitBranch className="text-[var(--color-accent-primary)]" size={24} weight="duotone" />
+                    <GitBranchIcon
+                        className="text-(--color-accent-primary)"
+                        size={24}
+                        weight="duotone"
+                    />
                     <div>
-                        <h2 className="font-semibold tracking-tight">Roundhouse routing summary</h2>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                            Production keys use efficiency scoring first, then fail over through active providers while excluding failed model attempts from the current request cycle.
+                        <h2 className="font-semibold tracking-tight">
+                            Roundhouse routing summary
+                        </h2>
+                        <p className="mt-1 text-sm text-(--color-text-secondary)">
+                            Production keys use efficiency scoring first, then
+                            fail over through active providers while excluding
+                            failed model attempts from the current request
+                            cycle.
                         </p>
                     </div>
                 </CardContent>
@@ -212,8 +329,8 @@ function ApiKeySkeletons() {
 
 function Metric({ label, value }: { label: string; value: string | number }) {
     return (
-        <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3">
-            <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
+        <div className="rounded-md bg-(--color-bg-input) p-3">
+            <p className="text-xs text-(--color-text-muted)">{label}</p>
             <p className="mt-1 font-mono text-lg font-semibold">{value}</p>
         </div>
     );

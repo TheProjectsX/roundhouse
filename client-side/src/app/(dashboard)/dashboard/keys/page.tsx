@@ -1,6 +1,12 @@
 "use client";
 
-import { Copy, LockKey, ShieldCheck, Timer, Trash } from "@phosphor-icons/react";
+import {
+    CopyIcon,
+    LockKeyIcon,
+    ShieldCheckIcon,
+    TimerIcon,
+    TrashIcon,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
@@ -9,7 +15,13 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
-import { useCreateKeysManagerMutation, useDeleteKeysManagerMutation, useGetKeysManagerQuery, useUnlockKeysMutation, useUpdateKeysManagerMutation } from "@/shared/store/api";
+import {
+    useCreateKeysManagerMutation,
+    useDeleteKeysManagerMutation,
+    useGetKeysManagerQuery,
+    useUnlockKeysMutation,
+    useUpdateKeysManagerMutation,
+} from "@/shared/store/api";
 import { lock, unlock } from "@/shared/store/unlock-slice";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
 import { formatDate } from "@/shared/lib/utils";
@@ -34,7 +46,12 @@ export default function KeysPage() {
                 description="Securely manage encrypted provider API keys."
                 actions={
                     <>
-                        <Button variant="secondary" onClick={() => setShowCreate((value) => !value)}>Add API Key</Button>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowCreate((value) => !value)}
+                        >
+                            Add API Key
+                        </Button>
                     </>
                 }
             />
@@ -43,7 +60,9 @@ export default function KeysPage() {
                     <Input
                         type="password"
                         value={unlockPassword}
-                        onChange={(event) => setUnlockPassword(event.target.value)}
+                        onChange={(event) =>
+                            setUnlockPassword(event.target.value)
+                        }
                         placeholder="Account password"
                         aria-label="Account password"
                     />
@@ -61,7 +80,9 @@ export default function KeysPage() {
                                 return;
                             }
                             try {
-                                const result = await unlockKeys({ password: unlockPassword }).unwrap();
+                                const result = await unlockKeys({
+                                    password: unlockPassword,
+                                }).unwrap();
                                 dispatch(unlock(result));
                                 toast.success("Keys unlocked");
                             } catch {
@@ -69,7 +90,8 @@ export default function KeysPage() {
                             }
                         }}
                     >
-                        <LockKey size={18} /> {isUnlocked ? "Lock Keys" : "Unlock All Keys"}
+                        <LockKeyIcon size={18} />{" "}
+                        {isUnlocked ? "Lock Keys" : "Unlock All Keys"}
                     </Button>
                 </CardContent>
             </Card>
@@ -81,11 +103,17 @@ export default function KeysPage() {
                             onSubmit={async (event) => {
                                 event.preventDefault();
                                 if (isSubmitting) return;
-                                
+
                                 const form = new FormData(event.currentTarget);
-                                const name = String(form.get("name") ?? "").trim();
-                                const provider = String(form.get("provider") ?? "").trim();
-                                const key = String(form.get("key") ?? "").trim();
+                                const name = String(
+                                    form.get("name") ?? "",
+                                ).trim();
+                                const provider = String(
+                                    form.get("provider") ?? "",
+                                ).trim();
+                                const key = String(
+                                    form.get("key") ?? "",
+                                ).trim();
 
                                 if (!name || !key) {
                                     toast.error("Name and key are required");
@@ -94,7 +122,11 @@ export default function KeysPage() {
 
                                 setIsSubmitting(true);
                                 try {
-                                    await createKey({ name, provider: provider || undefined, key }).unwrap();
+                                    await createKey({
+                                        name,
+                                        provider: provider || undefined,
+                                        key,
+                                    }).unwrap();
                                     toast.success("Vault key added");
                                     event.currentTarget.reset();
                                     setShowCreate(false);
@@ -105,23 +137,39 @@ export default function KeysPage() {
                                 }
                             }}
                         >
-                            <Input name="name" placeholder="OpenAI production" required />
+                            <Input
+                                name="name"
+                                placeholder="OpenAI production"
+                                required
+                            />
                             <Input name="provider" placeholder="openai" />
-                            <Input name="key" placeholder="Provider API key" required />
-                            <Button type="submit" disabled={createState.isLoading || isSubmitting}>Add</Button>
+                            <Input
+                                name="key"
+                                placeholder="Provider API key"
+                                required
+                            />
+                            <Button
+                                type="submit"
+                                disabled={createState.isLoading || isSubmitting}
+                            >
+                                Add
+                            </Button>
                         </form>
                     </CardContent>
                 </Card>
             ) : null}
             <Card>
                 <CardContent className="flex items-start gap-4 pt-5">
-                    <div className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--color-status-warning)_16%,transparent)] text-[var(--color-status-warning)]">
-                        <ShieldCheck size={20} weight="duotone" />
+                    <div className="grid size-10 shrink-0 place-items-center rounded-md bg-[color-mix(in_srgb,var(--color-status-warning)_16%,transparent)] text-(--color-status-warning)">
+                        <ShieldCheckIcon size={20} weight="duotone" />
                     </div>
                     <div>
-                        <h2 className="font-semibold tracking-tight">Keys are encrypted and masked by default</h2>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                            Unlocking stores revealed values only in memory. Use the lock action to clear them immediately.
+                        <h2 className="font-semibold tracking-tight">
+                            Keys are encrypted and masked by default
+                        </h2>
+                        <p className="mt-1 text-sm text-(--color-text-secondary)">
+                            Unlocking stores revealed values only in memory. Use
+                            the lock action to clear them immediately.
                         </p>
                     </div>
                 </CardContent>
@@ -135,68 +183,102 @@ export default function KeysPage() {
                             <CardContent className="grid gap-4 pt-5">
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <h2 className="font-semibold tracking-tight">{key.name}</h2>
+                                        <h2 className="font-semibold tracking-tight">
+                                            {key.name}
+                                        </h2>
                                         <StatusBadge status={key.active} />
                                     </div>
                                     <div className="mt-2 flex flex-wrap gap-2">
-                                        <Badge className="bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)] text-[var(--color-accent-secondary)]">
-                                            {key.provider ?? "Unassigned provider"}
+                                        <Badge className="bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)] text-(--color-accent-secondary)">
+                                            {key.provider ??
+                                                "Unassigned provider"}
                                         </Badge>
                                     </div>
                                 </div>
-                                <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-input)] px-3 py-2 font-mono text-sm">
+                                <div className="rounded-md bg-(--color-bg-input) px-3 py-2 font-mono text-sm">
                                     {revealed ?? key.key}
                                 </div>
                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <p className="text-xs text-[var(--color-text-muted)]">Updated {formatDate(key.updatedAt)}</p>
+                                    <p className="text-xs text-(--color-text-muted)">
+                                        Updated {formatDate(key.updatedAt)}
+                                    </p>
                                     <div className="flex flex-wrap items-center justify-end gap-2">
-                                    {revealed ? <span className="inline-flex items-center gap-1 text-xs text-[var(--color-status-warning)]"><Timer size={14} /> visible</span> : null}
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        disabled={updateState.isLoading}
-                                        onClick={async () => {
-                                            try {
-                                                await updateKey({ id: key.id, body: { active: !key.active } }).unwrap();
-                                                toast.success(key.active ? "Vault key disabled" : "Vault key enabled");
-                                            } catch {
-                                                toast.error("Could not update vault key");
-                                            }
-                                        }}
-                                    >
-                                        {key.active ? "Disable" : "Enable"}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        aria-label="Copy key"
-                                        onClick={async () => {
-                                            await navigator.clipboard.writeText(revealed ?? key.key);
-                                            toast.success("Vault key copied");
-                                        }}
-                                    >
-                                        <Copy size={18} />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        aria-label="Delete key"
-                                        disabled={deleteState.isLoading}
-                                        onClick={async () => {
-                                            if (!window.confirm(`Delete ${key.name}?`)) return;
-                                            try {
-                                                await deleteKey(key.id).unwrap();
-                                                toast.success("Vault key deleted");
-                                            } catch {
-                                                toast.error("Could not delete vault key");
-                                            }
-                                        }}
-                                    >
-                                        <Trash size={18} />
-                                    </Button>
+                                        {revealed ? (
+                                            <span className="inline-flex items-center gap-1 text-xs text-(--color-status-warning)">
+                                                <TimerIcon size={14} /> visible
+                                            </span>
+                                        ) : null}
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            disabled={updateState.isLoading}
+                                            onClick={async () => {
+                                                try {
+                                                    await updateKey({
+                                                        id: key.id,
+                                                        body: {
+                                                            active: !key.active,
+                                                        },
+                                                    }).unwrap();
+                                                    toast.success(
+                                                        key.active
+                                                            ? "Vault key disabled"
+                                                            : "Vault key enabled",
+                                                    );
+                                                } catch {
+                                                    toast.error(
+                                                        "Could not update vault key",
+                                                    );
+                                                }
+                                            }}
+                                        >
+                                            {key.active ? "Disable" : "Enable"}
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label="Copy key"
+                                            onClick={async () => {
+                                                await navigator.clipboard.writeText(
+                                                    revealed ?? key.key,
+                                                );
+                                                toast.success(
+                                                    "Vault key copied",
+                                                );
+                                            }}
+                                        >
+                                            <CopyIcon size={18} />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label="Delete key"
+                                            disabled={deleteState.isLoading}
+                                            onClick={async () => {
+                                                if (
+                                                    !window.confirm(
+                                                        `Delete ${key.name}?`,
+                                                    )
+                                                )
+                                                    return;
+                                                try {
+                                                    await deleteKey(
+                                                        key.id,
+                                                    ).unwrap();
+                                                    toast.success(
+                                                        "Vault key deleted",
+                                                    );
+                                                } catch {
+                                                    toast.error(
+                                                        "Could not delete vault key",
+                                                    );
+                                                }
+                                            }}
+                                        >
+                                            <TrashIcon size={18} />
+                                        </Button>
                                     </div>
                                 </div>
-                                
                             </CardContent>
                         </Card>
                     );

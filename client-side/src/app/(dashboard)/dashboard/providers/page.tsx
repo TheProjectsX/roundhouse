@@ -101,7 +101,7 @@ export default function ProvidersPage() {
                                     <select
                                         name="type"
                                         defaultValue={ProviderType.CUSTOM}
-                                        className="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-3 text-sm text-[var(--color-text-primary)] outline-none"
+                                        className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none"
                                     >
                                         {Object.values(ProviderType).map((value) => (
                                             <option key={value} value={value}>{value}</option>
@@ -113,19 +113,19 @@ export default function ProvidersPage() {
                                     <select
                                         name="status"
                                         defaultValue={ContentStatus.ACTIVE}
-                                        className="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-3 text-sm text-[var(--color-text-primary)] outline-none"
+                                        className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none"
                                     >
                                         {Object.values(ContentStatus).map((value) => (
                                             <option key={value} value={value}>{value}</option>
                                         ))}
                                     </select>
                                 </label>
-                                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-3 text-sm font-medium">
+                                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm font-medium">
                                     Free provider
-                                    <input name="free" type="checkbox" className="size-4 accent-[var(--color-accent-primary)]" />
+                                    <input name="free" type="checkbox" className="size-4 accent-(--color-accent-primary)" />
                                 </label>
                             </div>
-                            <div className="flex justify-end border-t border-[var(--color-border-subtle)] pt-4">
+                            <div className="flex justify-end border-t border-(--color-border-subtle) pt-4">
                                 <Button type="submit" disabled={createState.isLoading || isSubmitting}>Create Provider</Button>
                             </div>
                         </form>
@@ -141,9 +141,9 @@ export default function ProvidersPage() {
                         {isLoading ? <ProviderSkeletons /> : null}
                         {userProviders.map((provider) => (
                             <div key={provider.id} className="grid gap-3">
-                                <Card className="transition-colors hover:bg-[var(--color-bg-card-hover)]">
+                                <Card className="transition-colors hover:bg-(--color-bg-card-hover)">
                                     <CardHeader>
-                                        <div className="grid size-11 place-items-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-[var(--color-accent-primary)]">
+                                        <div className="grid size-11 place-items-center rounded-md bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-(--color-accent-primary)">
                                             <Stack size={22} weight="duotone" />
                                         </div>
                                         <StatusBadge status={provider.status} />
@@ -151,22 +151,22 @@ export default function ProvidersPage() {
                                     <CardContent className="grid gap-4">
                                         <div>
                                             <h2 className="font-semibold tracking-tight">{provider.name}</h2>
-                                            <p className="mt-1 line-clamp-2 min-h-10 text-sm text-[var(--color-text-secondary)]">{provider.description}</p>
+                                            <p className="mt-1 line-clamp-2 min-h-10 text-sm text-(--color-text-secondary)">{provider.description}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             <Badge>{provider.type}</Badge>
                                             {provider.free ? <Badge>Free</Badge> : null}
                                             <Badge>Custom</Badge>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3 text-sm">
-                                            <span className="text-[var(--color-text-secondary)]">Models</span>
+                                        <div className="grid grid-cols-2 gap-3 rounded-md bg-(--color-bg-input) p-3 text-sm">
+                                            <span className="text-(--color-text-secondary)">Models</span>
                                             <span className="text-right font-mono">{provider.activeModelsCount}/{provider.modelsCount}</span>
-                                            <span className="text-[var(--color-text-secondary)]">Connected</span>
-                                            <span className="flex justify-end text-[var(--color-status-success)]">
+                                            <span className="text-(--color-text-secondary)">Connected</span>
+                                            <span className="flex justify-end text-(--color-status-success)">
                                                 {provider.connected ? <CheckCircle size={18} weight="fill" /> : <Circle size={18} />}
                                             </span>
                                         </div>
-                                        <div className="flex items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
+                                        <div className="flex items-center justify-between gap-2 text-xs text-(--color-text-muted)">
                                             <span>{formatDate(provider.updatedAt)}</span>
                                             <div className="flex gap-1">
                                                 <Button variant="secondary" size="sm" onClick={() => setModelProvider(provider)}>
@@ -177,7 +177,7 @@ export default function ProvidersPage() {
                                                 </Button>
                                             </div>
                                         </div>
-                                        <div className="flex justify-end gap-1 border-t border-[var(--color-border-subtle)] pt-3">
+                                        <div className="flex justify-end gap-1 border-t border-(--color-border-subtle) pt-3">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -238,9 +238,9 @@ export default function ProvidersPage() {
                         {isLoading && userProviders.length === 0 ? <ProviderSkeletons /> : null}
                         {globalProviders.map((provider) => (
                             <div key={provider.id} className="grid gap-3">
-                                <Card className="transition-colors hover:bg-[var(--color-bg-card-hover)]">
+                                <Card className="transition-colors hover:bg-(--color-bg-card-hover)">
                                     <CardHeader>
-                                        <div className="grid size-11 place-items-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-[var(--color-accent-primary)]">
+                                        <div className="grid size-11 place-items-center rounded-md bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-(--color-accent-primary)">
                                             <Stack size={22} weight="duotone" />
                                         </div>
                                         <StatusBadge status={provider.status} />
@@ -248,22 +248,22 @@ export default function ProvidersPage() {
                                     <CardContent className="grid gap-4">
                                         <div>
                                             <h2 className="font-semibold tracking-tight">{provider.name}</h2>
-                                            <p className="mt-1 line-clamp-2 min-h-10 text-sm text-[var(--color-text-secondary)]">{provider.description}</p>
+                                            <p className="mt-1 line-clamp-2 min-h-10 text-sm text-(--color-text-secondary)">{provider.description}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             <Badge>{provider.type}</Badge>
                                             {provider.free ? <Badge>Free</Badge> : null}
                                             <Badge>Global</Badge>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3 text-sm">
-                                            <span className="text-[var(--color-text-secondary)]">Models</span>
+                                        <div className="grid grid-cols-2 gap-3 rounded-md bg-(--color-bg-input) p-3 text-sm">
+                                            <span className="text-(--color-text-secondary)">Models</span>
                                             <span className="text-right font-mono">{provider.activeModelsCount}/{provider.modelsCount}</span>
-                                            <span className="text-[var(--color-text-secondary)]">Connected</span>
-                                            <span className="flex justify-end text-[var(--color-status-success)]">
+                                            <span className="text-(--color-text-secondary)">Connected</span>
+                                            <span className="flex justify-end text-(--color-status-success)">
                                                 {provider.connected ? <CheckCircle size={18} weight="fill" /> : <Circle size={18} />}
                                             </span>
                                         </div>
-                                        <div className="flex items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
+                                        <div className="flex items-center justify-between gap-2 text-xs text-(--color-text-muted)">
                                             <span>{formatDate(provider.updatedAt)}</span>
                                             <Button variant="secondary" size="sm" onClick={() => setModelProvider(provider)}>
                                                 Models
@@ -291,10 +291,10 @@ function ProviderModelsModal({ provider, onClose }: { provider: ProviderListItem
 
     return (
         <Modal onClose={onClose} ariaLabel={`${provider.name} models`} className="grid max-h-[86dvh] w-full max-w-4xl">
-            <div className="flex items-start justify-between gap-4 border-b border-[var(--color-border-primary)] p-5">
+            <div className="flex items-start justify-between gap-4 border-b border-(--color-border-primary) p-5">
                 <div>
                     <h2 className="text-lg font-semibold">{provider.name} Models</h2>
-                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Inspect active models and their best-fit feature tags.</p>
+                    <p className="mt-1 text-sm text-(--color-text-secondary)">Inspect active models and their best-fit feature tags.</p>
                 </div>
                 <Button variant="secondary" size="sm" onClick={onClose}>Close</Button>
             </div>
@@ -302,11 +302,11 @@ function ProviderModelsModal({ provider, onClose }: { provider: ProviderListItem
                 {isLoading
                     ? Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-28" />)
                     : models.map((model) => (
-                          <div key={model.id} className="grid gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3">
+                          <div key={model.id} className="grid gap-3 rounded-md bg-(--color-bg-input) p-3">
                               <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">
                                       <h3 className="truncate text-sm font-semibold">{model.name}</h3>
-                                      <p className="mt-1 truncate font-mono text-xs text-[var(--color-text-muted)]">{model.code}</p>
+                                      <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">{model.code}</p>
                                   </div>
                                   <StatusBadge status={model.status} />
                               </div>
@@ -316,7 +316,7 @@ function ProviderModelsModal({ provider, onClose }: { provider: ProviderListItem
                                   {model.efficiencyScore !== null ? <Badge>{Math.round(model.efficiencyScore * 100)}% efficient</Badge> : null}
                               </div>
                               {provider.isCustom ? (
-                                  <div className="flex justify-end gap-1 border-t border-[var(--color-border-subtle)] pt-2">
+                                  <div className="flex justify-end gap-1 border-t border-(--color-border-subtle) pt-2">
                                       <Button
                                           variant="ghost"
                                           size="sm"
@@ -346,7 +346,7 @@ function ProviderModelsModal({ provider, onClose }: { provider: ProviderListItem
                               ) : null}
                           </div>
                       ))}
-                {!isLoading && models.length === 0 ? <p className="text-sm text-[var(--color-text-secondary)]">No active models found for this provider.</p> : null}
+                {!isLoading && models.length === 0 ? <p className="text-sm text-(--color-text-secondary)">No active models found for this provider.</p> : null}
             </div>
             {editModel ? <EditModelModal model={editModel} onClose={() => setEditModel(null)} /> : null}
         </Modal>
@@ -359,9 +359,9 @@ function CreateModelModal({ provider, onClose }: { provider: ProviderListItem; o
 
     return (
         <Modal onClose={onClose} ariaLabel={`Create model for ${provider.name}`} className="grid w-full max-w-md gap-0">
-            <div className="border-b border-[var(--color-border-primary)] p-5">
+            <div className="border-b border-(--color-border-primary) p-5">
                 <h2 className="text-lg font-semibold">Create Model</h2>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Add a new model to {provider.name}</p>
+                <p className="mt-1 text-sm text-(--color-text-secondary)">Add a new model to {provider.name}</p>
             </div>
             <form
                 className="grid gap-4 p-5"
@@ -416,7 +416,7 @@ function CreateModelModal({ provider, onClose }: { provider: ProviderListItem; o
                     <label className="text-sm font-medium">Best For (Comma-separated, Optional)</label>
                     <Input name="bestFor" placeholder="reasoning, coding, analysis" />
                 </div>
-                <div className="flex justify-end gap-2 border-t border-[var(--color-border-subtle)] pt-4">
+                <div className="flex justify-end gap-2 border-t border-(--color-border-subtle) pt-4">
                     <Button variant="secondary" onClick={onClose} disabled={createState.isLoading || isSubmitting}>Cancel</Button>
                     <Button type="submit" disabled={createState.isLoading || isSubmitting}>Create Model</Button>
                 </div>
@@ -431,9 +431,9 @@ function EditProviderModal({ provider, onClose }: { provider: ProviderListItem; 
 
     return (
         <Modal onClose={onClose} ariaLabel={`Edit provider ${provider.name}`} className="grid w-full max-w-md gap-0">
-            <div className="border-b border-[var(--color-border-primary)] p-5">
+            <div className="border-b border-(--color-border-primary) p-5">
                 <h2 className="text-lg font-semibold">Edit Provider</h2>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Update provider details for {provider.name}</p>
+                <p className="mt-1 text-sm text-(--color-text-secondary)">Update provider details for {provider.name}</p>
             </div>
             <form
                 className="grid gap-4 p-5"
@@ -490,11 +490,11 @@ function EditProviderModal({ provider, onClose }: { provider: ProviderListItem; 
                     <label className="text-sm font-medium">Description</label>
                     <Input name="description" placeholder="Description" defaultValue={provider.description || ""} />
                 </div>
-                <label className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-3 py-2 text-sm font-medium">
+                <label className="flex items-center justify-between gap-3 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 py-2 text-sm font-medium">
                     Free provider
-                    <input name="free" type="checkbox" defaultChecked={provider.free} className="size-4 accent-[var(--color-accent-primary)]" />
+                    <input name="free" type="checkbox" defaultChecked={provider.free} className="size-4 accent-(--color-accent-primary)" />
                 </label>
-                <div className="flex justify-end gap-2 border-t border-[var(--color-border-subtle)] pt-4">
+                <div className="flex justify-end gap-2 border-t border-(--color-border-subtle) pt-4">
                     <Button variant="secondary" onClick={onClose} disabled={updateState.isLoading || isSubmitting}>Cancel</Button>
                     <Button type="submit" disabled={updateState.isLoading || isSubmitting}>Update Provider</Button>
                 </div>
@@ -509,9 +509,9 @@ function EditModelModal({ model, onClose }: { model: any; onClose: () => void })
 
     return (
         <Modal onClose={onClose} ariaLabel={`Edit model ${model.name}`} className="grid w-full max-w-md gap-0">
-            <div className="border-b border-[var(--color-border-primary)] p-5">
+            <div className="border-b border-(--color-border-primary) p-5">
                 <h2 className="text-lg font-semibold">Edit Model</h2>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">Update model details for {model.name}</p>
+                <p className="mt-1 text-sm text-(--color-text-secondary)">Update model details for {model.name}</p>
             </div>
             <form
                 className="grid gap-4 p-5"
@@ -566,7 +566,7 @@ function EditModelModal({ model, onClose }: { model: any; onClose: () => void })
                     <label className="text-sm font-medium">Best For (Comma-separated, Optional)</label>
                     <Input name="bestFor" placeholder="reasoning, coding, analysis" defaultValue={model.bestFor?.join(", ") || ""} />
                 </div>
-                <div className="flex justify-end gap-2 border-t border-[var(--color-border-subtle)] pt-4">
+                <div className="flex justify-end gap-2 border-t border-(--color-border-subtle) pt-4">
                     <Button variant="secondary" onClick={onClose} disabled={updateState.isLoading || isSubmitting}>Cancel</Button>
                     <Button type="submit" disabled={updateState.isLoading || isSubmitting}>Update Model</Button>
                 </div>

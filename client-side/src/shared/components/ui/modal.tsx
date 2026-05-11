@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { type ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/lib/utils";
@@ -75,7 +75,7 @@ export function Modal({
         >
             <div
                 className={cn(
-                    "relative w-full overflow-hidden rounded-lg border border-(--color-border-primary) bg-(--color-bg-secondary) shadow-(--color-shadow) cursor-default",
+                    "relative w-full overflow-hidden rounded-lg border border-(--color-border-primary) bg-(--color-bg-card) shadow-(--color-shadow) cursor-default",
                     className,
                 )}
                 onMouseDown={(event) => event.stopPropagation()}
@@ -87,7 +87,7 @@ export function Modal({
                         className="absolute right-3 top-3 grid size-8 place-items-center rounded-full border border-(--color-border-primary) bg-(--color-bg-input) text-(--color-text-secondary) transition-colors hover:bg-(--color-bg-card-hover) hover:text-(--color-text-primary)"
                         onClick={onClose}
                     >
-                        <X size={16} />
+                        <XIcon size={16} />
                     </button>
                 ) : null}
                 {children}

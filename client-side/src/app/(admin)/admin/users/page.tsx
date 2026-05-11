@@ -20,7 +20,7 @@ export default function AdminUsersPage() {
             <Card>
                 <CardContent className="overflow-x-auto pt-5">
                     <table className="w-full min-w-[820px] text-left text-sm">
-                        <thead className="text-xs text-[var(--color-text-muted)]">
+                        <thead className="text-xs text-(--color-text-muted)">
                             <tr>
                                 <th className="pb-3 font-medium">User</th>
                                 <th className="pb-3 font-medium">Status</th>
@@ -33,10 +33,10 @@ export default function AdminUsersPage() {
                         </thead>
                         <tbody>
                             {users.map((user) => (
-                                <tr key={user.id} className="border-t border-[var(--color-border-subtle)]">
+                                <tr key={user.id} className="border-t border-(--color-border-subtle)">
                                     <td className="py-4">
                                         <p className="font-medium">{user.name}</p>
-                                        <p className="text-[var(--color-text-secondary)]">{user.email}</p>
+                                        <p className="text-(--color-text-secondary)">{user.email}</p>
                                     </td>
                                     <td className="py-4">
                                         <div className="flex items-center gap-2">
@@ -44,7 +44,7 @@ export default function AdminUsersPage() {
                                             <select
                                                 value={user.status}
                                                 disabled={updateState.isLoading}
-                                                className="min-h-9 rounded-[var(--radius-sm)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-2 text-xs text-[var(--color-text-primary)] outline-none"
+                                                className="min-h-9 rounded-sm border border-(--color-border-primary) bg-(--color-bg-input) px-2 text-xs text-(--color-text-primary) outline-none"
                                                 onChange={async (event) => {
                                                     try {
                                                         await updateStatus({ id: user.id, status: event.target.value as UserStatus }).unwrap();
@@ -63,7 +63,7 @@ export default function AdminUsersPage() {
                                     <td className="py-4 font-mono">{user.stats.activeApiKeyCount}/{user.stats.apiKeyCount}</td>
                                     <td className="py-4 font-mono">{user.stats.activeCustomProviderCount}/{user.stats.customProviderCount}</td>
                                     <td className="py-4 font-mono">{user.stats.selectedModelCount}</td>
-                                    <td className="py-4 text-[var(--color-text-secondary)]">{formatDate(user.createdAt)}</td>
+                                    <td className="py-4 text-(--color-text-secondary)">{formatDate(user.createdAt)}</td>
                                     <td className="py-4 text-right">
                                         <Button
                                             variant="secondary"

@@ -30,8 +30,8 @@ export default function AdminAnalyticsPage() {
                                 <span>{label}</span>
                                 <span className="font-mono font-semibold">{value}</span>
                             </div>
-                            <div className="h-2 rounded-full bg-[var(--color-bg-input)]">
-                                <div className="h-2 rounded-full bg-[var(--color-accent-primary)]" style={{ width: `${(Number(value) / max) * 100}%` }} />
+                            <div className="h-2 rounded-full bg-(--color-bg-input)">
+                                <div className="h-2 rounded-full bg-(--color-accent-primary)" style={{ width: `${(Number(value) / max) * 100}%` }} />
                             </div>
                         </div>
                     ))}

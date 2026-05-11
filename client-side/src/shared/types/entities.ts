@@ -123,6 +123,7 @@ export interface ProviderListItem {
     code: string;
     name: string;
     description: string | null;
+    baseApi: string;
     free: boolean;
     type: ProviderType;
     status: ContentStatus;

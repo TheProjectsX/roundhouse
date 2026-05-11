@@ -2,19 +2,19 @@
 
 import Link from "next/link";
 import {
-    ArrowLeft,
-    CheckCircle,
-    Copy,
-    FloppyDisk,
-    Funnel,
-    Gear,
-    GitBranch,
-    Key,
-    Power,
-    SlidersHorizontal,
-    Stack,
-    Trash,
-    WarningCircle,
+    ArrowLeftIcon,
+    CheckCircleIcon,
+    CopyIcon,
+    FloppyDiskIcon,
+    FunnelIcon,
+    GearIcon,
+    GitBranchIcon,
+    KeyIcon,
+    PowerIcon,
+    SlidersHorizontalIcon,
+    StackIcon,
+    TrashIcon,
+    WarningCircleIcon,
 } from "@phosphor-icons/react";
 import { use, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -42,8 +42,11 @@ import {
 } from "@/shared/store/api";
 import { routes } from "@/shared/constants/routes";
 import { RoundhouseMethod } from "@/shared/types/enums";
-import { formatDate, formatNumber } from "@/shared/lib/utils";
-import type { ApiKeyModelSelectionListItem, ProviderSelectionDetail } from "@/shared/types/entities";
+import { formatNumber } from "@/shared/lib/utils";
+import type {
+    ApiKeyModelSelectionListItem,
+    ProviderSelectionDetail,
+} from "@/shared/types/entities";
 
 export default function ApiKeySettingsPage({
     params,
@@ -153,13 +156,13 @@ export default function ApiKeySettingsPage({
         return (
             <Card>
                 <CardContent className="flex items-start gap-3 pt-5">
-                    <WarningCircle
+                    <WarningCircleIcon
                         size={22}
-                        className="text-[var(--color-status-warning)]"
+                        className="text-(--color-status-warning)"
                     />
                     <div>
                         <h1 className="font-semibold">API key not found</h1>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        <p className="mt-1 text-sm text-(--color-text-secondary)">
                             This key may have been deleted or you may not have
                             access to it.
                         </p>
@@ -178,7 +181,7 @@ export default function ApiKeySettingsPage({
                     <>
                         <Button asChild variant="secondary">
                             <Link href={routes.apiKeys}>
-                                <ArrowLeft size={18} /> Back
+                                <ArrowLeftIcon size={18} /> Back
                             </Link>
                         </Button>
                         <Button
@@ -212,17 +215,17 @@ export default function ApiKeySettingsPage({
                                 }
                             }}
                         >
-                            <FloppyDisk size={18} /> Save Changes
+                            <FloppyDiskIcon size={18} /> Save Changes
                         </Button>
                     </>
                 }
             />
 
             {hasDirtySettings ? (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[color-mix(in_srgb,var(--color-status-warning)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_10%,transparent)] p-3 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_10%,transparent)] p-3 text-sm">
                     <span className="flex items-center gap-2">
-                        <WarningCircle size={18} /> Unsaved changes are staged
-                        locally.
+                        <WarningCircleIcon size={18} /> Unsaved changes are
+                        staged locally.
                     </span>
                     <Button
                         variant="secondary"
@@ -245,7 +248,7 @@ export default function ApiKeySettingsPage({
                 <Card>
                     <CardHeader>
                         <h2 className="flex items-center gap-2 font-semibold">
-                            <Gear size={20} /> Core Settings
+                            <GearIcon size={20} /> Core Settings
                         </h2>
                         <StatusBadge status={draft.active} />
                     </CardHeader>
@@ -264,7 +267,7 @@ export default function ApiKeySettingsPage({
                         </label>
                         <label className="grid gap-2 text-sm font-medium">
                             API key
-                            <div className="flex min-h-11 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-3">
+                            <div className="flex min-h-11 items-center gap-2 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3">
                                 <code className="min-w-0 flex-1 truncate font-mono text-sm font-semibold">
                                     {apiKey.key}
                                 </code>
@@ -279,7 +282,7 @@ export default function ApiKeySettingsPage({
                                         toast.success("API key copied");
                                     }}
                                 >
-                                    <Copy size={18} />
+                                    <CopyIcon size={18} />
                                 </Button>
                             </div>
                         </label>
@@ -312,7 +315,7 @@ export default function ApiKeySettingsPage({
                                                 .value as RoundhouseMethod,
                                         }))
                                     }
-                                    className="min-h-10 rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] px-3 text-sm outline-none"
+                                    className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm outline-none"
                                 >
                                     {Object.values(RoundhouseMethod).map(
                                         (method) => (
@@ -324,7 +327,7 @@ export default function ApiKeySettingsPage({
                                 </select>
                             </label>
                         </div>
-                        <label className="flex items-center justify-between rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3 text-sm font-medium">
+                        <label className="flex items-center justify-between rounded-md bg-(--color-bg-input) p-3 text-sm font-medium">
                             Active routing
                             <input
                                 type="checkbox"
@@ -335,7 +338,7 @@ export default function ApiKeySettingsPage({
                                         active: event.target.checked,
                                     }))
                                 }
-                                className="size-4 accent-[var(--color-accent-primary)]"
+                                className="size-4 accent-(--color-accent-primary)"
                             />
                         </label>
                     </CardContent>
@@ -345,9 +348,9 @@ export default function ApiKeySettingsPage({
                     <CardHeader>
                         <div>
                             <h2 className="flex items-center gap-2 font-semibold">
-                                <Stack size={20} /> Add Provider Selection
+                                <StackIcon size={20} /> Add Provider Selection
                             </h2>
-                            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                            <p className="mt-1 text-sm text-(--color-text-secondary)">
                                 Connect one provider to this API key using one
                                 or more vault keys.
                             </p>
@@ -371,7 +374,7 @@ export default function ApiKeySettingsPage({
                                     }
                                     placeholder="Search providers"
                                 />
-                                <div className="grid max-h-[330px] gap-2 overflow-y-auto pr-1 grow">
+                                <div className="grid max-h-82.5 gap-2 overflow-y-auto pr-1 grow">
                                     {providerMatches.map((provider) => {
                                         const selected =
                                             provider.id === providerToAdd;
@@ -379,10 +382,10 @@ export default function ApiKeySettingsPage({
                                             <button
                                                 key={provider.id}
                                                 type="button"
-                                                className={`grid cursor-pointer gap-2 rounded-[var(--radius-md)] border p-3 text-left transition-colors ${
+                                                className={`grid cursor-pointer gap-2 rounded-md border p-3 text-left transition-colors ${
                                                     selected
-                                                        ? "border-[var(--color-accent-primary)] bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
-                                                        : "border-[var(--color-border-primary)] bg-[var(--color-bg-input)] hover:bg-[var(--color-bg-card-hover)]"
+                                                        ? "border-(--color-accent-primary) bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
+                                                        : "border-(--color-border-primary) bg-(--color-bg-input) hover:bg-(--color-bg-card-hover)"
                                                 }`}
                                                 onClick={() =>
                                                     setProviderToAdd(
@@ -395,15 +398,15 @@ export default function ApiKeySettingsPage({
                                                         <p className="truncate text-sm font-semibold">
                                                             {provider.name}
                                                         </p>
-                                                        <p className="mt-1 truncate font-mono text-xs text-[var(--color-text-muted)]">
+                                                        <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
                                                             {provider.code}
                                                         </p>
                                                     </div>
                                                     {selected ? (
-                                                        <CheckCircle
+                                                        <CheckCircleIcon
                                                             size={20}
                                                             weight="fill"
-                                                            className="text-[var(--color-accent-primary)]"
+                                                            className="text-(--color-accent-primary)"
                                                         />
                                                     ) : (
                                                         <StatusBadge
@@ -413,7 +416,7 @@ export default function ApiKeySettingsPage({
                                                         />
                                                     )}
                                                 </div>
-                                                <p className="line-clamp-2 text-xs text-[var(--color-text-secondary)]">
+                                                <p className="line-clamp-2 text-xs text-(--color-text-secondary)">
                                                     {provider.description ??
                                                         provider.type}
                                                 </p>
@@ -438,7 +441,7 @@ export default function ApiKeySettingsPage({
                                         );
                                     })}
                                     {providerMatches.length === 0 ? (
-                                        <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border-primary)] p-4 text-sm text-[var(--color-text-secondary)]">
+                                        <div className="rounded-md border border-dashed border-(--color-border-primary) p-4 text-sm text-(--color-text-secondary)">
                                             No unselected providers match this
                                             filter.
                                         </div>
@@ -453,20 +456,20 @@ export default function ApiKeySettingsPage({
                                     </h3>
                                     <Badge>{vaultIds.length} selected</Badge>
                                 </div>
-                                <div className="rounded-[var(--radius-md)] border border-[var(--color-border-primary)] bg-[var(--color-bg-input)] p-3">
+                                <div className="rounded-md border border-(--color-border-primary) bg-(--color-bg-input) p-3">
                                     {selectedProvider ? (
                                         <div className="flex items-start gap-3">
-                                            <div className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-[var(--color-accent-primary)]">
-                                                <Stack
+                                            <div className="grid size-10 shrink-0 place-items-center rounded-md bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-(--color-accent-primary)">
+                                                <StackIcon
                                                     size={20}
                                                     weight="duotone"
                                                 />
                                             </div>
                                             <div className="min-w-0">
-                                                <Badge className="max-w-full bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)] text-[var(--color-accent-primary)]">
+                                                <Badge className="max-w-full bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)] text-(--color-accent-primary)">
                                                     {selectedProvider.name}
                                                 </Badge>
-                                                <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                                                <p className="mt-1 text-xs text-(--color-text-secondary)">
                                                     Models are created
                                                     automatically after
                                                     selection.
@@ -474,13 +477,13 @@ export default function ApiKeySettingsPage({
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-sm text-[var(--color-text-secondary)]">
+                                        <p className="text-sm text-(--color-text-secondary)">
                                             Select a provider to enable
                                             vault-key assignment.
                                         </p>
                                     )}
                                 </div>
-                                <div className="grid max-h-[258px] gap-2 overflow-y-auto pr-1">
+                                <div className="grid max-h-64.5 gap-2 overflow-y-auto pr-1">
                                     {keyManagers.map((key) => {
                                         const checked = vaultIds.includes(
                                             key.id,
@@ -488,10 +491,10 @@ export default function ApiKeySettingsPage({
                                         return (
                                             <label
                                                 key={key.id}
-                                                className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-md)] border p-3 transition-colors ${
+                                                className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
                                                     checked
-                                                        ? "border-[var(--color-accent-primary)] bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
-                                                        : "border-[var(--color-border-primary)] bg-[var(--color-bg-input)] hover:bg-[var(--color-bg-card-hover)]"
+                                                        ? "border-(--color-accent-primary) bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
+                                                        : "border-(--color-border-primary) bg-(--color-bg-input) hover:bg-(--color-bg-card-hover)"
                                                 }`}
                                             >
                                                 <input
@@ -515,11 +518,11 @@ export default function ApiKeySettingsPage({
                                                                       ),
                                                         );
                                                     }}
-                                                    className="mt-1 size-4 accent-[var(--color-accent-primary)]"
+                                                    className="mt-1 size-4 accent-(--color-accent-primary)"
                                                 />
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <Key size={16} />
+                                                        <KeyIcon size={16} />
                                                         <p className="truncate text-sm font-semibold">
                                                             {key.name}
                                                         </p>
@@ -527,11 +530,11 @@ export default function ApiKeySettingsPage({
                                                             status={key.active}
                                                         />
                                                     </div>
-                                                    <p className="mt-1 truncate font-mono text-xs text-[var(--color-text-muted)]">
+                                                    <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
                                                         {key.key}
                                                     </p>
                                                     <div className="mt-2 flex flex-wrap gap-2">
-                                                        <Badge className="bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)] text-[var(--color-accent-secondary)]">
+                                                        <Badge className="bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)] text-(--color-accent-secondary)">
                                                             {key.provider ??
                                                                 "Unassigned provider"}
                                                         </Badge>
@@ -541,7 +544,7 @@ export default function ApiKeySettingsPage({
                                         );
                                     })}
                                     {keyManagers.length === 0 ? (
-                                        <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border-primary)] p-4 text-sm text-[var(--color-text-secondary)]">
+                                        <div className="rounded-md border border-dashed border-(--color-border-primary) p-4 text-sm text-(--color-text-secondary)">
                                             Add provider keys in Key Vault
                                             before selecting a provider.
                                         </div>
@@ -549,8 +552,8 @@ export default function ApiKeySettingsPage({
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-col gap-3 border-t border-[var(--color-border-subtle)] pt-4 sm:flex-row sm:items-center sm:justify-between">
-                            <p className="text-sm text-[var(--color-text-secondary)]">
+                        <div className="flex flex-col gap-3 border-t border-(--color-border-subtle) pt-4 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm text-(--color-text-secondary)">
                                 Provider selection creates the provider group,
                                 links selected vault keys, and seeds model
                                 routing entries.
@@ -590,7 +593,7 @@ export default function ApiKeySettingsPage({
             <section className="grid gap-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h2 className="flex items-center gap-2 font-semibold">
-                        <Funnel size={20} /> Provider Configuration
+                        <FunnelIcon size={20} /> Provider Configuration
                     </h2>
                     <Input
                         value={query}
@@ -644,9 +647,9 @@ export default function ApiKeySettingsPage({
                 <CardHeader>
                     <div>
                         <h2 className="flex items-center gap-2 font-semibold">
-                            <SlidersHorizontal size={20} /> Model Status
+                            <SlidersHorizontalIcon size={20} /> Model Status
                         </h2>
-                        <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        <p className="mt-1 text-sm text-(--color-text-secondary)">
                             Enable or disable individual model selections
                             without removing them from the provider group.
                         </p>
@@ -656,7 +659,7 @@ export default function ApiKeySettingsPage({
                     {orderedModels.map((item) => (
                         <div
                             key={item.modelSelectionId}
-                            className="grid gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3 md:grid-cols-[1fr_auto] md:items-center"
+                            className="grid gap-3 rounded-md bg-(--color-bg-input) p-3 md:grid-cols-[1fr_auto] md:items-center"
                         >
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
@@ -666,7 +669,7 @@ export default function ApiKeySettingsPage({
                                     <StatusBadge status={item.active} />
                                     <Badge>{item.provider.name}</Badge>
                                 </div>
-                                <p className="mt-1 truncate font-mono text-xs text-[var(--color-text-muted)]">
+                                <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
                                     {item.model.code}
                                 </p>
                                 <div className="mt-2 flex flex-wrap gap-2">
@@ -704,13 +707,13 @@ export default function ApiKeySettingsPage({
                                     }
                                 }}
                             >
-                                <Power size={16} />{" "}
+                                <PowerIcon size={16} />{" "}
                                 {item.active ? "Disable" : "Enable"}
                             </Button>
                         </div>
                     ))}
                     {orderedModels.length === 0 ? (
-                        <p className="text-sm text-[var(--color-text-secondary)]">
+                        <p className="text-sm text-(--color-text-secondary)">
                             No model selections yet. Add a provider selection to
                             manage model status.
                         </p>
@@ -722,10 +725,11 @@ export default function ApiKeySettingsPage({
                 <CardHeader>
                     <div>
                         <h2 className="flex items-center gap-2 font-semibold mb-0.5">
-                            <GitBranch size={20} /> Model Priority
+                            <GitBranchIcon size={20} /> Model Priority
                         </h2>
-                        <p className="font-mono text-xs text-[var(--color-text-muted)]">
-                            Change your model priority by dragging and moving the models.
+                        <p className="font-mono text-xs text-(--color-text-muted)">
+                            Change your model priority by dragging and moving
+                            the models.
                         </p>
                     </div>
                     {draftedModels.length > 0 && (
@@ -758,7 +762,7 @@ export default function ApiKeySettingsPage({
                                     }
                                 }}
                             >
-                                <FloppyDisk size={16} />
+                                <FloppyDiskIcon size={16} />
                                 {reorderModelsState.isLoading
                                     ? "Saving..."
                                     : "Save changes"}
@@ -781,7 +785,7 @@ export default function ApiKeySettingsPage({
                 </CardHeader>
                 <CardContent className="grid gap-3">
                     {draftedModels.length === 0 ? (
-                        <p className="text-sm text-[var(--color-text-secondary)]">
+                        <p className="text-sm text-(--color-text-secondary)">
                             No model selections yet. Add a provider selection to
                             generate model routing entries.
                         </p>
@@ -886,20 +890,20 @@ function ModelPriorityList({
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, item.modelSelectionId)}
                     onDragEnd={handleDragEnd}
-                    className={`grid gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3 md:grid-cols-[40px_1fr_auto] md:items-center cursor-move transition-all ${
+                    className={`grid gap-3 rounded-md bg-(--color-bg-input) p-3 md:grid-cols-[40px_1fr_auto] md:items-center cursor-move transition-all ${
                         draggedId === item.modelSelectionId
                             ? "opacity-50 scale-95"
                             : ""
-                    } ${dragOverId === item.modelSelectionId ? "ring-2 ring-[var(--color-accent-primary)] scale-102" : ""}`}
+                    } ${dragOverId === item.modelSelectionId ? "ring-2 ring-(--color-accent-primary) scale-102" : ""}`}
                 >
-                    <div className="flex items-center justify-center text-[var(--color-text-muted)]">
+                    <div className="flex items-center justify-center text-(--color-text-muted)">
                         <span className="text-sm font-semibold">
                             {index + 1}
                         </span>
                     </div>
                     <div>
                         <h3 className="font-medium">{item.model.name}</h3>
-                        <p className="font-mono text-xs text-[var(--color-text-muted)]">
+                        <p className="font-mono text-xs text-(--color-text-muted)">
                             {item.provider.name} / {item.model.code}
                         </p>
                     </div>
@@ -956,7 +960,7 @@ function ProviderSelectionCard({
                             <Badge>Global</Badge>
                         )}
                     </div>
-                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                    <p className="mt-1 text-sm text-(--color-text-secondary)">
                         {selection.description ?? selection.baseApi}
                     </p>
                 </div>
@@ -994,7 +998,7 @@ function ProviderSelectionCard({
                             }
                         }}
                     >
-                        <Power size={18} />
+                        <PowerIcon size={18} />
                     </Button>
                     <Button
                         variant="ghost"
@@ -1003,7 +1007,7 @@ function ProviderSelectionCard({
                         disabled={removePending}
                         onClick={onRemove}
                     >
-                        <Trash size={18} />
+                        <TrashIcon size={18} />
                     </Button>
                 </div>
             </CardHeader>
@@ -1081,14 +1085,14 @@ function ProviderModelConfigurator({
                 return (
                     <div
                         key={model.id}
-                        className="grid gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3"
+                        className="grid gap-3 rounded-md bg-(--color-bg-input) p-3"
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                                 <h4 className="truncate font-medium">
                                     {model.name}
                                 </h4>
-                                <p className="truncate font-mono text-xs text-[var(--color-text-muted)]">
+                                <p className="truncate font-mono text-xs text-(--color-text-muted)">
                                     {model.code}
                                 </p>
                             </div>
@@ -1130,9 +1134,9 @@ function ProviderModelConfigurator({
                                 }
                             >
                                 {active ? (
-                                    <CheckCircle size={16} weight="fill" />
+                                    <CheckCircleIcon size={16} weight="fill" />
                                 ) : (
-                                    <Power size={16} />
+                                    <PowerIcon size={16} />
                                 )}{" "}
                                 {active ? "Active" : "Inactive"}
                             </Button>
@@ -1176,8 +1180,8 @@ function ProviderModelConfigurator({
 
 function Metric({ label, value }: { label: string; value: string | number }) {
     return (
-        <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-input)] p-3">
-            <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
+        <div className="rounded-md bg-(--color-bg-input) p-3">
+            <p className="text-xs text-(--color-text-muted)">{label}</p>
             <p className="mt-1 font-mono text-lg font-semibold">{value}</p>
         </div>
     );
