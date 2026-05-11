@@ -2,6 +2,7 @@
 
 > Production-grade frontend architecture blueprint for the Roundhouse AI Service Platform.
 > Stack: Next.js (App Router) / TypeScript / Tailwind CSS / Redux Toolkit
+> Target Folder: client-side
 
 ---
 

@@ -1,0 +1,15 @@
+export const routes = {
+    login: "/login",
+    register: "/register",
+    adminLogin: "/admin/login",
+    dashboard: "/dashboard",
+    apiKeys: "/dashboard/apikeys",
+    providers: "/dashboard/providers",
+    keys: "/dashboard/keys",
+    settings: "/dashboard/settings",
+    docs: "/docs",
+    admin: "/admin",
+    adminProviders: "/admin/providers",
+    adminUsers: "/admin/users",
+    adminAnalytics: "/admin/analytics",
+} as const;
