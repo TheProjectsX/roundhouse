@@ -95,3 +95,17 @@ Same with when creating custom provider (/dashboard/providers)
 - /dashboard/providers
 Here should be 2 sections. The upper section will hold User created providers, the below section will hold Global providers.
 And the User providers should have models creation for that particular provider too. I already provided that to you
+
+
+
+- /dashboard/apikeys/:id
+
+In the Model Priority section, don't let user to enter number, instead do a drag and drop kind of update.
+And don't update right then and there, add a "Save changes" button for the db call
+the API already takes the list as request body::
+{
+    items: {
+        modelSelectionId: string;
+        priority: number;
+    }[];
+}

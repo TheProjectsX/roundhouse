@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { StatusBadge } from "@/shared/components/ui/badge";
+import { Badge, StatusBadge } from "@/shared/components/ui/badge";
 import { useCreateKeysManagerMutation, useDeleteKeysManagerMutation, useGetKeysManagerQuery, useUnlockKeysMutation, useUpdateKeysManagerMutation } from "@/shared/store/api";
 import { lock, unlock } from "@/shared/store/unlock-slice";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
@@ -121,7 +121,7 @@ export default function KeysPage() {
                     <div>
                         <h2 className="font-semibold tracking-tight">Keys are encrypted and masked by default</h2>
                         <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                            Unlocking stores revealed values only in Redux memory state. Use the lock action to clear them immediately.
+                            Unlocking stores revealed values only in memory. Use the lock action to clear them immediately.
                         </p>
                     </div>
                 </CardContent>
@@ -138,7 +138,11 @@ export default function KeysPage() {
                                         <h2 className="font-semibold tracking-tight">{key.name}</h2>
                                         <StatusBadge status={key.active} />
                                     </div>
-                                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{key.provider ?? "Unassigned provider"}</p>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        <Badge className="bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)] text-[var(--color-accent-secondary)]">
+                                            {key.provider ?? "Unassigned provider"}
+                                        </Badge>
+                                    </div>
                                 </div>
                                 <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-input)] px-3 py-2 font-mono text-sm">
                                     {revealed ?? key.key}
