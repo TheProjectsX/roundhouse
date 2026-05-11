@@ -242,6 +242,7 @@ export class ProvidersService {
             free: provider.free,
             type: provider.type,
             status: provider.status,
+            baseApi: provider.baseApi,
             modelsCount,
             activeModelsCount,
             apiKeys: providerSelections?.[0]?.apiKey,
