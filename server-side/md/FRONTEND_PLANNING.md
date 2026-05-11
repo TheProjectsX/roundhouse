@@ -1911,7 +1911,7 @@ For toggle operations (active/inactive):
 
 - **Dynamic imports** for heavy components: Recharts, dnd-kit, react-markdown
 - **Route-based code splitting**: Automatic via Next.js App Router
-- **Tree shaking**: Import specific icons (`import { Key } from "@phosphor-icons/react"`)
+- **Tree shaking**: Import specific icons (`import { KeyIcon } from "@phosphor-icons/react"`)
 - **Image optimization**: `next/image` for avatars, provider logos
 
 ### 29.2 Rendering Optimization

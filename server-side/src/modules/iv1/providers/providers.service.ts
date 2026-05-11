@@ -50,7 +50,6 @@ export class ProvidersService {
             .sort()
             .rawFilter({
                 userId: user.id,
-                status: { notIn: ["INACTIVE", "TESTING", "DEPRECATED"] },
             })
             .execute();
 
@@ -67,21 +66,10 @@ export class ProvidersService {
             )),
         ].sort((a, b) => this.sortProviders(a, b, query));
 
-        // const page = Number(query.page) || 1;
-        // const limit = Number(query.limit) || 10;
-        // const start = (page - 1) * limit;
-        // const paginated = formatted.slice(start, start + limit);
-        // const total = formatted.length;
 
         return {
             message: "Providers fetched",
             data: formatted,
-            // pagination: {
-            //     page,
-            //     limit,
-            //     total,
-            //     totalPage: Math.ceil(total / limit),
-            // },
         };
     }
 
@@ -132,7 +120,6 @@ export class ProvidersService {
             where: {
                 userId: user.id,
                 id,
-                status: { not: ContentStatus.INACTIVE },
             },
         });
 
