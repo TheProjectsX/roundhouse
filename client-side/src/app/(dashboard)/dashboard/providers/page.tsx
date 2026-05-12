@@ -18,7 +18,6 @@ import type { ProviderListItem } from "@/shared/types/entities";
 export default function ProvidersPage() {
     const { data: providers = [], isLoading } = useGetProvidersQuery();
     const [showCreate, setShowCreate] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [modelProvider, setModelProvider] = useState<ProviderListItem | null>(null);
     const [showCreateModel, setShowCreateModel] = useState(false);
     const [editProvider, setEditProvider] = useState<ProviderListItem | null>(null);
@@ -32,105 +31,13 @@ export default function ProvidersPage() {
 
     return (
         <>
-            <PageHeader title="Providers" description="Browse global providers and manage custom providers." actions={<Button onClick={() => setShowCreate((value) => !value)}>Add Custom Provider</Button>} />
+            <PageHeader title="Providers" description="Browse global providers and manage custom providers." actions={<Button onClick={() => setShowCreate(true)}>Add Custom Provider</Button>} />
             {showCreate ? (
-                <Card>
-                    <CardContent className="pt-5">
-                        <form
-                            className="grid gap-4"
-                            onSubmit={async (event) => {
-                                event.preventDefault();
-                                if (isSubmitting) return;
-                                
-                                const form = new FormData(event.currentTarget);
-                                const name = String(form.get("name") ?? "").trim();
-                                const baseApi = String(form.get("baseApi") ?? "").trim();
-                                const description = String(form.get("description") ?? "").trim();
-                                const code = String(form.get("code") ?? "").trim();
-                                const free = form.get("free") === "on";
-                                const type = String(form.get("type") ?? ProviderType.CUSTOM) as ProviderType;
-                                const status = String(form.get("status") ?? ContentStatus.ACTIVE) as ContentStatus;
-
-                                if (!name || !baseApi) {
-                                    toast.error("Provider name and base API are required");
-                                    return;
-                                }
-
-                                setIsSubmitting(true);
-                                try {
-                                    await createProvider({
-                                        name,
-                                        code: code || undefined,
-                                        baseApi,
-                                        description: description || undefined,
-                                        free,
-                                        type,
-                                        status,
-                                    }).unwrap();
-                                    toast.success("Custom provider created");
-                                    event.currentTarget.reset();
-                                    setShowCreate(false);
-                                } catch {
-                                    toast.error("Could not create custom provider");
-                                } finally {
-                                    setIsSubmitting(false);
-                                }
-                            }}
-                        >
-                            <div className="grid gap-3 lg:grid-cols-2">
-                                <label className="grid gap-2 text-sm font-medium">
-                                    Name
-                                    <Input name="name" placeholder="Provider name" required />
-                                </label>
-                                <label className="grid gap-2 text-sm font-medium">
-                                    Base API
-                                    <Input name="baseApi" type="url" placeholder="https://api.example.com/v1" required />
-                                </label>
-                                <label className="grid gap-2 text-sm font-medium">
-                                    Code
-                                    <Input name="code" placeholder="provider-code" />
-                                </label>
-                                <label className="grid gap-2 text-sm font-medium">
-                                    Description
-                                    <Input name="description" placeholder="Description" />
-                                </label>
-                            </div>
-                            <div className="grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
-                                <label className="grid gap-2 text-sm font-medium">
-                                    Type
-                                    <select
-                                        name="type"
-                                        defaultValue={ProviderType.CUSTOM}
-                                        className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none"
-                                    >
-                                        {Object.values(ProviderType).map((value) => (
-                                            <option key={value} value={value}>{value}</option>
-                                        ))}
-                                    </select>
-                                </label>
-                                <label className="grid gap-2 text-sm font-medium">
-                                    Status
-                                    <select
-                                        name="status"
-                                        defaultValue={ContentStatus.ACTIVE}
-                                        className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none"
-                                    >
-                                        {Object.values(ContentStatus).map((value) => (
-                                            <option key={value} value={value}>{value}</option>
-                                        ))}
-                                    </select>
-                                </label>
-                                <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm font-medium">
-                                    Free provider
-                                    <input name="free" type="checkbox" className="size-4 accent-(--color-accent-primary)" />
-                                </label>
-                            </div>
-                            <div className="flex justify-end border-t border-(--color-border-subtle) pt-4">
-                                <Button type="submit" disabled={createState.isLoading || isSubmitting}>Create Provider</Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                <CreateProviderModal
+                    onClose={() => setShowCreate(false)}
+                    createProvider={createProvider}
+                    isLoading={createState.isLoading}
+                />
             ) : null}
             
             {/* User Created Providers Section */}
@@ -151,7 +58,7 @@ export default function ProvidersPage() {
                                     <CardContent className="grid gap-4">
                                         <div>
                                             <h2 className="font-semibold tracking-tight">{provider.name}</h2>
-                                            <p className="mt-1 line-clamp-2 min-h-10 text-sm text-(--color-text-secondary)">{provider.description}</p>
+                                            <p className="mt-1 line-clamp-2 min-h-10 text-sm text-(--color-text-secondary)">{provider.description ?? `${provider.name} API Provider`}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             <Badge>{provider.type}</Badge>
@@ -248,7 +155,7 @@ export default function ProvidersPage() {
                                     <CardContent className="grid gap-4">
                                         <div>
                                             <h2 className="font-semibold tracking-tight">{provider.name}</h2>
-                                            <p className="mt-1 line-clamp-2 min-h-10 text-sm text-(--color-text-secondary)">{provider.description}</p>
+                                            <p className="mt-1 line-clamp-2 min-h-10 text-sm text-(--color-text-secondary)">{provider.description ?? `${provider.name} API Provider`}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             <Badge>{provider.type}</Badge>
@@ -281,6 +188,125 @@ export default function ProvidersPage() {
             {modelProvider && showCreateModel ? <CreateModelModal provider={modelProvider} onClose={() => { setModelProvider(null); setShowCreateModel(false); }} /> : null}
             {editProvider ? <EditProviderModal provider={editProvider} onClose={() => setEditProvider(null)} /> : null}
         </>
+    );
+}
+
+function CreateProviderModal({
+    onClose,
+    createProvider,
+    isLoading,
+}: {
+    onClose: () => void;
+    createProvider: ReturnType<typeof useCreateCustomProviderMutation>[0];
+    isLoading: boolean;
+}) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    return (
+        <Modal
+            onClose={onClose}
+            ariaLabel="Create custom provider"
+            showCloseButton
+            className="w-full max-w-2xl"
+        >
+            <div className="border-b border-(--color-border-primary) p-5">
+                <h2 className="text-lg font-semibold">Create Provider</h2>
+                <p className="mt-1 text-sm text-(--color-text-secondary)">Add a new custom provider to the catalog.</p>
+            </div>
+            <form
+                className="grid gap-4 p-5"
+                onSubmit={async (event) => {
+                    event.preventDefault();
+                    if (isSubmitting) return;
+
+                    const form = new FormData(event.currentTarget);
+                    const name = String(form.get("name") ?? "").trim();
+                    const baseApi = String(form.get("baseApi") ?? "").trim();
+                    const description = String(form.get("description") ?? "").trim();
+                    const code = String(form.get("code") ?? "").trim();
+                    const free = form.get("free") === "on";
+                    const type = String(form.get("type") ?? ProviderType.CUSTOM) as ProviderType;
+                    const status = String(form.get("status") ?? ContentStatus.ACTIVE) as ContentStatus;
+
+                    if (!name || !baseApi) {
+                        toast.error("Provider name and base API are required");
+                        return;
+                    }
+
+                    setIsSubmitting(true);
+                    try {
+                        await createProvider({
+                            name,
+                            code: code || undefined,
+                            baseApi,
+                            description: description || undefined,
+                            free,
+                            type,
+                            status,
+                        }).unwrap();
+                        toast.success("Custom provider created");
+                        onClose();
+                    } catch {
+                        toast.error("Could not create custom provider");
+                    } finally {
+                        setIsSubmitting(false);
+                    }
+                }}
+            >
+                <div className="grid gap-3 lg:grid-cols-2">
+                    <label className="grid gap-2 text-sm font-medium">
+                        Name
+                        <Input name="name" placeholder="Provider name" required />
+                    </label>
+                    <label className="grid gap-2 text-sm font-medium">
+                        Base API
+                        <Input name="baseApi" type="url" placeholder="https://api.example.com/v1" required />
+                    </label>
+                    <label className="grid gap-2 text-sm font-medium">
+                        Code
+                        <Input name="code" placeholder="provider-code" />
+                    </label>
+                    <label className="grid gap-2 text-sm font-medium">
+                        Description
+                        <Input name="description" placeholder="Description" />
+                    </label>
+                </div>
+                <div className="grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+                    <label className="grid gap-2 text-sm font-medium">
+                        Type
+                        <select
+                            name="type"
+                            defaultValue={ProviderType.CUSTOM}
+                            className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none"
+                        >
+                            {Object.values(ProviderType).map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="grid gap-2 text-sm font-medium">
+                        Status
+                        <select
+                            name="status"
+                            defaultValue={ContentStatus.ACTIVE}
+                            className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none"
+                        >
+                            {Object.values(ContentStatus).map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                            ))}
+                        </select>
+                    </label>
+                    <label className="flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm font-medium">
+                        Free provider
+                        <input name="free" type="checkbox" className="size-4 accent-(--color-accent-primary)" />
+                    </label>
+                </div>
+                <div className="flex justify-end gap-2 border-t border-(--color-border-subtle) pt-4">
+                    <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
+                    <Button type="submit" disabled={isLoading || isSubmitting}>Create Provider</Button>
+                </div>
+            </form>
+        </Modal>
     );
 }
 

@@ -15,6 +15,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
+import { Modal } from "@/shared/components/ui/modal";
 import {
     useCreateKeysManagerMutation,
     useDeleteKeysManagerMutation,
@@ -48,7 +49,7 @@ export default function KeysPage() {
                     <>
                         <Button
                             variant="secondary"
-                            onClick={() => setShowCreate((value) => !value)}
+                            onClick={() => setShowCreate(true)}
                         >
                             Add API Key
                         </Button>
@@ -96,67 +97,11 @@ export default function KeysPage() {
                 </CardContent>
             </Card>
             {showCreate ? (
-                <Card>
-                    <CardContent className="pt-5">
-                        <form
-                            className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]"
-                            onSubmit={async (event) => {
-                                event.preventDefault();
-                                if (isSubmitting) return;
-
-                                const form = new FormData(event.currentTarget);
-                                const name = String(
-                                    form.get("name") ?? "",
-                                ).trim();
-                                const provider = String(
-                                    form.get("provider") ?? "",
-                                ).trim();
-                                const key = String(
-                                    form.get("key") ?? "",
-                                ).trim();
-
-                                if (!name || !key) {
-                                    toast.error("Name and key are required");
-                                    return;
-                                }
-
-                                setIsSubmitting(true);
-                                try {
-                                    await createKey({
-                                        name,
-                                        provider: provider || undefined,
-                                        key,
-                                    }).unwrap();
-                                    toast.success("Vault key added");
-                                    event.currentTarget.reset();
-                                    setShowCreate(false);
-                                } catch {
-                                    toast.error("Could not add vault key");
-                                } finally {
-                                    setIsSubmitting(false);
-                                }
-                            }}
-                        >
-                            <Input
-                                name="name"
-                                placeholder="OpenAI production"
-                                required
-                            />
-                            <Input name="provider" placeholder="openai" />
-                            <Input
-                                name="key"
-                                placeholder="Provider API key"
-                                required
-                            />
-                            <Button
-                                type="submit"
-                                disabled={createState.isLoading || isSubmitting}
-                            >
-                                Add
-                            </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                <CreateKeyModal
+                    onClose={() => setShowCreate(false)}
+                    createKey={createKey}
+                    isLoading={createState.isLoading}
+                />
             ) : null}
             <Card>
                 <CardContent className="flex items-start gap-4 pt-5">
@@ -285,6 +230,80 @@ export default function KeysPage() {
                 })}
             </section>
         </>
+    );
+}
+
+function CreateKeyModal({
+    onClose,
+    createKey,
+    isLoading,
+}: {
+    onClose: () => void;
+    createKey: ReturnType<typeof useCreateKeysManagerMutation>[0];
+    isLoading: boolean;
+}) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    return (
+        <Modal
+            onClose={onClose}
+            ariaLabel="Add API key"
+            showCloseButton
+            className="w-full max-w-xl"
+        >
+            <div className="border-b border-(--color-border-primary) p-5">
+                <h2 className="text-lg font-semibold">Add API Key</h2>
+                <p className="mt-1 text-sm text-(--color-text-secondary)">Store an encrypted provider key in the vault.</p>
+            </div>
+            <form
+                className="grid gap-4 p-5"
+                onSubmit={async (event) => {
+                    event.preventDefault();
+                    if (isSubmitting) return;
+
+                    const form = new FormData(event.currentTarget);
+                    const name = String(form.get("name") ?? "").trim();
+                    const provider = String(form.get("provider") ?? "").trim();
+                    const key = String(form.get("key") ?? "").trim();
+
+                    if (!name || !key) {
+                        toast.error("Name and key are required");
+                        return;
+                    }
+
+                    setIsSubmitting(true);
+                    try {
+                        await createKey({
+                            name,
+                            provider: provider || undefined,
+                            key,
+                        }).unwrap();
+                        toast.success("Vault key added");
+                        onClose();
+                    } catch {
+                        toast.error("Could not add vault key");
+                    } finally {
+                        setIsSubmitting(false);
+                    }
+                }}
+            >
+                <Input
+                    name="name"
+                    placeholder="OpenAI production"
+                    required
+                />
+                <Input name="provider" placeholder="openai" />
+                <Input
+                    name="key"
+                    placeholder="Provider API key"
+                    required
+                />
+                <div className="flex justify-end gap-2 border-t border-(--color-border-subtle) pt-4">
+                    <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
+                    <Button type="submit" disabled={isLoading || isSubmitting}>Add</Button>
+                </div>
+            </form>
+        </Modal>
     );
 }
 

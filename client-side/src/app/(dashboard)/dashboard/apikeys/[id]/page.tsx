@@ -16,7 +16,14 @@ import {
     TrashIcon,
     WarningCircleIcon,
 } from "@phosphor-icons/react";
-import { use, useEffect, useMemo, useState } from "react";
+import {
+    use,
+    useEffect,
+    useMemo,
+    useState,
+    type Dispatch,
+    type SetStateAction,
+} from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Button } from "@/shared/components/ui/button";
@@ -68,10 +75,11 @@ export default function ApiKeySettingsPage({
         useRemoveApiKeyProviderSelectionMutation();
     const [updateProviderStatus, updateProviderStatusState] =
         useUpdateApiKeyProviderStatusMutation();
-    const [updateModelStatus, updateModelStatusState] =
-        useUpdateApiKeyModelStatusMutation();
+    const [updateModelStatus] = useUpdateApiKeyModelStatusMutation();
     const [reorderModels, reorderModelsState] =
         useReorderApiKeyModelSelectionsMutation();
+    const [pendingModelStatusKey, setPendingModelStatusKey] =
+        useState<string | null>(null);
 
     const [draft, setDraft] = useState({
         name: "",
@@ -636,9 +644,8 @@ export default function ApiKeySettingsPage({
                             updateProviderStatusState.isLoading
                         }
                         updateModelStatus={updateModelStatus}
-                        updateModelStatusPending={
-                            updateModelStatusState.isLoading
-                        }
+                        pendingModelStatusKey={pendingModelStatusKey}
+                        setPendingModelStatusKey={setPendingModelStatusKey}
                     />
                 ))}
             </section>
@@ -687,8 +694,13 @@ export default function ApiKeySettingsPage({
                             <Button
                                 variant={item.active ? "secondary" : "primary"}
                                 size="sm"
-                                disabled={updateModelStatusState.isLoading}
+                                disabled={
+                                    pendingModelStatusKey ===
+                                    item.modelSelectionId
+                                }
                                 onClick={async () => {
+                                    const rowKey = item.modelSelectionId;
+                                    setPendingModelStatusKey(rowKey);
                                     try {
                                         await updateModelStatus({
                                             apiKeyId,
@@ -703,6 +715,10 @@ export default function ApiKeySettingsPage({
                                     } catch {
                                         toast.error(
                                             "Could not update model status",
+                                        );
+                                    } finally {
+                                        setPendingModelStatusKey((current) =>
+                                            current === rowKey ? null : current,
                                         );
                                     }
                                 }}
@@ -931,7 +947,8 @@ function ProviderSelectionCard({
     updateProviderStatus,
     updateProviderStatusPending,
     updateModelStatus,
-    updateModelStatusPending,
+    pendingModelStatusKey,
+    setPendingModelStatusKey,
 }: {
     apiKeyId: string;
     selection: ProviderSelectionDetail;
@@ -944,7 +961,8 @@ function ProviderSelectionCard({
     >[0];
     updateProviderStatusPending: boolean;
     updateModelStatus: ReturnType<typeof useUpdateApiKeyModelStatusMutation>[0];
-    updateModelStatusPending: boolean;
+    pendingModelStatusKey: string | null;
+    setPendingModelStatusKey: Dispatch<SetStateAction<string | null>>;
 }) {
     return (
         <Card>
@@ -1035,7 +1053,8 @@ function ProviderSelectionCard({
                         providerId={selection.providerId}
                         selectedModels={selection.models}
                         updateModelStatus={updateModelStatus}
-                        updateModelStatusPending={updateModelStatusPending}
+                        pendingModelStatusKey={pendingModelStatusKey}
+                        setPendingModelStatusKey={setPendingModelStatusKey}
                     />
                 </CardContent>
             ) : null}
@@ -1048,13 +1067,15 @@ function ProviderModelConfigurator({
     providerId,
     selectedModels,
     updateModelStatus,
-    updateModelStatusPending,
+    pendingModelStatusKey,
+    setPendingModelStatusKey,
 }: {
     apiKeyId: string;
     providerId: string;
     selectedModels: ProviderSelectionDetail["models"];
     updateModelStatus: ReturnType<typeof useUpdateApiKeyModelStatusMutation>[0];
-    updateModelStatusPending: boolean;
+    pendingModelStatusKey: string | null;
+    setPendingModelStatusKey: Dispatch<SetStateAction<string | null>>;
 }) {
     const { data: providerModels = [], isLoading } =
         useGetProviderModelsQuery(providerId);
@@ -1103,9 +1124,12 @@ function ProviderModelConfigurator({
                                 disabled={
                                     selectModelsState.isLoading ||
                                     deselectModelsState.isLoading ||
-                                    updateModelStatusPending
+                                    pendingModelStatusKey ===
+                                        `${providerId}:${model.id}`
                                 }
                                 onClick={async () => {
+                                    const rowKey = `${providerId}:${model.id}`;
+                                    setPendingModelStatusKey(rowKey);
                                     try {
                                         if (!selected) {
                                             await selectModels({
@@ -1126,6 +1150,10 @@ function ProviderModelConfigurator({
                                     } catch {
                                         toast.error(
                                             "Could not update model selection",
+                                        );
+                                    } finally {
+                                        setPendingModelStatusKey((current) =>
+                                            current === rowKey ? null : current,
                                         );
                                     }
                                 }}
