@@ -553,6 +553,17 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                     },
                 }),
             );
+
+            runInBackground(
+                prisma.modelSelection.update({
+                    where: { id: candidate.modelSelectionId },
+                    data: {
+                        failureCount: {
+                            increment: 1,
+                        },
+                    },
+                }),
+            );
         }
 
         return {

@@ -20,6 +20,32 @@ const hasFunctionCall = (
     return "functionCall" in part;
 };
 
+type GeminiToolCall = {
+    id: string;
+    type: "function";
+    function: {
+        name: string;
+        arguments: string;
+    };
+    thought_signature?: string;
+    extra_content?: {
+        google?: {
+            thought_signature?: string;
+        };
+    };
+};
+
+const getToolCallThoughtSignature = (
+    toolCall: OpenAIChatMessage["tool_calls"] extends Array<infer ToolCall>
+        ? ToolCall
+        : never,
+) => {
+    return (
+        toolCall?.thought_signature ||
+        toolCall?.extra_content?.google?.thought_signature
+    );
+};
+
 const transformMessageToParts = (message: OpenAIChatMessage): GeminiPart[] => {
     if (message.role === "tool") {
         return [
@@ -42,11 +68,13 @@ const transformMessageToParts = (message: OpenAIChatMessage): GeminiPart[] => {
     }
 
     (message.tool_calls || []).forEach((toolCall) => {
+        const thoughtSignature = getToolCallThoughtSignature(toolCall);
+
         parts.push({
             functionCall: {
                 name: toolCall.function.name,
                 args: JSON.parse(toolCall.function.arguments || "{}"),
-                thought_signature: toolCall.thought_signature,
+                thought_signature: thoughtSignature,
             },
         });
     });
@@ -112,17 +140,8 @@ const toOpenAIResponse = (
         .join("\n")
         .trim();
 
-    const toolCalls = parts.reduce<
-        Array<{
-            id: string;
-            type: "function";
-            function: {
-                name: string;
-                arguments: string;
-            };
-            thought_signature?: string;
-        }>
-    >((accumulator, part, index) => {
+    const toolCalls = parts.reduce<GeminiToolCall[]>(
+        (accumulator, part, index) => {
         if (!hasFunctionCall(part) || !part.functionCall?.name) {
             return accumulator;
         }
@@ -135,10 +154,20 @@ const toOpenAIResponse = (
                 arguments: JSON.stringify(part.functionCall.args || {}),
             },
             thought_signature: part.functionCall.thought_signature,
+            extra_content: part.functionCall.thought_signature
+                ? {
+                      google: {
+                          thought_signature:
+                              part.functionCall.thought_signature,
+                      },
+                  }
+                : undefined,
         });
 
         return accumulator;
-    }, []);
+        },
+        [],
+    );
 
     const promptTokens = data.usageMetadata?.promptTokenCount;
     const completionTokens = data.usageMetadata?.candidatesTokenCount;

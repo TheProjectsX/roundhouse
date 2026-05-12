@@ -36,6 +36,11 @@ export type OpenAIChatToolCall = {
         arguments: string;
     };
     thought_signature?: string;
+    extra_content?: {
+        google?: {
+            thought_signature?: string;
+        };
+    };
 };
 
 export type OpenAIChatMessage = {
