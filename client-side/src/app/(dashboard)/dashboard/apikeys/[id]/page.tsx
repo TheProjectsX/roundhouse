@@ -44,6 +44,7 @@ import {
     useSelectApiKeyProviderMutation,
     useUpdateApiKeyMutation,
     useUpdateApiKeySettingsMutation,
+    useUpdateApiKeyStatusMutation,
     useUpdateApiKeyModelStatusMutation,
     useUpdateApiKeyProviderStatusMutation,
 } from "@/shared/store/api";
@@ -55,6 +56,8 @@ import type {
     ProviderSelectionDetail,
 } from "@/shared/types/entities";
 
+const EMPTY_ORDERED_MODELS: ApiKeyModelSelectionListItem[] = [];
+
 export default function ApiKeySettingsPage({
     params,
 }: {
@@ -64,7 +67,7 @@ export default function ApiKeySettingsPage({
     const { data: apiKey, isLoading } = useGetApiKeyDetailQuery(apiKeyId);
     const { data: providers = [] } = useGetProvidersQuery();
     const { data: keyManagers = [] } = useGetKeysManagerQuery();
-    const { data: orderedModels = [] } =
+    const { data: orderedModels = EMPTY_ORDERED_MODELS } =
         useGetApiKeyModelSelectionsQuery(apiKeyId);
     const [updateApiKey, updateApiKeyState] = useUpdateApiKeyMutation();
     const [updateSettings, updateSettingsState] =
@@ -75,11 +78,17 @@ export default function ApiKeySettingsPage({
         useRemoveApiKeyProviderSelectionMutation();
     const [updateProviderStatus, updateProviderStatusState] =
         useUpdateApiKeyProviderStatusMutation();
+    const [updateApiKeyStatus, updateApiKeyStatusState] =
+        useUpdateApiKeyStatusMutation();
     const [updateModelStatus] = useUpdateApiKeyModelStatusMutation();
     const [reorderModels, reorderModelsState] =
         useReorderApiKeyModelSelectionsMutation();
-    const [pendingModelStatusKey, setPendingModelStatusKey] =
-        useState<string | null>(null);
+    const [pendingModelStatusKey, setPendingModelStatusKey] = useState<
+        string | null
+    >(null);
+    const [pendingProviderStatusId, setPendingProviderStatusId] = useState<
+        string | null
+    >(null);
 
     const [draft, setDraft] = useState({
         name: "",
@@ -109,7 +118,9 @@ export default function ApiKeySettingsPage({
     }, [apiKey]);
 
     useEffect(() => {
-        setDraftedModels(orderedModels);
+        setDraftedModels((current) =>
+            current === orderedModels ? current : orderedModels,
+        );
     }, [orderedModels]);
 
     const selectedProviderIds = useMemo(
@@ -148,6 +159,25 @@ export default function ApiKeySettingsPage({
                 .includes(term),
         );
     });
+    const apiKeyAnalytics = useMemo(() => {
+        const providers = apiKey?.providers ?? [];
+
+        return {
+            providerSelections: providers.length,
+            activeProviders: providers.filter((provider) => provider.active)
+                .length,
+            vaultKeys: providers.reduce(
+                (total, provider) => total + provider.apiKeysManagers.length,
+                0,
+            ),
+            activeModels: providers.reduce(
+                (total, provider) =>
+                    total +
+                    provider.models.filter((model) => model.active).length,
+                0,
+            ),
+        };
+    }, [apiKey?.providers]);
     const hasDirtySettings = Boolean(
         apiKey &&
         (draft.name !== apiKey.name ||
@@ -252,105 +282,172 @@ export default function ApiKeySettingsPage({
                 </div>
             ) : null}
 
-            <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-                <Card>
-                    <CardHeader>
-                        <h2 className="flex items-center gap-2 font-semibold">
-                            <GearIcon size={20} /> Core Settings
-                        </h2>
-                        <StatusBadge status={draft.active} />
-                    </CardHeader>
-                    <CardContent className="grid gap-4">
-                        <label className="grid gap-2 text-sm font-medium">
-                            Name
-                            <Input
-                                value={draft.name}
-                                onChange={(event) =>
-                                    setDraft((value) => ({
-                                        ...value,
-                                        name: event.target.value,
-                                    }))
-                                }
-                            />
-                        </label>
-                        <label className="grid gap-2 text-sm font-medium">
-                            API key
-                            <div className="flex min-h-11 items-center gap-2 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3">
-                                <code className="min-w-0 flex-1 truncate font-mono text-sm font-semibold">
-                                    {apiKey.key}
-                                </code>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label="Copy API key"
-                                    onClick={async () => {
-                                        await navigator.clipboard.writeText(
-                                            apiKey.key,
-                                        );
-                                        toast.success("API key copied");
-                                    }}
-                                >
-                                    <CopyIcon size={18} />
-                                </Button>
+            <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr] xl:items-start">
+                <div className="grid gap-5">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between gap-3 w-full">
+                                <h2 className="flex items-center gap-2 font-semibold">
+                                    <GearIcon size={20} /> Core Settings
+                                </h2>
+                                <div className="flex items-center gap-2">
+                                    {/* <StatusBadge status={draft.active} /> */}
+                                    <Button
+                                        size="sm"
+                                        variant={
+                                            draft.active ? "danger" : "success"
+                                        }
+                                        disabled={
+                                            updateApiKeyStatusState.isLoading
+                                        }
+                                        onClick={async () => {
+                                            const nextActive = !draft.active;
+                                            try {
+                                                await updateApiKeyStatus({
+                                                    id: apiKey.id,
+                                                    active: nextActive,
+                                                }).unwrap();
+                                                setDraft((value) => ({
+                                                    ...value,
+                                                    active: nextActive,
+                                                }));
+                                                toast.success(
+                                                    nextActive
+                                                        ? "API key enabled"
+                                                        : "API key disabled",
+                                                );
+                                            } catch {
+                                                toast.error(
+                                                    "Could not update API key status",
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        <PowerIcon size={16} />
+                                        {draft.active ? "Disable" : "Enable"}
+                                    </Button>
+                                </div>
                             </div>
-                        </label>
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        </CardHeader>
+                        <CardContent className="grid gap-4">
                             <label className="grid gap-2 text-sm font-medium">
-                                Max iterations
+                                Name
                                 <Input
-                                    type="number"
-                                    min={1}
-                                    value={draft.maxIterations}
+                                    value={draft.name}
                                     onChange={(event) =>
                                         setDraft((value) => ({
                                             ...value,
-                                            maxIterations: Math.max(
-                                                1,
-                                                Number(event.target.value) || 1,
-                                            ),
+                                            name: event.target.value,
                                         }))
                                     }
                                 />
                             </label>
                             <label className="grid gap-2 text-sm font-medium">
-                                Routing method
-                                <select
-                                    value={draft.roundhouseMethod}
-                                    onChange={(event) =>
-                                        setDraft((value) => ({
-                                            ...value,
-                                            roundhouseMethod: event.target
-                                                .value as RoundhouseMethod,
-                                        }))
-                                    }
-                                    className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm outline-none"
-                                >
-                                    {Object.values(RoundhouseMethod).map(
-                                        (method) => (
-                                            <option key={method} value={method}>
-                                                {method}
-                                            </option>
-                                        ),
-                                    )}
-                                </select>
+                                API key
+                                <div className="flex min-h-11 items-center gap-2 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3">
+                                    <code className="min-w-0 flex-1 truncate font-mono text-sm font-semibold">
+                                        {apiKey.key.slice(0, 11) +
+                                            "****" +
+                                            apiKey.key.slice(-4)}
+                                    </code>
+                                    <Button
+                                        variant="blank"
+                                        size="icon"
+                                        aria-label="Copy API key"
+                                        title="Copy API key"
+                                        onClick={async () => {
+                                            await navigator.clipboard.writeText(
+                                                apiKey.key,
+                                            );
+                                            toast.success("API key copied");
+                                        }}
+                                    >
+                                        <CopyIcon size={18} />
+                                    </Button>
+                                </div>
                             </label>
-                        </div>
-                        <label className="flex items-center justify-between rounded-md bg-(--color-bg-input) p-3 text-sm font-medium">
-                            Active routing
-                            <input
-                                type="checkbox"
-                                checked={draft.active}
-                                onChange={(event) =>
-                                    setDraft((value) => ({
-                                        ...value,
-                                        active: event.target.checked,
-                                    }))
-                                }
-                                className="size-4 accent-(--color-accent-primary)"
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <label className="grid gap-2 text-sm font-medium">
+                                    Max iterations
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        value={draft.maxIterations}
+                                        onChange={(event) =>
+                                            setDraft((value) => ({
+                                                ...value,
+                                                maxIterations: Math.max(
+                                                    1,
+                                                    Number(
+                                                        event.target.value,
+                                                    ) || 1,
+                                                ),
+                                            }))
+                                        }
+                                    />
+                                </label>
+                                <label className="grid gap-2 text-sm font-medium">
+                                    Routing method
+                                    <select
+                                        value={draft.roundhouseMethod}
+                                        onChange={(event) =>
+                                            setDraft((value) => ({
+                                                ...value,
+                                                roundhouseMethod: event.target
+                                                    .value as RoundhouseMethod,
+                                            }))
+                                        }
+                                        className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm outline-none"
+                                    >
+                                        {Object.values(RoundhouseMethod).map(
+                                            (method) => (
+                                                <option
+                                                    key={method}
+                                                    value={method}
+                                                >
+                                                    {method}
+                                                </option>
+                                            ),
+                                        )}
+                                    </select>
+                                </label>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <div>
+                                <h2 className="flex items-center gap-2 font-semibold">
+                                    <SlidersHorizontalIcon size={20} /> Routing
+                                    Analytics
+                                </h2>
+                                <p className="mt-1 text-sm text-(--color-text-secondary)">
+                                    Quick readout of how this API key is wired
+                                    right now.
+                                </p>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="grid gap-3 sm:grid-cols-2">
+                            <Metric
+                                label="Provider selections"
+                                value={apiKeyAnalytics.providerSelections}
                             />
-                        </label>
-                    </CardContent>
-                </Card>
+                            <Metric
+                                label="Active providers"
+                                value={apiKeyAnalytics.activeProviders}
+                            />
+                            <Metric
+                                label="Vault keys"
+                                value={apiKeyAnalytics.vaultKeys}
+                            />
+                            <Metric
+                                label="Active models"
+                                value={apiKeyAnalytics.activeModels}
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <Card>
                     <CardHeader>
@@ -640,9 +737,8 @@ export default function ApiKeySettingsPage({
                         }}
                         removePending={removeSelectionState.isLoading}
                         updateProviderStatus={updateProviderStatus}
-                        updateProviderStatusPending={
-                            updateProviderStatusState.isLoading
-                        }
+                        pendingProviderStatusId={pendingProviderStatusId}
+                        setPendingProviderStatusId={setPendingProviderStatusId}
                         updateModelStatus={updateModelStatus}
                         pendingModelStatusKey={pendingModelStatusKey}
                         setPendingModelStatusKey={setPendingModelStatusKey}
@@ -692,7 +788,7 @@ export default function ApiKeySettingsPage({
                                 </div>
                             </div>
                             <Button
-                                variant={item.active ? "secondary" : "primary"}
+                                variant={item.active ? "danger" : "success"}
                                 size="sm"
                                 disabled={
                                     pendingModelStatusKey ===
@@ -722,8 +818,13 @@ export default function ApiKeySettingsPage({
                                         );
                                     }
                                 }}
+                                title={
+                                    item.active
+                                        ? "Disable model"
+                                        : "Enable model"
+                                }
                             >
-                                <PowerIcon size={16} />{" "}
+                                <PowerIcon size={18} />{" "}
                                 {item.active ? "Disable" : "Enable"}
                             </Button>
                         </div>
@@ -945,7 +1046,8 @@ function ProviderSelectionCard({
     onRemove,
     removePending,
     updateProviderStatus,
-    updateProviderStatusPending,
+    pendingProviderStatusId,
+    setPendingProviderStatusId,
     updateModelStatus,
     pendingModelStatusKey,
     setPendingModelStatusKey,
@@ -959,7 +1061,8 @@ function ProviderSelectionCard({
     updateProviderStatus: ReturnType<
         typeof useUpdateApiKeyProviderStatusMutation
     >[0];
-    updateProviderStatusPending: boolean;
+    pendingProviderStatusId: string | null;
+    setPendingProviderStatusId: Dispatch<SetStateAction<string | null>>;
     updateModelStatus: ReturnType<typeof useUpdateApiKeyModelStatusMutation>[0];
     pendingModelStatusKey: string | null;
     setPendingModelStatusKey: Dispatch<SetStateAction<string | null>>;
@@ -991,37 +1094,50 @@ function ProviderSelectionCard({
                         {expanded ? "Collapse" : "Configure"}
                     </Button>
                     <Button
-                        variant="ghost"
+                        variant="secondary"
                         size="icon"
-                        aria-label={
+                        className={`${
                             selection.active
-                                ? "Disable provider selection"
-                                : "Enable provider selection"
-                        }
-                        disabled={updateProviderStatusPending}
+                                ? "text-(--color-status-error) hover:opacity-90"
+                                : "text-(--color-status-success) hover:opacity-90"
+                        } p-2`}
+                        disabled={pendingProviderStatusId === selection.id}
                         onClick={async () => {
+                            const nextActive = !selection.active;
+                            setPendingProviderStatusId(selection.id);
                             try {
                                 await updateProviderStatus({
                                     apiKeyId,
                                     providerId: selection.providerId,
-                                    active: !selection.active,
+                                    active: nextActive,
                                 }).unwrap();
                                 toast.success(
-                                    selection.active
-                                        ? "Provider disabled"
-                                        : "Provider enabled",
+                                    nextActive
+                                        ? "Provider enabled"
+                                        : "Provider disabled",
                                 );
                             } catch {
                                 toast.error("Could not update provider");
+                            } finally {
+                                setPendingProviderStatusId((current) =>
+                                    current === selection.id ? null : current,
+                                );
                             }
                         }}
+                        title={
+                            selection.active
+                                ? "Disable provider"
+                                : "Enable provider"
+                        }
                     >
-                        <PowerIcon size={18} />
+                        <PowerIcon size={20} />
+                        {/* {selection.active ? "Disable" : "Enable"} */}
                     </Button>
                     <Button
                         variant="ghost"
                         size="icon"
                         aria-label="Remove provider selection"
+                        title="Remove provider selection"
                         disabled={removePending}
                         onClick={onRemove}
                     >
@@ -1119,8 +1235,11 @@ function ProviderModelConfigurator({
                             </div>
                             <Button
                                 type="button"
-                                variant={active ? "secondary" : "primary"}
+                                variant={active ? "danger" : "success"}
                                 size="sm"
+                                title={
+                                    active ? "Disable model" : "Enable model"
+                                }
                                 disabled={
                                     selectModelsState.isLoading ||
                                     deselectModelsState.isLoading ||
@@ -1166,7 +1285,7 @@ function ProviderModelConfigurator({
                                 ) : (
                                     <PowerIcon size={16} />
                                 )}{" "}
-                                {active ? "Active" : "Inactive"}
+                                {active ? "Disable" : "Enable"}
                             </Button>
                         </div>
                         <div className="flex flex-wrap gap-2">

@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatNumber(value: number | null | undefined) {
-    return new Intl.NumberFormat("en", { maximumFractionDigits: 1 }).format(value ?? 0);
+    return new Intl.NumberFormat("en", { maximumFractionDigits: 1 }).format(value ?? 0).toString().padStart(2, "0");
 }
 
 export function formatDate(value: string | null | undefined) {

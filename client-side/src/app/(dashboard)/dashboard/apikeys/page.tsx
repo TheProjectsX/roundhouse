@@ -72,7 +72,7 @@ export default function ApiKeysPage() {
                                 </div>
                                 <div className="mt-3 flex min-h-11 items-center gap-2 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3">
                                     <code className="min-w-0 flex-1 truncate font-mono text-sm font-semibold text-(--color-text-primary)">
-                                        {item.key}
+                                         {item.key.slice(0, 11)}****{item.key.slice(-5)}
                                     </code>
                                     <Button
                                         variant="ghost"
