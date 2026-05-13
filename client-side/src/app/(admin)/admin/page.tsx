@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import {
     useGetAdminAnalyticsQuery,
     useGetAdminUsersQuery,
-} from "@/shared/store/api";
+} from "@/shared/store/features/api/roundhouseApi";
 import { StatusBadge } from "@/shared/components/ui/badge";
 
 export default function AdminDashboardPage() {

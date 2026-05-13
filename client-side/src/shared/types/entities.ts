@@ -130,11 +130,14 @@ export interface ProviderListItem {
     modelsCount: number;
     activeModelsCount: number;
     connected: boolean;
+    connectedApiCount: number;
     active: boolean;
     isCustom: boolean;
     createdAt: string;
     updatedAt: string;
 }
+
+
 
 export interface ProviderModelListItem {
     id: string;

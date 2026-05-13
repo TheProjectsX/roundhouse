@@ -16,7 +16,7 @@ import {
     useGetApiKeysQuery,
     useGetKeysManagerQuery,
     useGetProvidersQuery,
-} from "@/shared/store/api";
+} from "@/shared/store/features/api/roundhouseApi";
 import { formatDate, formatNumber } from "@/shared/lib/utils";
 import { routes } from "@/shared/constants/routes";
 

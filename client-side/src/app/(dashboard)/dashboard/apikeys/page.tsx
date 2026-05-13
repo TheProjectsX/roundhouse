@@ -23,7 +23,7 @@ import {
     useDeleteApiKeyMutation,
     useGetApiKeysQuery,
     useUpdateApiKeyStatusMutation,
-} from "@/shared/store/api";
+} from "@/shared/store/features/api/roundhouseApi";
 import { formatDate, formatNumber } from "@/shared/lib/utils";
 import { RoundhouseMethod } from "@/shared/types/enums";
 import { routes } from "@/shared/constants/routes";

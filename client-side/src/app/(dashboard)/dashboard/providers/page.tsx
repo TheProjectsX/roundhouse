@@ -29,7 +29,7 @@ import {
     useUpdateCustomProviderMutation,
     useUpdateCustomProviderStatusMutation,
     useUpdateProviderModelMutation,
-} from "@/shared/store/api";
+} from "@/shared/store/features/api/roundhouseApi";
 import { formatDate } from "@/shared/lib/utils";
 import { ContentStatus, ProviderType } from "@/shared/types/enums";
 import type { ProviderListItem } from "@/shared/types/entities";

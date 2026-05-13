@@ -4,7 +4,7 @@ import { PageHeader } from "@/shared/components/layout/page-header";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { StatusBadge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { useDeleteAdminUserMutation, useGetAdminUsersQuery, useUpdateAdminUserStatusMutation } from "@/shared/store/api";
+import { useDeleteAdminUserMutation, useGetAdminUsersQuery, useUpdateAdminUserStatusMutation } from "@/shared/store/features/api/roundhouseApi";
 import { formatDate } from "@/shared/lib/utils";
 import { UserStatus } from "@/shared/types/enums";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ export default function AdminUsersPage() {
             <PageHeader title="Users" description="Inspect users, status, API keys, and selected models." />
             <Card>
                 <CardContent className="overflow-x-auto pt-5">
-                    <table className="w-full min-w-[820px] text-left text-sm">
+                    <table className="w-full min-w-205 text-left text-sm">
                         <thead className="text-xs text-(--color-text-muted)">
                             <tr>
                                 <th className="pb-3 font-medium">User</th>

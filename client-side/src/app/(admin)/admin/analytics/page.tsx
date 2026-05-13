@@ -2,7 +2,7 @@
 
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
-import { useGetAdminAnalyticsQuery } from "@/shared/store/api";
+import { useGetAdminAnalyticsQuery } from "@/shared/store/features/api/roundhouseApi";
 
 export default function AdminAnalyticsPage() {
     const { data } = useGetAdminAnalyticsQuery();

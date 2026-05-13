@@ -16,7 +16,7 @@ import {
     useChangePasswordMutation,
     useGetMeQuery,
     useUpdateMeMutation,
-} from "@/shared/store/api";
+} from "@/shared/store/features/api/roundhouseApi";
 
 export default function SettingsPage() {
     const { data: user } = useGetMeQuery();

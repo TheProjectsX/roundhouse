@@ -14,8 +14,8 @@ import {
     useDeleteAdminProviderMutation,
     useGetAdminProvidersQuery,
     useUpdateAdminProviderStatusMutation,
-    useCreateAdminProviderMutation as useUpdateAdminProviderMutation,
-} from "@/shared/store/api";
+    useUpdateCustomProviderMutation,
+} from "@/shared/store/features/api/roundhouseApi";
 import { ContentStatus, ProviderType } from "@/shared/types/enums";
 
 export default function AdminProvidersPage() {
@@ -23,7 +23,7 @@ export default function AdminProvidersPage() {
     const [showCreate, setShowCreate] = useState(false);
     const [editingProvider, setEditingProvider] = useState<(typeof providers)[0] | null>(null);
     const [createProvider, createState] = useCreateAdminProviderMutation();
-    const [updateProvider, updateState] = useCreateAdminProviderMutation();
+    const [updateProvider, updateState] = useUpdateCustomProviderMutation();
     const [updateStatus, updateStatusState] = useUpdateAdminProviderStatusMutation();
     const [deleteProvider, deleteState] = useDeleteAdminProviderMutation();
 
@@ -237,7 +237,7 @@ function EditAdminProviderModal({
 }: {
     provider: any;
     onClose: () => void;
-    updateProvider: ReturnType<typeof useCreateAdminProviderMutation>[0];
+    updateProvider: ReturnType<typeof useUpdateCustomProviderMutation>[0];
     isLoading: boolean;
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -274,10 +274,12 @@ function EditAdminProviderModal({
                     try {
                         await updateProvider({
                             id: provider.id,
-                            name,
-                            code: code || undefined,
-                            description: description || undefined,
-                            baseApi,
+                            body: {
+                                name,
+                                code: code || undefined,
+                                description: description || undefined,
+                                baseApi,
+                            },
                         }).unwrap();
                         toast.success("Provider updated");
                         onClose();
