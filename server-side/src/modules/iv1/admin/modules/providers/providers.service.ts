@@ -408,6 +408,7 @@ export class AdminProvidersService {
             code: provider.code,
             name: provider.name,
             description: provider.description,
+            baseApi: provider.baseApi,
             free: provider.free,
             type: provider.type,
             status: provider.status,
