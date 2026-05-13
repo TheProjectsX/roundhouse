@@ -30,7 +30,7 @@ export function Topbar({ admin = false }: { admin?: boolean }) {
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_92%,transparent)] px-4 backdrop-blur-xl lg:px-6">
             <div>
                 <p className="text-xs font-medium uppercase text-(--color-text-muted)">
-                    {admin ? "Admin Console" : "Control Plane"}
+                    {admin ? "Admin Console" : "Control Panal"}
                 </p>
                 <p className="text-sm font-medium text-(--color-text-secondary)">
                     {user?.name ?? "Roundhouse Operator"}

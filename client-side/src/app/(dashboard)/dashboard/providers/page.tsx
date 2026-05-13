@@ -3,6 +3,7 @@
 import {
     CheckCircleIcon,
     CircleIcon,
+    DotsThreeVerticalIcon,
     PencilIcon,
     PlugIcon,
     PlusIcon,
@@ -516,6 +517,7 @@ function ProviderModelsModal({
         provider.id,
     );
     const [editModel, setEditModel] = useState<any>(null);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [deleteModel, deleteModelState] = useDeleteProviderModelMutation();
 
     return (
@@ -537,7 +539,10 @@ function ProviderModelsModal({
                     Close
                 </Button>
             </div>
-            <div className="grid max-h-[70dvh] gap-3 overflow-y-auto p-5 md:grid-cols-2">
+            <div 
+                className="grid max-h-[70dvh] gap-3 overflow-y-auto p-5 md:grid-cols-2"
+                onClick={() => setOpenMenuId(null)}
+            >
                 {isLoading
                     ? Array.from({ length: 6 }).map((_, index) => (
                           <Skeleton key={index} className="h-28" />
@@ -556,9 +561,85 @@ function ProviderModelsModal({
                                           {model.code}
                                       </p>
                                   </div>
-                                  <StatusBadge status={model.status} />
+                                  <div className="flex items-center gap-2">
+                                      <StatusBadge status={model.status} />
+                                      {provider.isCustom ? (
+                                          <div className="relative">
+                                              <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  aria-label="Model options"
+                                                  onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setOpenMenuId(
+                                                          openMenuId === model.id
+                                                              ? null
+                                                              : model.id,
+                                                      );
+                                                  }}
+                                              >
+                                                  <DotsThreeVerticalIcon size={16} />
+                                              </Button>
+                                              {openMenuId === model.id ? (
+                                                  <div 
+                                                      className="absolute right-0 top-full z-10 mt-1 rounded-md border border-(--color-border-primary) bg-(--color-bg-primary) shadow-lg"
+                                                      onClick={(e) => e.stopPropagation()}
+                                                  >
+                                                      <Button
+                                                          variant="ghost"
+                                                          size="sm"
+                                                          className="w-full justify-start rounded-none rounded-t-md px-3"
+                                                          aria-label="Edit model"
+                                                          onClick={() => {
+                                                              setEditModel(
+                                                                  model,
+                                                              );
+                                                              setOpenMenuId(null);
+                                                          }}
+                                                      >
+                                                          <PencilIcon size={14} />
+                                                          Edit
+                                                      </Button>
+                                                      <Button
+                                                          variant="ghost"
+                                                          size="sm"
+                                                          className="w-full justify-start rounded-none rounded-b-md px-3 text-(--color-status-error)"
+                                                          aria-label="Delete model"
+                                                          disabled={
+                                                              deleteModelState.isLoading
+                                                          }
+                                                          onClick={async () => {
+                                                              if (
+                                                                  !window.confirm(
+                                                                      `Delete ${model.name}?`,
+                                                                  )
+                                                              )
+                                                                  return;
+                                                              try {
+                                                                  await deleteModel(
+                                                                      model.id,
+                                                                  ).unwrap();
+                                                                  toast.success(
+                                                                      "Model deleted",
+                                                                  );
+                                                              } catch {
+                                                                  toast.error(
+                                                                      "Could not delete model",
+                                                                  );
+                                                              }
+                                                              setOpenMenuId(null);
+                                                          }}
+                                                      >
+                                                          <TrashIcon size={14} />
+                                                          Delete
+                                                      </Button>
+                                                  </div>
+                                              ) : null}
+                                          </div>
+                                      ) : null}
+                                  </div>
                               </div>
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex gap-2 overflow-x-auto pb-2">
                                   {model.bestFor.length > 0 ? (
                                       model.bestFor.map((item) => (
                                           <Badge key={item}>{item}</Badge>
@@ -578,46 +659,6 @@ function ProviderModelsModal({
                                       </Badge>
                                   ) : null}
                               </div>
-                              {provider.isCustom ? (
-                                  <div className="flex justify-end gap-1 border-t border-(--color-border-subtle) pt-2">
-                                      <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          aria-label="Edit model"
-                                          onClick={() => setEditModel(model)}
-                                      >
-                                          <PencilIcon size={14} />
-                                      </Button>
-                                      <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          aria-label="Delete model"
-                                          disabled={deleteModelState.isLoading}
-                                          onClick={async () => {
-                                              if (
-                                                  !window.confirm(
-                                                      `Delete ${model.name}?`,
-                                                  )
-                                              )
-                                                  return;
-                                              try {
-                                                  await deleteModel(
-                                                      model.id,
-                                                  ).unwrap();
-                                                  toast.success(
-                                                      "Model deleted",
-                                                  );
-                                              } catch {
-                                                  toast.error(
-                                                      "Could not delete model",
-                                                  );
-                                              }
-                                          }}
-                                      >
-                                          <TrashIcon size={14} />
-                                      </Button>
-                                  </div>
-                              ) : null}
                           </div>
                       ))}
                 {!isLoading && models.length === 0 ? (

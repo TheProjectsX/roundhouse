@@ -1,6 +1,6 @@
 "use client";
 
-import { StackIcon, TrashIcon } from "@phosphor-icons/react";
+import { PenIcon, StackIcon, TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
@@ -14,14 +14,17 @@ import {
     useDeleteAdminProviderMutation,
     useGetAdminProvidersQuery,
     useUpdateAdminProviderStatusMutation,
+    useCreateAdminProviderMutation as useUpdateAdminProviderMutation,
 } from "@/shared/store/api";
 import { ContentStatus, ProviderType } from "@/shared/types/enums";
 
 export default function AdminProvidersPage() {
     const { data: providers = [] } = useGetAdminProvidersQuery();
     const [showCreate, setShowCreate] = useState(false);
+    const [editingProvider, setEditingProvider] = useState<(typeof providers)[0] | null>(null);
     const [createProvider, createState] = useCreateAdminProviderMutation();
-    const [updateStatus, updateState] = useUpdateAdminProviderStatusMutation();
+    const [updateProvider, updateState] = useCreateAdminProviderMutation();
+    const [updateStatus, updateStatusState] = useUpdateAdminProviderStatusMutation();
     const [deleteProvider, deleteState] = useDeleteAdminProviderMutation();
 
     return (
@@ -40,6 +43,14 @@ export default function AdminProvidersPage() {
                     onClose={() => setShowCreate(false)}
                     createProvider={createProvider}
                     isLoading={createState.isLoading}
+                />
+            ) : null}
+            {editingProvider ? (
+                <EditAdminProviderModal
+                    provider={editingProvider}
+                    onClose={() => setEditingProvider(null)}
+                    updateProvider={updateProvider}
+                    isLoading={updateState.isLoading}
                 />
             ) : null}
             <section className="grid gap-4">
@@ -73,7 +84,7 @@ export default function AdminProvidersPage() {
                                 </div>
                                 <select
                                     value={provider.status}
-                                    disabled={updateState.isLoading}
+                                    disabled={updateStatusState.isLoading}
                                     className="min-h-9 rounded-sm border border-(--color-border-primary) bg-(--color-bg-input) px-2 text-xs text-(--color-text-primary) outline-none"
                                     onChange={async (event) => {
                                         try {
@@ -101,7 +112,19 @@ export default function AdminProvidersPage() {
                                     )}
                                 </select>
                                 <Button
-                                    variant="ghost"
+                                    variant="primary:outline"
+                                    size="icon"
+                                    aria-label="Edit provider"
+                                    disabled={updateStatusState.isLoading}
+                                    onClick={async () => {
+                                        setEditingProvider(provider);
+                                    }}
+                                >
+                                    <PenIcon size={18} />
+                                </Button>
+
+                                <Button
+                                    variant="danger:outline"
                                     size="icon"
                                     aria-label="Delete provider"
                                     disabled={deleteState.isLoading}
@@ -200,6 +223,78 @@ function CreateAdminProviderModal({
                 <div className="flex justify-end gap-2 border-t border-(--color-border-subtle) pt-4">
                     <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
                     <Button type="submit" disabled={isLoading || isSubmitting}>Create</Button>
+                </div>
+            </form>
+        </Modal>
+    );
+}
+
+function EditAdminProviderModal({
+    provider,
+    onClose,
+    updateProvider,
+    isLoading,
+}: {
+    provider: any;
+    onClose: () => void;
+    updateProvider: ReturnType<typeof useCreateAdminProviderMutation>[0];
+    isLoading: boolean;
+}) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    return (
+        <Modal
+            onClose={onClose}
+            ariaLabel="Edit provider"
+            showCloseButton
+            className="w-full max-w-xl"
+        >
+            <div className="border-b border-(--color-border-primary) p-5">
+                <h2 className="text-lg font-semibold">Edit Provider</h2>
+                <p className="mt-1 text-sm text-(--color-text-secondary)">Update provider details.</p>
+            </div>
+            <form
+                className="grid gap-4 p-5"
+                onSubmit={async (event) => {
+                    event.preventDefault();
+                    if (isSubmitting) return;
+
+                    const form = new FormData(event.currentTarget);
+                    const name = String(form.get("name") ?? "").trim();
+                    const baseApi = String(form.get("baseApi") ?? "").trim();
+                    const code = String(form.get("code") ?? "").trim();
+                    const description = String(form.get("description") ?? "").trim();
+
+                    if (!name || !baseApi) {
+                        toast.error("Provider name and base API are required");
+                        return;
+                    }
+
+                    setIsSubmitting(true);
+                    try {
+                        await updateProvider({
+                            id: provider.id,
+                            name,
+                            code: code || undefined,
+                            description: description || undefined,
+                            baseApi,
+                        }).unwrap();
+                        toast.success("Provider updated");
+                        onClose();
+                    } catch {
+                        toast.error("Could not update provider");
+                    } finally {
+                        setIsSubmitting(false);
+                    }
+                }}
+            >
+                <Input name="name" placeholder="Provider name" defaultValue={provider.name} required />
+                <Input name="baseApi" type="url" placeholder="https://api.example.com/v1" defaultValue={provider.baseApi} required />
+                <Input name="code" placeholder="provider-code" defaultValue={provider.code || ""} />
+                <Input name="description" placeholder="Description" defaultValue={provider.description || ""} />
+                <div className="flex justify-end gap-2 border-t border-(--color-border-subtle) pt-4">
+                    <Button variant="secondary" type="button" onClick={onClose}>Cancel</Button>
+                    <Button type="submit" disabled={isLoading || isSubmitting}>Update</Button>
                 </div>
             </form>
         </Modal>

@@ -38,10 +38,10 @@ const buttonVariants = cva(
             },
 
             size: {
-                xs: "min-h-8 px-2 text-xs",
-                sm: "min-h-8 px-3 text-sm",
-                md: "min-h-9 px-4 text-base",
-                lg: "min-h-10 px-5 text-lg",
+                xs: "min-h-8 px-2 !text-xs",
+                sm: "min-h-8 px-3 !text-sm",
+                md: "min-h-9 px-4 !text-base",
+                lg: "min-h-10 px-5 !text-lg",
 
                 icon: "size-10 p-0",
             },
