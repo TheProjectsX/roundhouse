@@ -27,13 +27,13 @@ import { AdminProvidersService } from "./providers.service";
 @Controller("providers")
 @UseGuards()
 export class AdminProvidersController {
-    constructor(private svc: AdminProvidersService) {}
+    constructor(private adminProvidersService: AdminProvidersService) {}
 
     @Roles("ADMIN")
     @Get()
     @ApiOperation({ summary: "List providers (admin)" })
     async fetchAllProviders(@Query() query: Record<string, string>) {
-        const result = await this.svc.fetchAllProviders(query);
+        const result = await this.adminProvidersService.fetchAllProviders(query);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -46,7 +46,7 @@ export class AdminProvidersController {
     @Get(":id")
     @ApiOperation({ summary: "Get provider details (admin)" })
     async fetchSingleProvider(@Param("id") id: string) {
-        const result = await this.svc.fetchSingleProvider(id);
+        const result = await this.adminProvidersService.fetchSingleProvider(id);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -58,7 +58,7 @@ export class AdminProvidersController {
     @Post()
     @ApiOperation({ summary: "Create provider (admin)" })
     async createProvider(@Body() payload: CreateProviderDto) {
-        const result = await this.svc.createProvider(payload);
+        const result = await this.adminProvidersService.createProvider(payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.CREATED,
             message: result.message,
@@ -73,7 +73,7 @@ export class AdminProvidersController {
         @Param("id") id: string,
         @Body() payload: UpdateProviderDto,
     ) {
-        const result = await this.svc.updateProvider(id, payload);
+        const result = await this.adminProvidersService.updateProvider(id, payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -88,7 +88,7 @@ export class AdminProvidersController {
         @Param("id") id: string,
         @Body() payload: UpdateProviderStatusDto,
     ) {
-        const result = await this.svc.updateProviderStatus(id, payload);
+        const result = await this.adminProvidersService.updateProviderStatus(id, payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -100,7 +100,7 @@ export class AdminProvidersController {
     @Delete(":id")
     @ApiOperation({ summary: "Delete provider (admin)" })
     async deleteProvider(@Param("id") id: string) {
-        const result = await this.svc.deleteProvider(id);
+        const result = await this.adminProvidersService.deleteProvider(id);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -114,7 +114,7 @@ export class AdminProvidersController {
         @Param("id") id: string,
         @Query() query: Record<string, string>,
     ) {
-        const result = await this.svc.fetchAllProviderModels(id, query);
+        const result = await this.adminProvidersService.fetchAllProviderModels(id, query);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -130,7 +130,7 @@ export class AdminProvidersController {
         @Param("id") id: string,
         @Body() payload: CreateProviderModelDto,
     ) {
-        const result = await this.svc.createProviderModel(id, payload);
+        const result = await this.adminProvidersService.createProviderModel(id, payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.CREATED,
             message: result.message,
@@ -145,7 +145,7 @@ export class AdminProvidersController {
         @Param("modelId") modelId: string,
         @Body() payload: UpdateProviderModelDto,
     ) {
-        const result = await this.svc.updateProviderModel(modelId, payload);
+        const result = await this.adminProvidersService.updateProviderModel(modelId, payload);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
@@ -160,7 +160,7 @@ export class AdminProvidersController {
         @Param("modelId") modelId: string,
         @Body() payload: UpdateProviderModelStatusDto,
     ) {
-        const result = await this.svc.updateProviderModelStatus(
+        const result = await this.adminProvidersService.updateProviderModelStatus(
             modelId,
             payload,
         );
@@ -176,7 +176,7 @@ export class AdminProvidersController {
     @Delete("models/:modelId")
     @ApiOperation({ summary: "Delete model (admin)" })
     async deleteProviderModel(@Param("modelId") modelId: string) {
-        const result = await this.svc.deleteProviderModel(modelId);
+        const result = await this.adminProvidersService.deleteProviderModel(modelId);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,

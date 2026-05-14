@@ -188,7 +188,11 @@ export class AdminProvidersService {
                 builder.countTotal(),
             ]);
 
-            return { message: "Models fetched", data, pagination };
+            const enriched = await Promise.all(
+                data.map((model) => this.formatModelSummary(model, false)),
+            );
+
+            return { message: "Models fetched", data: enriched, pagination };
         }
 
         const builder = new QueryBuilder<
@@ -209,7 +213,40 @@ export class AdminProvidersService {
             builder.countTotal(),
         ]);
 
-        return { message: "Models fetched", data, pagination };
+        const enriched = await Promise.all(
+            data.map((model) => this.formatModelSummary(model, true)),
+        );
+
+        return { message: "Models fetched", data: enriched, pagination };
+    }
+
+    private async formatModelSummary(model: any, isCustom: boolean) {
+        const stats = await this.prisma.modelSelection.aggregate({
+            where: isCustom ? { userModelId: model.id } : { modelId: model.id },
+            _sum: {
+                tokenUsage: true,
+                successCount: true,
+                failureCount: true,
+            },
+            _max: {
+                lastUsedAt: true,
+            },
+        });
+
+        const totalSuccess = stats._sum.successCount || 0;
+        const totalFailure = stats._sum.failureCount || 0;
+        const totalRequests = totalSuccess + totalFailure;
+        const successRate =
+            totalRequests > 0 ? (totalSuccess / totalRequests) * 100 : 0;
+
+        return {
+            ...model,
+            totalTokenUsage: stats._sum.tokenUsage || 0,
+            totalSuccessCount: totalSuccess,
+            totalFailureCount: totalFailure,
+            successRate,
+            lastUsedAt: stats._max.lastUsedAt,
+        };
     }
 
     async createProviderModel(
@@ -313,7 +350,11 @@ export class AdminProvidersService {
             Prisma.$UserProviderPayload
         >(this.prisma.userProvider, query)
             .search(["name", "description", "code"])
-            .filter({ exacts: ["status", "type"], booleans: ["free"] })
+            .filter({
+                exacts: ["status", "type"],
+                booleans: ["free"],
+                exclude: ["customOnly"],
+            })
             .sort()
             .paginate();
     }
@@ -370,38 +411,70 @@ export class AdminProvidersService {
         provider: Provider | UserProvider,
         isCustom: boolean,
     ) {
-        const [modelsCount, activeModelsCount, connectedApiCount] =
-            await Promise.all([
-                isCustom
-                    ? this.prisma.userModel.count({
-                          where: {
-                              provider: provider.code,
-                              userId: (provider as UserProvider).userId,
-                          },
-                      })
-                    : this.prisma.model.count({
-                          where: { provider: provider.code },
-                      }),
-                isCustom
-                    ? this.prisma.userModel.count({
-                          where: {
-                              provider: provider.code,
-                              userId: (provider as UserProvider).userId,
-                              status: ContentStatus.ACTIVE,
-                          },
-                      })
-                    : this.prisma.model.count({
-                          where: {
-                              provider: provider.code,
-                              status: ContentStatus.ACTIVE,
-                          },
-                      }),
-                this.prisma.providerSelection.count({
-                    where: isCustom
+        const [
+            modelsCount,
+            activeModelsCount,
+            connectedApiCount,
+            stats,
+            uniqueUsers,
+        ] = await Promise.all([
+            isCustom
+                ? this.prisma.userModel.count({
+                      where: {
+                          provider: provider.code,
+                          userId: (provider as UserProvider).userId,
+                      },
+                  })
+                : this.prisma.model.count({
+                      where: { provider: provider.code },
+                  }),
+            isCustom
+                ? this.prisma.userModel.count({
+                      where: {
+                          provider: provider.code,
+                          userId: (provider as UserProvider).userId,
+                          status: ContentStatus.ACTIVE,
+                      },
+                  })
+                : this.prisma.model.count({
+                      where: {
+                          provider: provider.code,
+                          status: ContentStatus.ACTIVE,
+                      },
+                  }),
+            this.prisma.providerSelection.count({
+                where: isCustom
+                    ? { userProviderId: provider.id }
+                    : { providerId: provider.id },
+            }),
+            this.prisma.modelSelection.aggregate({
+                where: {
+                    providerSelection: isCustom
                         ? { userProviderId: provider.id }
                         : { providerId: provider.id },
-                }),
-            ]);
+                },
+                _sum: {
+                    tokenUsage: true,
+                    successCount: true,
+                    failureCount: true,
+                },
+                _max: {
+                    lastUsedAt: true,
+                },
+            }),
+            this.prisma.providerSelection.groupBy({
+                by: ["userId"],
+                where: isCustom
+                    ? { userProviderId: provider.id }
+                    : { providerId: provider.id },
+            }),
+        ]);
+
+        const totalSuccess = stats._sum.successCount || 0;
+        const totalFailure = stats._sum.failureCount || 0;
+        const totalRequests = totalSuccess + totalFailure;
+        const successRate =
+            totalRequests > 0 ? (totalSuccess / totalRequests) * 100 : 0;
 
         return {
             id: provider.id,
@@ -415,6 +488,12 @@ export class AdminProvidersService {
             modelsCount,
             activeModelsCount,
             connectedApiCount,
+            totalTokenUsage: stats._sum.tokenUsage || 0,
+            totalSuccessCount: totalSuccess,
+            totalFailureCount: totalFailure,
+            successRate,
+            uniqueUsersCount: uniqueUsers.length,
+            lastUsedAt: stats._max.lastUsedAt,
             isCustom,
             createdAt: provider.createdAt,
             updatedAt: provider.updatedAt,
