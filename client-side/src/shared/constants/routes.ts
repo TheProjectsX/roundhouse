@@ -10,6 +10,7 @@ export const routes = {
     docs: "/docs",
     admin: "/admin",
     adminProviders: "/admin/providers",
+    adminCustomProviders: "/admin/custom-providers",
     adminUsers: "/admin/users",
     adminAnalytics: "/admin/analytics",
 } as const;

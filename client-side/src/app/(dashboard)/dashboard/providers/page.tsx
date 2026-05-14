@@ -209,7 +209,12 @@ export default function ProvidersPage() {
                                                 </Button>
                                             </div>
                                             <Button
-                                                variant={provider.status === ContentStatus.ACTIVE ? "danger:outline" : "success:outline"}
+                                                variant={
+                                                    provider.status ===
+                                                    ContentStatus.ACTIVE
+                                                        ? "danger:outline"
+                                                        : "success:outline"
+                                                }
                                                 size="sm"
                                                 disabled={updateState.isLoading}
                                                 onClick={async () => {
@@ -539,7 +544,7 @@ function ProviderModelsModal({
                     Close
                 </Button>
             </div>
-            <div 
+            <div
                 className="grid max-h-[70dvh] gap-3 overflow-y-auto p-5 md:grid-cols-2"
                 onClick={() => setOpenMenuId(null)}
             >
@@ -572,18 +577,23 @@ function ProviderModelsModal({
                                                   onClick={(e) => {
                                                       e.stopPropagation();
                                                       setOpenMenuId(
-                                                          openMenuId === model.id
+                                                          openMenuId ===
+                                                              model.id
                                                               ? null
                                                               : model.id,
                                                       );
                                                   }}
                                               >
-                                                  <DotsThreeVerticalIcon size={16} />
+                                                  <DotsThreeVerticalIcon
+                                                      size={16}
+                                                  />
                                               </Button>
                                               {openMenuId === model.id ? (
-                                                  <div 
+                                                  <div
                                                       className="absolute right-0 top-full z-10 mt-1 rounded-md border border-(--color-border-primary) bg-(--color-bg-primary) shadow-lg"
-                                                      onClick={(e) => e.stopPropagation()}
+                                                      onClick={(e) =>
+                                                          e.stopPropagation()
+                                                      }
                                                   >
                                                       <Button
                                                           variant="ghost"
@@ -594,10 +604,14 @@ function ProviderModelsModal({
                                                               setEditModel(
                                                                   model,
                                                               );
-                                                              setOpenMenuId(null);
+                                                              setOpenMenuId(
+                                                                  null,
+                                                              );
                                                           }}
                                                       >
-                                                          <PencilIcon size={14} />
+                                                          <PencilIcon
+                                                              size={14}
+                                                          />
                                                           Edit
                                                       </Button>
                                                       <Button
@@ -627,10 +641,14 @@ function ProviderModelsModal({
                                                                       "Could not delete model",
                                                                   );
                                                               }
-                                                              setOpenMenuId(null);
+                                                              setOpenMenuId(
+                                                                  null,
+                                                              );
                                                           }}
                                                       >
-                                                          <TrashIcon size={14} />
+                                                          <TrashIcon
+                                                              size={14}
+                                                          />
                                                           Delete
                                                       </Button>
                                                   </div>

@@ -168,14 +168,32 @@ export interface UnlockedKey {
 }
 
 export interface AdminAnalytics {
-    users: number;
-    apiKeys: number;
-    globalProviders: number;
-    customProviders: number;
-    models: number;
-    userModels: number;
-    providerSelections: number;
-    providerSelectionApiKeysManagers: number;
+    summary: {
+        users: number;
+        apiKeys: number;
+        globalProviders: number;
+        customProviders: number;
+        models: number;
+        userModels: number;
+        totalTokens: number;
+        totalRequests: number;
+        averageSuccessRate: number;
+    };
+    dailyTrend: {
+        date: string;
+        tokens: number;
+        requests: number;
+        success: number;
+        failure: number;
+    }[];
+    topProviders: {
+        id: string | null;
+        name: string;
+        code: string;
+        isCustom: boolean;
+        successCount: number;
+        tokenUsage: number;
+    }[];
 }
 
 export interface AdminUserListItem {

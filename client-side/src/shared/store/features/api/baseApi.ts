@@ -24,6 +24,6 @@ const liveBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryErro
 export const roundhouseApi = createApi({
     reducerPath: "roundhouseApi",
     baseQuery: liveBaseQuery,
-    tagTypes: ["Me", "ApiKeys", "Providers", "KeysManager", "Admin"],
+    tagTypes: ["Me", "ApiKeys", "Providers", "KeysManager", "Admin", "Models"],
     endpoints: () => ({}),
 });

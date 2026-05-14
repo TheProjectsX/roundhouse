@@ -28,25 +28,25 @@ export default function AdminDashboardPage() {
             <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <StatCard
                     label="Users"
-                    value={analytics?.users ?? 0}
+                    value={analytics?.summary.users ?? 0}
                     icon={UsersIcon}
                 />
                 <StatCard
                     label="API Keys"
-                    value={analytics?.apiKeys ?? 0}
+                    value={analytics?.summary.apiKeys ?? 0}
                     icon={KeyIcon}
                 />
                 <StatCard
                     label="Providers"
                     value={
-                        (analytics?.globalProviders ?? 0) +
-                        (analytics?.customProviders ?? 0)
+                        (analytics?.summary.globalProviders ?? 0) +
+                        (analytics?.summary.customProviders ?? 0)
                     }
                     icon={StackIcon}
                 />
                 <StatCard
-                    label="Selections"
-                    value={analytics?.providerSelections ?? 0}
+                    label="Requests"
+                    value={analytics?.summary.totalRequests ?? 0}
                     icon={ChartLineUpIcon}
                 />
             </section>
@@ -59,16 +59,15 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent className="grid gap-3">
                         {[
-                            ["Global models", analytics?.models ?? 0],
-                            ["Custom models", analytics?.userModels ?? 0],
+                            ["Global models", analytics?.summary.models ?? 0],
+                            ["Custom models", analytics?.summary.userModels ?? 0],
                             [
-                                "Linked vault keys",
-                                analytics?.providerSelectionApiKeysManagers ??
-                                    0,
+                                "Total Tokens",
+                                analytics?.summary.totalTokens ?? 0,
                             ],
                             [
                                 "Custom providers",
-                                analytics?.customProviders ?? 0,
+                                analytics?.summary.customProviders ?? 0,
                             ],
                         ].map(([label, value]) => (
                             <div

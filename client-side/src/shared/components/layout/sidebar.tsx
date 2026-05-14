@@ -6,6 +6,7 @@ import {
     BookOpenIcon,
     ChartLineUpIcon,
     GearSixIcon,
+    GlobeIcon,
     HouseIcon,
     KeyIcon,
     ShieldCheckIcon,
@@ -27,6 +28,11 @@ const userNav = [
 const adminNav = [
     { href: routes.admin, label: "Dashboard", icon: ChartLineUpIcon },
     { href: routes.adminProviders, label: "Providers", icon: StackIcon },
+    {
+        href: routes.adminCustomProviders,
+        label: "Custom Providers",
+        icon: GlobeIcon,
+    },
     { href: routes.adminUsers, label: "Users", icon: UsersIcon },
     { href: routes.adminAnalytics, label: "Analytics", icon: ChartLineUpIcon },
 ];
@@ -48,10 +54,8 @@ export function Sidebar({ admin = false }: { admin?: boolean }) {
             </Link>
             <nav className="mt-8 grid gap-1">
                 {nav.map((item) => {
-                    const active =
-                        item.href === routes.dashboard
-                            ? pathname === item.href
-                            : pathname.startsWith(item.href);
+                    const active = pathname === item.href;
+
                     const Icon = item.icon;
 
                     return (
