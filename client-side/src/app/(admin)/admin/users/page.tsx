@@ -8,15 +8,38 @@ import { useDeleteAdminUserMutation, useGetAdminUsersQuery, useUpdateAdminUserSt
 import { formatDate } from "@/shared/lib/utils";
 import { UserStatus } from "@/shared/types/enums";
 import { toast } from "sonner";
+import { UserRow } from "./components/user-row";
 
 export default function AdminUsersPage() {
     const { data: users = [] } = useGetAdminUsersQuery();
     const [updateStatus, updateState] = useUpdateAdminUserStatusMutation();
     const [deleteUser, deleteState] = useDeleteAdminUserMutation();
 
+    const handleUpdateStatus = async (id: string, status: UserStatus) => {
+        try {
+            await updateStatus({ id, status }).unwrap();
+            toast.success("User status updated");
+        } catch {
+            toast.error("Could not update user");
+        }
+    };
+
+    const handleDeleteUser = async (id: string, name: string) => {
+        if (!window.confirm(`Delete ${name}?`)) return;
+        try {
+            await deleteUser(id).unwrap();
+            toast.success("User deleted");
+        } catch {
+            toast.error("Could not delete user");
+        }
+    };
+
     return (
         <>
-            <PageHeader title="Users" description="Inspect users, status, API keys, and selected models." />
+            <PageHeader
+                title="Users"
+                description="Inspect users, status, API keys, and selected models."
+            />
             <Card>
                 <CardContent className="overflow-x-auto pt-5">
                     <table className="w-full min-w-205 text-left text-sm">
@@ -33,56 +56,14 @@ export default function AdminUsersPage() {
                         </thead>
                         <tbody>
                             {users.map((user) => (
-                                <tr key={user.id} className="border-t border-(--color-border-subtle)">
-                                    <td className="py-4">
-                                        <p className="font-medium">{user.name}</p>
-                                        <p className="text-(--color-text-secondary)">{user.email}</p>
-                                    </td>
-                                    <td className="py-4">
-                                        <div className="flex items-center gap-2">
-                                            <StatusBadge status={user.status} />
-                                            <select
-                                                value={user.status}
-                                                disabled={updateState.isLoading}
-                                                className="min-h-9 rounded-sm border border-(--color-border-primary) bg-(--color-bg-input) px-2 text-xs text-(--color-text-primary) outline-none"
-                                                onChange={async (event) => {
-                                                    try {
-                                                        await updateStatus({ id: user.id, status: event.target.value as UserStatus }).unwrap();
-                                                        toast.success("User status updated");
-                                                    } catch {
-                                                        toast.error("Could not update user");
-                                                    }
-                                                }}
-                                            >
-                                                {Object.values(UserStatus).map((status) => (
-                                                    <option key={status} value={status}>{status}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </td>
-                                    <td className="py-4 font-mono">{user.stats.activeApiKeyCount}/{user.stats.apiKeyCount}</td>
-                                    <td className="py-4 font-mono">{user.stats.activeCustomProviderCount}/{user.stats.customProviderCount}</td>
-                                    <td className="py-4 font-mono">{user.stats.selectedModelCount}</td>
-                                    <td className="py-4 text-(--color-text-secondary)">{formatDate(user.createdAt)}</td>
-                                    <td className="py-4 text-right">
-                                        <Button
-                                            variant="secondary"
-                                            size="sm"
-                                            disabled={deleteState.isLoading}
-                                            onClick={async () => {
-                                                if (!window.confirm(`Delete ${user.name}?`)) return;
-                                                try {
-                                                    await deleteUser(user.id).unwrap();
-                                                    toast.success("User deleted");
-                                                } catch {
-                                                    toast.error("Could not delete user");
-                                                }
-                                            }}
-                                        >
-                                            Delete
-                                        </Button>
-                                    </td>
-                                </tr>
+                                <UserRow
+                                    key={user.id}
+                                    user={user}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onDelete={handleDeleteUser}
+                                    isUpdating={updateState.isLoading}
+                                    isDeleting={deleteState.isLoading}
+                                />
                             ))}
                         </tbody>
                     </table>

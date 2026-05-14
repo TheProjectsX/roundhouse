@@ -11,25 +11,26 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { StatCard } from "@/shared/components/data-display/stat-card";
-import { StatusBadge } from "@/shared/components/ui/badge";
 import {
     useGetApiKeysQuery,
     useGetKeysManagerQuery,
     useGetProvidersQuery,
 } from "@/shared/store/features/api/roundhouseApi";
-import { formatDate, formatNumber } from "@/shared/lib/utils";
+import { formatDate } from "@/shared/lib/utils";
 import { routes } from "@/shared/constants/routes";
+import { ApiKeyItem } from "./components/api-key-item";
+import { ReadinessItem } from "./components/readiness-item";
 
 export default function DashboardPage() {
     const { data: apiKeys = [] } = useGetApiKeysQuery();
     const { data: providers = [] } = useGetProvidersQuery();
     const { data: managedKeys = [] } = useGetKeysManagerQuery();
     const totalModels = apiKeys.reduce(
-        (total, item) => total + item.stats.modelCount,
+        (total, item) => total + (item.stats?.modelCount ?? 0),
         0,
     );
     const successfulRequests = apiKeys.reduce(
-        (total, item) => total + item.stats.successfulRequests,
+        (total, item) => total + (item.stats?.successfulRequests ?? 0),
         0,
     );
 
@@ -86,31 +87,7 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent className="grid gap-3">
                         {apiKeys.map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex flex-col gap-3 rounded-md bg-(--color-bg-input) p-4 sm:flex-row sm:items-center sm:justify-between"
-                            >
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-medium">
-                                            {item.name}
-                                        </h3>
-                                        <StatusBadge status={item.active} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-4 text-right font-mono text-sm">
-                                    <span>
-                                        {item.stats.providerCount} providers
-                                    </span>
-                                    <span>{item.stats.modelCount} models</span>
-                                    <span>
-                                        {formatNumber(
-                                            item.stats.successfulRequests,
-                                        )}{" "}
-                                        ok
-                                    </span>
-                                </div>
-                            </div>
+                            <ApiKeyItem key={item.id} item={item} />
                         ))}
                     </CardContent>
                 </Card>
@@ -133,14 +110,20 @@ export default function DashboardPage() {
                                 `${managedKeys.length} provider secrets stored`,
                                 `${providers.filter((item) => item.connected).length} providers connected`,
                                 `Last routing update ${formatDate(apiKeys[0]?.updatedAt)}`,
-                            ].map((item) => (
-                                <li
-                                    key={item}
-                                    className="flex items-center gap-3 rounded-md bg-(--color-bg-input) p-3"
-                                >
-                                    <span className="size-2 rounded-full bg-(--color-accent-primary)" />
-                                    {item}
-                                </li>
+                            ].map((item, index) => (
+                                <ReadinessItem
+                                    key={index}
+                                    item={
+                                        index === 3 ? (
+                                            <span suppressHydrationWarning>
+                                                Last routing update{" "}
+                                                {formatDate(apiKeys[0]?.updatedAt)}
+                                            </span>
+                                        ) : (
+                                            item
+                                        )
+                                    }
+                                />
                             ))}
                         </ol>
                     </CardContent>

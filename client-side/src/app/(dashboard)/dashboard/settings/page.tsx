@@ -6,27 +6,21 @@ import {
     PasswordIcon,
     UserCircleIcon,
 } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
 import {
     useChangePasswordMutation,
     useGetMeQuery,
     useUpdateMeMutation,
 } from "@/shared/store/features/api/roundhouseApi";
+import { ProfileForm } from "./components/profile-form";
+import { SecurityForm } from "./components/security-form";
+import { PreferenceItem } from "./components/preference-item";
 
 export default function SettingsPage() {
     const { data: user } = useGetMeQuery();
-    const [name, setName] = useState("");
     const [updateMe, updateMeState] = useUpdateMeMutation();
     const [changePassword, changePasswordState] = useChangePasswordMutation();
-
-    useEffect(() => {
-        setName(user?.name ?? "");
-    }, [user?.name]);
 
     return (
         <>
@@ -42,37 +36,11 @@ export default function SettingsPage() {
                         </h2>
                     </CardHeader>
                     <CardContent>
-                        <form
-                            className="grid gap-4"
-                            onSubmit={async (event) => {
-                                event.preventDefault();
-                                try {
-                                    await updateMe({ name }).unwrap();
-                                    toast.success("Profile saved");
-                                } catch {
-                                    toast.error("Could not save profile");
-                                }
-                            }}
-                        >
-                            <Input
-                                value={name}
-                                onChange={(event) =>
-                                    setName(event.target.value)
-                                }
-                                aria-label="Name"
-                            />
-                            <Input
-                                value={user?.email ?? ""}
-                                readOnly
-                                aria-label="Email"
-                            />
-                            <Button
-                                type="submit"
-                                disabled={updateMeState.isLoading}
-                            >
-                                Save Profile
-                            </Button>
-                        </form>
+                        <ProfileForm
+                            user={user}
+                            updateMe={updateMe}
+                            isLoading={updateMeState.isLoading}
+                        />
                     </CardContent>
                 </Card>
                 <Card>
@@ -82,71 +50,10 @@ export default function SettingsPage() {
                         </h2>
                     </CardHeader>
                     <CardContent>
-                        <form
-                            className="grid gap-4"
-                            onSubmit={async (event) => {
-                                event.preventDefault();
-                                const form = new FormData(event.currentTarget);
-                                const oldPassword = String(
-                                    form.get("oldPassword") ?? "",
-                                );
-                                const newPassword = String(
-                                    form.get("newPassword") ?? "",
-                                );
-                                const confirmPassword = String(
-                                    form.get("confirmPassword") ?? "",
-                                );
-
-                                if (!oldPassword || !newPassword) {
-                                    toast.error(
-                                        "Current and new password are required",
-                                    );
-                                    return;
-                                }
-
-                                if (newPassword !== confirmPassword) {
-                                    toast.error("New passwords do not match");
-                                    return;
-                                }
-
-                                try {
-                                    await changePassword({
-                                        oldPassword,
-                                        newPassword,
-                                    }).unwrap();
-                                    toast.success("Password changed");
-                                    event.currentTarget.reset();
-                                } catch {
-                                    toast.error("Could not change password");
-                                }
-                            }}
-                        >
-                            <Input
-                                name="oldPassword"
-                                type="password"
-                                placeholder="Current password"
-                                autoComplete="current-password"
-                            />
-                            <Input
-                                name="newPassword"
-                                type="password"
-                                placeholder="New password"
-                                autoComplete="new-password"
-                            />
-                            <Input
-                                name="confirmPassword"
-                                type="password"
-                                placeholder="Confirm new password"
-                                autoComplete="new-password"
-                            />
-                            <Button
-                                type="submit"
-                                variant="secondary"
-                                disabled={changePasswordState.isLoading}
-                            >
-                                Change Password
-                            </Button>
-                        </form>
+                        <SecurityForm
+                            changePassword={changePassword}
+                            isLoading={changePasswordState.isLoading}
+                        />
                     </CardContent>
                 </Card>
                 <Card>
@@ -156,17 +63,17 @@ export default function SettingsPage() {
                         </h2>
                     </CardHeader>
                     <CardContent className="grid gap-3 text-sm">
-                        <Preference
+                        <PreferenceItem
                             icon={MoonIcon}
                             label="Default theme"
                             value="Dark / system aware"
                         />
-                        <Preference
+                        <PreferenceItem
                             icon={BellIcon}
                             label="Operational alerts"
                             value="Enabled for failures"
                         />
-                        <Preference
+                        <PreferenceItem
                             icon={UserCircleIcon}
                             label="Items per page"
                             value="25 rows"
@@ -175,24 +82,5 @@ export default function SettingsPage() {
                 </Card>
             </section>
         </>
-    );
-}
-
-function Preference({
-    icon: Icon,
-    label,
-    value,
-}: {
-    icon: typeof MoonIcon;
-    label: string;
-    value: string;
-}) {
-    return (
-        <div className="flex items-center justify-between rounded-md bg-(--color-bg-input) p-3">
-            <span className="flex items-center gap-2">
-                <Icon size={17} /> {label}
-            </span>
-            <span className="text-(--color-text-secondary)">{value}</span>
-        </div>
     );
 }

@@ -14,6 +14,8 @@ import {
     useGetAdminUsersQuery,
 } from "@/shared/store/features/api/roundhouseApi";
 import { StatusBadge } from "@/shared/components/ui/badge";
+import { EntityItem } from "./components/entity-item";
+import { RecentUserItem } from "./components/recent-user-item";
 
 export default function AdminDashboardPage() {
     const { data: analytics } = useGetAdminAnalyticsQuery();
@@ -70,15 +72,11 @@ export default function AdminDashboardPage() {
                                 analytics?.summary.customProviders ?? 0,
                             ],
                         ].map(([label, value]) => (
-                            <div
+                            <EntityItem
                                 key={label}
-                                className="flex items-center justify-between rounded-md bg-(--color-bg-input) p-3 text-sm"
-                            >
-                                <span>{label}</span>
-                                <span className="font-mono font-semibold">
-                                    {value}
-                                </span>
-                            </div>
+                                label={label as string}
+                                value={value}
+                            />
                         ))}
                     </CardContent>
                 </Card>
@@ -90,26 +88,7 @@ export default function AdminDashboardPage() {
                     </CardHeader>
                     <CardContent className="grid gap-3">
                         {users.map((user) => (
-                            <div
-                                key={user.id}
-                                className="grid gap-3 rounded-md bg-(--color-bg-input) p-3 md:grid-cols-[1fr_auto] md:items-center"
-                            >
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-medium">
-                                            {user.name}
-                                        </h3>
-                                        <StatusBadge status={user.status} />
-                                    </div>
-                                    <p className="text-sm text-(--color-text-secondary)">
-                                        {user.email}
-                                    </p>
-                                </div>
-                                <p className="font-mono text-sm">
-                                    {user.stats.activeApiKeyCount}/
-                                    {user.stats.apiKeyCount} active keys
-                                </p>
-                            </div>
+                            <RecentUserItem key={user.id} user={user} />
                         ))}
                     </CardContent>
                 </Card>

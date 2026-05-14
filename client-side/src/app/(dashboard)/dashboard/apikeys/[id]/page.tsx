@@ -3,44 +3,27 @@
 import Link from "next/link";
 import {
     ArrowLeftIcon,
-    CheckCircleIcon,
-    CopyIcon,
     FloppyDiskIcon,
     FunnelIcon,
-    GearIcon,
     GitBranchIcon,
-    KeyIcon,
-    PowerIcon,
     SlidersHorizontalIcon,
-    StackIcon,
-    TrashIcon,
     WarningCircleIcon,
 } from "@phosphor-icons/react";
-import {
-    use,
-    useEffect,
-    useMemo,
-    useState,
-    type Dispatch,
-    type SetStateAction,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
-import { Badge, StatusBadge } from "@/shared/components/ui/badge";
-import { Skeleton } from "@/shared/components/ui/skeleton";
+import { StatusBadge } from "@/shared/components/ui/badge";
 import {
-    useDeselectApiKeyProviderModelsMutation,
     useGetApiKeyDetailQuery,
     useGetApiKeyModelSelectionsQuery,
     useGetKeysManagerQuery,
-    useGetProviderModelsQuery,
     useGetProvidersQuery,
     useRemoveApiKeyProviderSelectionMutation,
     useReorderApiKeyModelSelectionsMutation,
-    useSelectApiKeyProviderModelsMutation,
     useSelectApiKeyProviderMutation,
     useUpdateApiKeyMutation,
     useUpdateApiKeySettingsMutation,
@@ -50,25 +33,25 @@ import {
 } from "@/shared/store/features/api/roundhouseApi";
 import { routes } from "@/shared/constants/routes";
 import { RoundhouseMethod } from "@/shared/types/enums";
-import { formatNumber } from "@/shared/lib/utils";
-import type {
-    ApiKeyModelSelectionListItem,
-    ProviderSelectionDetail,
-} from "@/shared/types/entities";
+import type { ApiKeyModelSelectionListItem } from "@/shared/types/entities";
+import { SettingsSkeleton } from "./components/settings-skeleton";
+import { CoreSettings } from "./components/core-settings";
+import { RoutingAnalytics } from "./components/routing-analytics";
+import { AddProviderSelection } from "./components/add-provider-selection";
+import { ProviderSelectionCard } from "./components/provider-selection-card";
+import { ModelPriorityList } from "./components/model-priority-list";
 
 const EMPTY_ORDERED_MODELS: ApiKeyModelSelectionListItem[] = [];
 
-export default function ApiKeySettingsPage({
-    params,
-}: {
-    params: Promise<{ id: string }>;
-}) {
-    const { id: apiKeyId } = use(params);
+export default function ApiKeySettingsPage() {
+    const params = useParams();
+    const apiKeyId = params.id as string;
     const { data: apiKey, isLoading } = useGetApiKeyDetailQuery(apiKeyId);
     const { data: providers = [] } = useGetProvidersQuery();
     const { data: keyManagers = [] } = useGetKeysManagerQuery();
     const { data: orderedModels = EMPTY_ORDERED_MODELS } =
         useGetApiKeyModelSelectionsQuery(apiKeyId);
+
     const [updateApiKey, updateApiKeyState] = useUpdateApiKeyMutation();
     const [updateSettings, updateSettingsState] =
         useUpdateApiKeySettingsMutation();
@@ -76,19 +59,22 @@ export default function ApiKeySettingsPage({
         useSelectApiKeyProviderMutation();
     const [removeSelection, removeSelectionState] =
         useRemoveApiKeyProviderSelectionMutation();
-    const [updateProviderStatus, updateProviderStatusState] =
-        useUpdateApiKeyProviderStatusMutation();
+    const [updateProviderStatus] = useUpdateApiKeyProviderStatusMutation();
     const [updateApiKeyStatus, updateApiKeyStatusState] =
         useUpdateApiKeyStatusMutation();
     const [updateModelStatus] = useUpdateApiKeyModelStatusMutation();
     const [reorderModels, reorderModelsState] =
         useReorderApiKeyModelSelectionsMutation();
+
     const [pendingModelStatusKey, setPendingModelStatusKey] = useState<
         string | null
     >(null);
     const [pendingProviderStatusId, setPendingProviderStatusId] = useState<
         string | null
     >(null);
+    const [expandedProviderId, setExpandedProviderId] = useState<string | null>(
+        null,
+    );
 
     const [draft, setDraft] = useState({
         name: "",
@@ -96,9 +82,7 @@ export default function ApiKeySettingsPage({
         maxIterations: 3,
         roundhouseMethod: RoundhouseMethod.EFFICIENCY,
     });
-    const [expandedProviderId, setExpandedProviderId] = useState<string | null>(
-        null,
-    );
+
     const [providerToAdd, setProviderToAdd] = useState("");
     const [vaultIds, setVaultIds] = useState<string[]>([]);
     const [query, setQuery] = useState("");
@@ -130,9 +114,11 @@ export default function ApiKeySettingsPage({
             ),
         [apiKey?.providers],
     );
+
     const availableProviders = providers.filter(
         (provider) => !selectedProviderIds.has(provider.id),
     );
+
     const providerMatches = availableProviders.filter((provider) => {
         const term = providerSearch.trim().toLowerCase();
         if (!term) return true;
@@ -147,9 +133,7 @@ export default function ApiKeySettingsPage({
                 .includes(term),
         );
     });
-    const selectedProvider = availableProviders.find(
-        (provider) => provider.id === providerToAdd,
-    );
+
     const filteredSelections = (apiKey?.providers ?? []).filter((provider) => {
         const term = query.trim().toLowerCase();
         if (!term) return true;
@@ -159,36 +143,33 @@ export default function ApiKeySettingsPage({
                 .includes(term),
         );
     });
+
     const apiKeyAnalytics = useMemo(() => {
         const providers = apiKey?.providers ?? [];
-
         return {
             providerSelections: providers.length,
-            activeProviders: providers.filter((provider) => provider.active)
-                .length,
+            activeProviders: providers.filter((p) => p.active).length,
             vaultKeys: providers.reduce(
-                (total, provider) => total + provider.apiKeysManagers.length,
+                (total, p) => total + (p.apiKeysManagers?.length ?? 0),
                 0,
             ),
             activeModels: providers.reduce(
-                (total, provider) =>
-                    total +
-                    provider.models.filter((model) => model.active).length,
+                (total, p) =>
+                    total + (p.models?.filter((m) => m.active).length ?? 0),
                 0,
             ),
         };
     }, [apiKey?.providers]);
+
     const hasDirtySettings = Boolean(
         apiKey &&
-        (draft.name !== apiKey.name ||
-            draft.active !== apiKey.active ||
-            draft.maxIterations !== apiKey.maxIterations ||
-            draft.roundhouseMethod !== apiKey.roundhouseMethod),
+            (draft.name !== apiKey.name ||
+                draft.active !== apiKey.active ||
+                draft.maxIterations !== apiKey.maxIterations ||
+                draft.roundhouseMethod !== apiKey.roundhouseMethod),
     );
 
-    if (isLoading) {
-        return <SettingsSkeleton />;
-    }
+    if (isLoading) return <SettingsSkeleton />;
 
     if (!apiKey) {
         return (
@@ -210,6 +191,55 @@ export default function ApiKeySettingsPage({
         );
     }
 
+    const handleSaveSettings = async () => {
+        try {
+            await updateApiKey({
+                id: apiKey.id,
+                body: { name: draft.name, active: draft.active },
+            }).unwrap();
+            await updateSettings({
+                id: apiKey.id,
+                body: {
+                    maxIterations: draft.maxIterations,
+                    roundhouseMethod: draft.roundhouseMethod,
+                },
+            }).unwrap();
+            toast.success("API key settings saved");
+        } catch {
+            toast.error("Could not save API key settings");
+        }
+    };
+
+    const handleToggleStatus = async () => {
+        const nextActive = !draft.active;
+        try {
+            await updateApiKeyStatus({
+                id: apiKey.id,
+                active: nextActive,
+            }).unwrap();
+            setDraft((v) => ({ ...v, active: nextActive }));
+            toast.success(nextActive ? "API key enabled" : "API key disabled");
+        } catch {
+            toast.error("Could not update API key status");
+        }
+    };
+
+    const handleAddSelection = async () => {
+        try {
+            await selectProvider({
+                apiKeyId,
+                providerId: providerToAdd,
+                apiKeysManagerIds: vaultIds,
+            }).unwrap();
+            setProviderToAdd("");
+            setVaultIds([]);
+            setProviderSearch("");
+            toast.success("Provider selected");
+        } catch {
+            toast.error("Could not select provider");
+        }
+    };
+
     return (
         <>
             <PageHeader
@@ -228,30 +258,7 @@ export default function ApiKeySettingsPage({
                                 updateApiKeyState.isLoading ||
                                 updateSettingsState.isLoading
                             }
-                            onClick={async () => {
-                                try {
-                                    await updateApiKey({
-                                        id: apiKey.id,
-                                        body: {
-                                            name: draft.name,
-                                            active: draft.active,
-                                        },
-                                    }).unwrap();
-                                    await updateSettings({
-                                        id: apiKey.id,
-                                        body: {
-                                            maxIterations: draft.maxIterations,
-                                            roundhouseMethod:
-                                                draft.roundhouseMethod,
-                                        },
-                                    }).unwrap();
-                                    toast.success("API key settings saved");
-                                } catch {
-                                    toast.error(
-                                        "Could not save API key settings",
-                                    );
-                                }
-                            }}
+                            onClick={handleSaveSettings}
                         >
                             <FloppyDiskIcon size={18} /> Save Changes
                         </Button>
@@ -259,7 +266,7 @@ export default function ApiKeySettingsPage({
                 }
             />
 
-            {hasDirtySettings ? (
+            {hasDirtySettings && (
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_10%,transparent)] p-3 text-sm">
                     <span className="flex items-center gap-2">
                         <WarningCircleIcon size={18} /> Unsaved changes are
@@ -280,419 +287,35 @@ export default function ApiKeySettingsPage({
                         Discard
                     </Button>
                 </div>
-            ) : null}
+            )}
 
             <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr] xl:items-start">
                 <div className="grid gap-5">
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center justify-between gap-3 w-full">
-                                <h2 className="flex items-center gap-2 font-semibold">
-                                    <GearIcon size={20} /> Core Settings
-                                </h2>
-                                <div className="flex items-center gap-2">
-                                    {/* <StatusBadge status={draft.active} /> */}
-                                    <Button
-                                        size="sm"
-                                        variant={
-                                            draft.active ? "danger" : "success"
-                                        }
-                                        disabled={
-                                            updateApiKeyStatusState.isLoading
-                                        }
-                                        onClick={async () => {
-                                            const nextActive = !draft.active;
-                                            try {
-                                                await updateApiKeyStatus({
-                                                    id: apiKey.id,
-                                                    active: nextActive,
-                                                }).unwrap();
-                                                setDraft((value) => ({
-                                                    ...value,
-                                                    active: nextActive,
-                                                }));
-                                                toast.success(
-                                                    nextActive
-                                                        ? "API key enabled"
-                                                        : "API key disabled",
-                                                );
-                                            } catch {
-                                                toast.error(
-                                                    "Could not update API key status",
-                                                );
-                                            }
-                                        }}
-                                    >
-                                        <PowerIcon size={16} />
-                                        {draft.active ? "Disable" : "Enable"}
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="grid gap-4">
-                            <label className="grid gap-2 text-sm font-medium">
-                                Name
-                                <Input
-                                    value={draft.name}
-                                    onChange={(event) =>
-                                        setDraft((value) => ({
-                                            ...value,
-                                            name: event.target.value,
-                                        }))
-                                    }
-                                />
-                            </label>
-                            <label className="grid gap-2 text-sm font-medium">
-                                API key
-                                <div className="flex min-h-11 items-center gap-2 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3">
-                                    <code className="min-w-0 flex-1 truncate font-mono text-sm font-semibold">
-                                        {apiKey.key.slice(0, 11) +
-                                            "****" +
-                                            apiKey.key.slice(-4)}
-                                    </code>
-                                    <Button
-                                        variant="blank"
-                                        size="icon"
-                                        aria-label="Copy API key"
-                                        title="Copy API key"
-                                        onClick={async () => {
-                                            await navigator.clipboard.writeText(
-                                                apiKey.key,
-                                            );
-                                            toast.success("API key copied");
-                                        }}
-                                    >
-                                        <CopyIcon size={18} />
-                                    </Button>
-                                </div>
-                            </label>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                <label className="grid gap-2 text-sm font-medium">
-                                    Max iterations
-                                    <Input
-                                        type="number"
-                                        min={1}
-                                        value={draft.maxIterations}
-                                        onChange={(event) =>
-                                            setDraft((value) => ({
-                                                ...value,
-                                                maxIterations: Math.max(
-                                                    1,
-                                                    Number(
-                                                        event.target.value,
-                                                    ) || 1,
-                                                ),
-                                            }))
-                                        }
-                                    />
-                                </label>
-                                <label className="grid gap-2 text-sm font-medium">
-                                    Routing method
-                                    <select
-                                        value={draft.roundhouseMethod}
-                                        onChange={(event) =>
-                                            setDraft((value) => ({
-                                                ...value,
-                                                roundhouseMethod: event.target
-                                                    .value as RoundhouseMethod,
-                                            }))
-                                        }
-                                        className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm outline-none"
-                                    >
-                                        {Object.values(RoundhouseMethod).map(
-                                            (method) => (
-                                                <option
-                                                    key={method}
-                                                    value={method}
-                                                >
-                                                    {method}
-                                                </option>
-                                            ),
-                                        )}
-                                    </select>
-                                </label>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <div>
-                                <h2 className="flex items-center gap-2 font-semibold">
-                                    <SlidersHorizontalIcon size={20} /> Routing
-                                    Analytics
-                                </h2>
-                                <p className="mt-1 text-sm text-(--color-text-secondary)">
-                                    Quick readout of how this API key is wired
-                                    right now.
-                                </p>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="grid gap-3 sm:grid-cols-2">
-                            <Metric
-                                label="Provider selections"
-                                value={apiKeyAnalytics.providerSelections}
-                            />
-                            <Metric
-                                label="Active providers"
-                                value={apiKeyAnalytics.activeProviders}
-                            />
-                            <Metric
-                                label="Vault keys"
-                                value={apiKeyAnalytics.vaultKeys}
-                            />
-                            <Metric
-                                label="Active models"
-                                value={apiKeyAnalytics.activeModels}
-                            />
-                        </CardContent>
-                    </Card>
+                    <CoreSettings
+                        apiKey={apiKey}
+                        draft={draft}
+                        onDraftChange={(updates) =>
+                            setDraft((v) => ({ ...v, ...updates }))
+                        }
+                        onToggleStatus={handleToggleStatus}
+                        isUpdatingStatus={updateApiKeyStatusState.isLoading}
+                    />
+                    <RoutingAnalytics analytics={apiKeyAnalytics} />
                 </div>
 
-                <Card>
-                    <CardHeader>
-                        <div>
-                            <h2 className="flex items-center gap-2 font-semibold">
-                                <StackIcon size={20} /> Add Provider Selection
-                            </h2>
-                            <p className="mt-1 text-sm text-(--color-text-secondary)">
-                                Connect one provider to this API key using one
-                                or more vault keys.
-                            </p>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-5">
-                        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-                            <div className="flex flex-col gap-3">
-                                <div className="flex items-center justify-between gap-3">
-                                    <h3 className="text-sm font-semibold">
-                                        1. Choose Provider
-                                    </h3>
-                                    <Badge>
-                                        {availableProviders.length} available
-                                    </Badge>
-                                </div>
-                                <Input
-                                    value={providerSearch}
-                                    onChange={(event) =>
-                                        setProviderSearch(event.target.value)
-                                    }
-                                    placeholder="Search providers"
-                                />
-                                <div className="grid max-h-82.5 gap-2 overflow-y-auto pr-1 grow">
-                                    {providerMatches.map((provider) => {
-                                        const selected =
-                                            provider.id === providerToAdd;
-                                        return (
-                                            <button
-                                                key={provider.id}
-                                                type="button"
-                                                className={`grid cursor-pointer gap-2 rounded-md border p-3 text-left transition-colors ${
-                                                    selected
-                                                        ? "border-(--color-accent-primary) bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
-                                                        : "border-(--color-border-primary) bg-(--color-bg-input) hover:bg-(--color-bg-card-hover)"
-                                                }`}
-                                                onClick={() =>
-                                                    setProviderToAdd(
-                                                        provider.id,
-                                                    )
-                                                }
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <p className="truncate text-sm font-semibold">
-                                                            {provider.name}
-                                                        </p>
-                                                        <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
-                                                            {provider.code}
-                                                        </p>
-                                                    </div>
-                                                    {selected ? (
-                                                        <CheckCircleIcon
-                                                            size={20}
-                                                            weight="fill"
-                                                            className="text-(--color-accent-primary)"
-                                                        />
-                                                    ) : (
-                                                        <StatusBadge
-                                                            status={
-                                                                provider.status
-                                                            }
-                                                        />
-                                                    )}
-                                                </div>
-                                                <p className="line-clamp-2 text-xs text-(--color-text-secondary)">
-                                                    {provider.description ??
-                                                        provider.type}
-                                                </p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    <Badge>
-                                                        {provider.type}
-                                                    </Badge>
-                                                    <Badge>
-                                                        {
-                                                            provider.activeModelsCount
-                                                        }
-                                                        /{provider.modelsCount}{" "}
-                                                        models
-                                                    </Badge>
-                                                    {provider.isCustom ? (
-                                                        <Badge>Custom</Badge>
-                                                    ) : (
-                                                        <Badge>Global</Badge>
-                                                    )}
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                    {providerMatches.length === 0 ? (
-                                        <div className="rounded-md border border-dashed border-(--color-border-primary) p-4 text-sm text-(--color-text-secondary)">
-                                            No unselected providers match this
-                                            filter.
-                                        </div>
-                                    ) : null}
-                                </div>
-                            </div>
-
-                            <div className="grid gap-3">
-                                <div className="flex items-center justify-between gap-3">
-                                    <h3 className="text-sm font-semibold">
-                                        2. Attach Vault Keys
-                                    </h3>
-                                    <Badge>{vaultIds.length} selected</Badge>
-                                </div>
-                                <div className="rounded-md border border-(--color-border-primary) bg-(--color-bg-input) p-3">
-                                    {selectedProvider ? (
-                                        <div className="flex items-start gap-3">
-                                            <div className="grid size-10 shrink-0 place-items-center rounded-md bg-[color-mix(in_srgb,var(--color-accent-primary)_14%,transparent)] text-(--color-accent-primary)">
-                                                <StackIcon
-                                                    size={20}
-                                                    weight="duotone"
-                                                />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <Badge className="max-w-full bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)] text-(--color-accent-primary)">
-                                                    {selectedProvider.name}
-                                                </Badge>
-                                                <p className="mt-1 text-xs text-(--color-text-secondary)">
-                                                    Models are created
-                                                    automatically after
-                                                    selection.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-(--color-text-secondary)">
-                                            Select a provider to enable
-                                            vault-key assignment.
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="grid max-h-64.5 gap-2 overflow-y-auto pr-1">
-                                    {keyManagers.map((key) => {
-                                        const checked = vaultIds.includes(
-                                            key.id,
-                                        );
-                                        return (
-                                            <label
-                                                key={key.id}
-                                                className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${
-                                                    checked
-                                                        ? "border-(--color-accent-primary) bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
-                                                        : "border-(--color-border-primary) bg-(--color-bg-input) hover:bg-(--color-bg-card-hover)"
-                                                }`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={checked}
-                                                    onChange={(event) => {
-                                                        setVaultIds(
-                                                            (current) =>
-                                                                event.target
-                                                                    .checked
-                                                                    ? [
-                                                                          ...current,
-                                                                          key.id,
-                                                                      ]
-                                                                    : current.filter(
-                                                                          (
-                                                                              id,
-                                                                          ) =>
-                                                                              id !==
-                                                                              key.id,
-                                                                      ),
-                                                        );
-                                                    }}
-                                                    className="mt-1 size-4 accent-(--color-accent-primary)"
-                                                />
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <KeyIcon size={16} />
-                                                        <p className="truncate text-sm font-semibold">
-                                                            {key.name}
-                                                        </p>
-                                                        <StatusBadge
-                                                            status={key.active}
-                                                        />
-                                                    </div>
-                                                    <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
-                                                        {key.key}
-                                                    </p>
-                                                    <div className="mt-2 flex flex-wrap gap-2">
-                                                        <Badge className="bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)] text-(--color-accent-secondary)">
-                                                            {key.provider ??
-                                                                "Unassigned provider"}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        );
-                                    })}
-                                    {keyManagers.length === 0 ? (
-                                        <div className="rounded-md border border-dashed border-(--color-border-primary) p-4 text-sm text-(--color-text-secondary)">
-                                            Add provider keys in Key Vault
-                                            before selecting a provider.
-                                        </div>
-                                    ) : null}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-3 border-t border-(--color-border-subtle) pt-4 sm:flex-row sm:items-center sm:justify-between">
-                            <p className="text-sm text-(--color-text-secondary)">
-                                Provider selection creates the provider group,
-                                links selected vault keys, and seeds model
-                                routing entries.
-                            </p>
-                            <Button
-                                className="sm:min-w-40"
-                                disabled={
-                                    !providerToAdd ||
-                                    vaultIds.length === 0 ||
-                                    selectProviderState.isLoading
-                                }
-                                onClick={async () => {
-                                    try {
-                                        await selectProvider({
-                                            apiKeyId,
-                                            providerId: providerToAdd,
-                                            apiKeysManagerIds: vaultIds,
-                                        }).unwrap();
-                                        setProviderToAdd("");
-                                        setVaultIds([]);
-                                        setProviderSearch("");
-                                        toast.success("Provider selected");
-                                    } catch {
-                                        toast.error(
-                                            "Could not select provider",
-                                        );
-                                    }
-                                }}
-                            >
-                                Add Selection
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                <AddProviderSelection
+                    availableProviders={availableProviders}
+                    providerSearch={providerSearch}
+                    onProviderSearchChange={setProviderSearch}
+                    providerToAdd={providerToAdd}
+                    onProviderToAddChange={setProviderToAdd}
+                    providerMatches={providerMatches}
+                    keyManagers={keyManagers}
+                    vaultIds={vaultIds}
+                    onVaultIdsChange={setVaultIds}
+                    onAdd={handleAddSelection}
+                    isLoading={selectProviderState.isLoading}
+                />
             </section>
 
             <section className="grid gap-5">
@@ -702,7 +325,7 @@ export default function ApiKeySettingsPage({
                     </h2>
                     <Input
                         value={query}
-                        onChange={(event) => setQuery(event.target.value)}
+                        onChange={(e) => setQuery(e.target.value)}
                         placeholder="Filter providers"
                         className="sm:max-w-xs"
                     />
@@ -714,8 +337,8 @@ export default function ApiKeySettingsPage({
                         selection={selection}
                         expanded={expandedProviderId === selection.id}
                         onToggleExpanded={() =>
-                            setExpandedProviderId((value) =>
-                                value === selection.id ? null : selection.id,
+                            setExpandedProviderId((v) =>
+                                v === selection.id ? null : selection.id,
                             )
                         }
                         onRemove={async () => {
@@ -738,105 +361,15 @@ export default function ApiKeySettingsPage({
                         removePending={removeSelectionState.isLoading}
                         updateProviderStatus={updateProviderStatus}
                         pendingProviderStatusId={pendingProviderStatusId}
-                        setPendingProviderStatusId={setPendingProviderStatusId}
+                        onPendingProviderStatusIdChange={
+                            setPendingProviderStatusId
+                        }
                         updateModelStatus={updateModelStatus}
                         pendingModelStatusKey={pendingModelStatusKey}
-                        setPendingModelStatusKey={setPendingModelStatusKey}
+                        onPendingModelStatusKeyChange={setPendingModelStatusKey}
                     />
                 ))}
             </section>
-
-            <Card>
-                <CardHeader>
-                    <div>
-                        <h2 className="flex items-center gap-2 font-semibold">
-                            <SlidersHorizontalIcon size={20} /> Model Status
-                        </h2>
-                        <p className="mt-1 text-sm text-(--color-text-secondary)">
-                            Enable or disable individual model selections
-                            without removing them from the provider group.
-                        </p>
-                    </div>
-                </CardHeader>
-                <CardContent className="grid gap-3">
-                    {orderedModels.map((item) => (
-                        <div
-                            key={item.modelSelectionId}
-                            className="grid gap-3 rounded-md bg-(--color-bg-input) p-3 md:grid-cols-[1fr_auto] md:items-center"
-                        >
-                            <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <h3 className="font-medium">
-                                        {item.model.name}
-                                    </h3>
-                                    <StatusBadge status={item.active} />
-                                    <Badge>{item.provider.name}</Badge>
-                                </div>
-                                <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
-                                    {item.model.code}
-                                </p>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {(item.model.bestFor?.length
-                                        ? item.model.bestFor
-                                        : ["General"]
-                                    ).map((tag) => (
-                                        <Badge key={tag}>{tag}</Badge>
-                                    ))}
-                                    {item.model.thinking ? (
-                                        <Badge>Thinking</Badge>
-                                    ) : null}
-                                </div>
-                            </div>
-                            <Button
-                                variant={item.active ? "danger" : "success"}
-                                size="sm"
-                                disabled={
-                                    pendingModelStatusKey ===
-                                    item.modelSelectionId
-                                }
-                                onClick={async () => {
-                                    const rowKey = item.modelSelectionId;
-                                    setPendingModelStatusKey(rowKey);
-                                    try {
-                                        await updateModelStatus({
-                                            apiKeyId,
-                                            modelId: item.model.id,
-                                            active: !item.active,
-                                        }).unwrap();
-                                        toast.success(
-                                            item.active
-                                                ? "Model disabled"
-                                                : "Model enabled",
-                                        );
-                                    } catch {
-                                        toast.error(
-                                            "Could not update model status",
-                                        );
-                                    } finally {
-                                        setPendingModelStatusKey((current) =>
-                                            current === rowKey ? null : current,
-                                        );
-                                    }
-                                }}
-                                title={
-                                    item.active
-                                        ? "Disable model"
-                                        : "Enable model"
-                                }
-                            >
-                                <PowerIcon size={18} />{" "}
-                                {item.active ? "Disable" : "Enable"}
-                            </Button>
-                        </div>
-                    ))}
-                    {orderedModels.length === 0 ? (
-                        <p className="text-sm text-(--color-text-secondary)">
-                            No model selections yet. Add a provider selection to
-                            manage model status.
-                        </p>
-                    ) : null}
-                </CardContent>
-            </Card>
 
             <Card>
                 <CardHeader>
@@ -859,13 +392,10 @@ export default function ApiKeySettingsPage({
                                     reorderModelsState.isLoading
                                 }
                                 onClick={async () => {
-                                    const items = draftedModels.map(
-                                        (model) => ({
-                                            modelSelectionId:
-                                                model.modelSelectionId,
-                                            priority: model.priority,
-                                        }),
-                                    );
+                                    const items = draftedModels.map((m) => ({
+                                        modelSelectionId: m.modelSelectionId,
+                                        priority: m.priority,
+                                    }));
                                     try {
                                         await reorderModels({
                                             apiKeyId,
@@ -914,441 +444,6 @@ export default function ApiKeySettingsPage({
                     )}
                 </CardContent>
             </Card>
-        </>
-    );
-}
-
-function ModelPriorityList({
-    models,
-    onReorder,
-}: {
-    models: ApiKeyModelSelectionListItem[];
-    onReorder: (models: ApiKeyModelSelectionListItem[]) => void;
-}) {
-    const [draggedId, setDraggedId] = useState<string | null>(null);
-    const [dragOverId, setDragOverId] = useState<string | null>(null);
-
-    const handleDragStart = (e: React.DragEvent, id: string) => {
-        setDraggedId(id);
-        e.dataTransfer.effectAllowed = "move";
-    };
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-    };
-
-    const handleDragEnter = (e: React.DragEvent, targetId: string) => {
-        if (draggedId && draggedId !== targetId) {
-            setDragOverId(targetId);
-        }
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        if (e.currentTarget === e.target) {
-            setDragOverId(null);
-        }
-    };
-
-    const handleDrop = (e: React.DragEvent, targetId: string) => {
-        e.preventDefault();
-        if (!draggedId || draggedId === targetId) {
-            setDraggedId(null);
-            setDragOverId(null);
-            return;
-        }
-
-        const draggedIndex = models.findIndex(
-            (m) => m.modelSelectionId === draggedId,
-        );
-        const targetIndex = models.findIndex(
-            (m) => m.modelSelectionId === targetId,
-        );
-
-        if (draggedIndex === -1 || targetIndex === -1) {
-            setDraggedId(null);
-            setDragOverId(null);
-            return;
-        }
-
-        const newModels = [...models];
-        const [movedItem] = newModels.splice(draggedIndex, 1);
-        newModels.splice(targetIndex, 0, movedItem);
-
-        // Update priorities based on new order
-        const reorderedModels = newModels.map((model, index) => ({
-            ...model,
-            priority: index + 1,
-        }));
-
-        onReorder(reorderedModels);
-        setDraggedId(null);
-        setDragOverId(null);
-    };
-
-    const handleDragEnd = () => {
-        setDraggedId(null);
-        setDragOverId(null);
-    };
-
-    return (
-        <div className="grid gap-2">
-            {models.map((item, index) => (
-                <div
-                    key={item.modelSelectionId}
-                    draggable
-                    onDragStart={(e) =>
-                        handleDragStart(e, item.modelSelectionId)
-                    }
-                    onDragOver={handleDragOver}
-                    onDragEnter={(e) =>
-                        handleDragEnter(e, item.modelSelectionId)
-                    }
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, item.modelSelectionId)}
-                    onDragEnd={handleDragEnd}
-                    className={`grid gap-3 rounded-md bg-(--color-bg-input) p-3 md:grid-cols-[40px_1fr_auto] md:items-center cursor-move transition-all ${
-                        draggedId === item.modelSelectionId
-                            ? "opacity-50 scale-95"
-                            : ""
-                    } ${dragOverId === item.modelSelectionId ? "ring-2 ring-(--color-accent-primary) scale-102" : ""}`}
-                >
-                    <div className="flex items-center justify-center text-(--color-text-muted)">
-                        <span className="text-sm font-semibold">
-                            {index + 1}
-                        </span>
-                    </div>
-                    <div>
-                        <h3 className="font-medium">{item.model.name}</h3>
-                        <p className="font-mono text-xs text-(--color-text-muted)">
-                            {item.provider.name} / {item.model.code}
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap justify-end gap-2">
-                        <Badge>
-                            {formatNumber(item.stats.successCount)} ok
-                        </Badge>
-                        <Badge>
-                            {formatNumber(item.stats.failureCount)} fail
-                        </Badge>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-function ProviderSelectionCard({
-    apiKeyId,
-    selection,
-    expanded,
-    onToggleExpanded,
-    onRemove,
-    removePending,
-    updateProviderStatus,
-    pendingProviderStatusId,
-    setPendingProviderStatusId,
-    updateModelStatus,
-    pendingModelStatusKey,
-    setPendingModelStatusKey,
-}: {
-    apiKeyId: string;
-    selection: ProviderSelectionDetail;
-    expanded: boolean;
-    onToggleExpanded: () => void;
-    onRemove: () => void;
-    removePending: boolean;
-    updateProviderStatus: ReturnType<
-        typeof useUpdateApiKeyProviderStatusMutation
-    >[0];
-    pendingProviderStatusId: string | null;
-    setPendingProviderStatusId: Dispatch<SetStateAction<string | null>>;
-    updateModelStatus: ReturnType<typeof useUpdateApiKeyModelStatusMutation>[0];
-    pendingModelStatusKey: string | null;
-    setPendingModelStatusKey: Dispatch<SetStateAction<string | null>>;
-}) {
-    return (
-        <Card>
-            <CardHeader>
-                <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold">{selection.name}</h3>
-                        <StatusBadge status={selection.active} />
-                        <Badge>{selection.type}</Badge>
-                        {selection.isCustom ? (
-                            <Badge>Custom</Badge>
-                        ) : (
-                            <Badge>Global</Badge>
-                        )}
-                    </div>
-                    <p className="mt-1 text-sm text-(--color-text-secondary)">
-                        {selection.description ?? selection.baseApi}
-                    </p>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={onToggleExpanded}
-                    >
-                        {expanded ? "Collapse" : "Configure"}
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        size="icon"
-                        className={`${
-                            selection.active
-                                ? "text-(--color-status-error) hover:opacity-90"
-                                : "text-(--color-status-success) hover:opacity-90"
-                        } p-2`}
-                        disabled={pendingProviderStatusId === selection.id}
-                        onClick={async () => {
-                            const nextActive = !selection.active;
-                            setPendingProviderStatusId(selection.id);
-                            try {
-                                await updateProviderStatus({
-                                    apiKeyId,
-                                    providerId: selection.providerId,
-                                    active: nextActive,
-                                }).unwrap();
-                                toast.success(
-                                    nextActive
-                                        ? "Provider enabled"
-                                        : "Provider disabled",
-                                );
-                            } catch {
-                                toast.error("Could not update provider");
-                            } finally {
-                                setPendingProviderStatusId((current) =>
-                                    current === selection.id ? null : current,
-                                );
-                            }
-                        }}
-                        title={
-                            selection.active
-                                ? "Disable provider"
-                                : "Enable provider"
-                        }
-                    >
-                        <PowerIcon size={20} />
-                        {/* {selection.active ? "Disable" : "Enable"} */}
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Remove provider selection"
-                        title="Remove provider selection"
-                        disabled={removePending}
-                        onClick={onRemove}
-                    >
-                        <TrashIcon size={18} />
-                    </Button>
-                </div>
-            </CardHeader>
-            {expanded ? (
-                <CardContent className="grid gap-5">
-                    <div className="grid gap-3 md:grid-cols-3">
-                        <Metric
-                            label="Vault Keys"
-                            value={selection.apiKeysManagers.length}
-                        />
-                        <Metric
-                            label="Active Models"
-                            value={
-                                selection.models.filter((model) => model.active)
-                                    .length
-                            }
-                        />
-                        <Metric
-                            label="Total Models"
-                            value={selection.models.length}
-                        />
-                    </div>
-                    <ProviderModelConfigurator
-                        apiKeyId={apiKeyId}
-                        providerId={selection.providerId}
-                        selectedModels={selection.models}
-                        updateModelStatus={updateModelStatus}
-                        pendingModelStatusKey={pendingModelStatusKey}
-                        setPendingModelStatusKey={setPendingModelStatusKey}
-                    />
-                </CardContent>
-            ) : null}
-        </Card>
-    );
-}
-
-function ProviderModelConfigurator({
-    apiKeyId,
-    providerId,
-    selectedModels,
-    updateModelStatus,
-    pendingModelStatusKey,
-    setPendingModelStatusKey,
-}: {
-    apiKeyId: string;
-    providerId: string;
-    selectedModels: ProviderSelectionDetail["models"];
-    updateModelStatus: ReturnType<typeof useUpdateApiKeyModelStatusMutation>[0];
-    pendingModelStatusKey: string | null;
-    setPendingModelStatusKey: Dispatch<SetStateAction<string | null>>;
-}) {
-    const { data: providerModels = [], isLoading } =
-        useGetProviderModelsQuery(providerId);
-    const [selectModels, selectModelsState] =
-        useSelectApiKeyProviderModelsMutation();
-    const [deselectModels, deselectModelsState] =
-        useDeselectApiKeyProviderModelsMutation();
-    const selectedById = useMemo(
-        () => new Map(selectedModels.map((model) => [model.id, model])),
-        [selectedModels],
-    );
-
-    if (isLoading) {
-        return (
-            <div className="grid gap-3 md:grid-cols-2">
-                {Array.from({ length: 4 }).map((_, index) => (
-                    <Skeleton key={index} className="h-28" />
-                ))}
-            </div>
-        );
-    }
-
-    return (
-        <div className="grid gap-3 md:grid-cols-2">
-            {providerModels.map((model) => {
-                const selected = selectedById.get(model.id);
-                const active = selected?.active ?? false;
-                return (
-                    <div
-                        key={model.id}
-                        className="grid gap-3 rounded-md bg-(--color-bg-input) p-3"
-                    >
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <h4 className="truncate font-medium">
-                                    {model.name}
-                                </h4>
-                                <p className="truncate font-mono text-xs text-(--color-text-muted)">
-                                    {model.code}
-                                </p>
-                            </div>
-                            <Button
-                                type="button"
-                                variant={active ? "danger" : "success"}
-                                size="sm"
-                                title={
-                                    active ? "Disable model" : "Enable model"
-                                }
-                                disabled={
-                                    selectModelsState.isLoading ||
-                                    deselectModelsState.isLoading ||
-                                    pendingModelStatusKey ===
-                                        `${providerId}:${model.id}`
-                                }
-                                onClick={async () => {
-                                    const rowKey = `${providerId}:${model.id}`;
-                                    setPendingModelStatusKey(rowKey);
-                                    try {
-                                        if (!selected) {
-                                            await selectModels({
-                                                apiKeyId,
-                                                providerId,
-                                                modelIds: [model.id],
-                                            }).unwrap();
-                                        } else {
-                                            await updateModelStatus({
-                                                apiKeyId,
-                                                modelId: model.id,
-                                                active: !active,
-                                            }).unwrap();
-                                        }
-                                        toast.success(
-                                            "Model selection updated",
-                                        );
-                                    } catch {
-                                        toast.error(
-                                            "Could not update model selection",
-                                        );
-                                    } finally {
-                                        setPendingModelStatusKey((current) =>
-                                            current === rowKey ? null : current,
-                                        );
-                                    }
-                                }}
-                                aria-label={
-                                    active ? "Disable model" : "Enable model"
-                                }
-                            >
-                                {active ? (
-                                    <CheckCircleIcon size={16} weight="fill" />
-                                ) : (
-                                    <PowerIcon size={16} />
-                                )}{" "}
-                                {active ? "Disable" : "Enable"}
-                            </Button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {(model.bestFor?.length
-                                ? model.bestFor
-                                : ["General"]
-                            ).map((item) => (
-                                <Badge key={item}>{item}</Badge>
-                            ))}
-                            {model.thinking ? <Badge>Thinking</Badge> : null}
-                        </div>
-                        {selected ? (
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                disabled={deselectModelsState.isLoading}
-                                onClick={async () => {
-                                    try {
-                                        await deselectModels({
-                                            apiKeyId,
-                                            providerId,
-                                            modelIds: [model.id],
-                                        }).unwrap();
-                                        toast.success("Model deselected");
-                                    } catch {
-                                        toast.error("Could not deselect model");
-                                    }
-                                }}
-                            >
-                                Remove from Routing
-                            </Button>
-                        ) : null}
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
-
-function Metric({ label, value }: { label: string; value: string | number }) {
-    return (
-        <div className="rounded-md bg-(--color-bg-input) p-3">
-            <p className="text-xs text-(--color-text-muted)">{label}</p>
-            <p className="mt-1 font-mono text-lg font-semibold">{value}</p>
-        </div>
-    );
-}
-
-function SettingsSkeleton() {
-    return (
-        <>
-            <div className="flex justify-between gap-4">
-                <div className="grid gap-3">
-                    <Skeleton className="h-8 w-64" />
-                    <Skeleton className="h-4 w-96" />
-                </div>
-                <Skeleton className="h-10 w-32" />
-            </div>
-            <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-                <Skeleton className="h-80" />
-                <Skeleton className="h-80" />
-            </section>
-            <Skeleton className="h-96" />
         </>
     );
 }
