@@ -9,7 +9,7 @@ import { z } from "zod";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { routes } from "@/shared/constants/routes";
-import { useRegisterMutation } from "@/shared/store/features/api/roundhouseApi";
+import { useRegisterMutation } from "@/shared/store/features/auth/authApi";
 
 const registerSchema = z
     .object({

@@ -7,6 +7,9 @@ interface ApiKeyItemProps {
 }
 
 export function ApiKeyItem({ item }: ApiKeyItemProps) {
+
+    console.log("API Key Item:", item);
+
     return (
         <div className="flex flex-col gap-3 rounded-md bg-(--color-bg-input) p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

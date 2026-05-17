@@ -5,13 +5,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import {
     useCreateApiKeyMutation,
     useDeleteApiKeyMutation,
     useGetApiKeysQuery,
     useUpdateApiKeyStatusMutation,
-} from "@/shared/store/features/api/roundhouseApi";
+} from "@/shared/store/features/apikeys/apikeysApi";
 import { CreateApiKeyModal } from "./components/create-api-key-modal";
 import { ApiKeySkeletons } from "./components/api-key-skeletons";
 import { ApiKeyCard } from "./components/api-key-card";
@@ -68,6 +69,14 @@ export default function ApiKeysPage() {
             )}
             <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {isLoading ? <ApiKeySkeletons /> : null}
+                {!isLoading && apiKeys.length === 0 ? (
+                    <div className="md:col-span-2 xl:col-span-3">
+                        <EmptyState
+                            title="No API keys yet"
+                            description="Create your first Roundhouse API key to configure provider routing and model selection."
+                        />
+                    </div>
+                ) : null}
                 {apiKeys.map((item) => (
                     <ApiKeyCard
                         key={item.id}

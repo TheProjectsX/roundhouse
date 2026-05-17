@@ -4,7 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { ReduxProvider } from "./redux-provider";
-import { useGetMeQuery } from "@/shared/store/features/api/roundhouseApi";
+import { useGetMeQuery } from "@/shared/store/features/auth/authApi";
 import { setUser } from "@/shared/store/auth-slice";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
 

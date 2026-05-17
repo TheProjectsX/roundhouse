@@ -15,22 +15,24 @@ import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Input } from "@/shared/components/ui/input";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { StatusBadge } from "@/shared/components/ui/badge";
 import {
     useGetApiKeyDetailQuery,
     useGetApiKeyModelSelectionsQuery,
-    useGetKeysManagerQuery,
-    useGetProvidersQuery,
     useRemoveApiKeyProviderSelectionMutation,
     useReorderApiKeyModelSelectionsMutation,
     useSelectApiKeyProviderMutation,
     useUpdateApiKeyMutation,
-    useUpdateApiKeySettingsMutation,
-    useUpdateApiKeyStatusMutation,
     useUpdateApiKeyModelStatusMutation,
     useUpdateApiKeyProviderStatusMutation,
-} from "@/shared/store/features/api/roundhouseApi";
+    useUpdateApiKeySettingsMutation,
+    useUpdateApiKeyStatusMutation,
+} from "@/shared/store/features/apikeys/apikeysApi";
+import { useGetKeysManagerQuery } from "@/shared/store/features/keysManager/keysManagerApi";
+import { useGetProvidersQuery } from "@/shared/store/features/providers/providersApi";
 import { routes } from "@/shared/constants/routes";
 import { RoundhouseMethod } from "@/shared/types/enums";
 import type { ApiKeyModelSelectionListItem } from "@/shared/types/entities";
@@ -47,9 +49,9 @@ export default function ApiKeySettingsPage() {
     const params = useParams();
     const apiKeyId = params.id as string;
     const { data: apiKey, isLoading } = useGetApiKeyDetailQuery(apiKeyId);
-    const { data: providers = [] } = useGetProvidersQuery();
-    const { data: keyManagers = [] } = useGetKeysManagerQuery();
-    const { data: orderedModels = EMPTY_ORDERED_MODELS } =
+    const { data: providers = [], isLoading: isProvidersLoading } = useGetProvidersQuery();
+    const { data: keyManagers = [], isLoading: isKeyManagersLoading } = useGetKeysManagerQuery();
+    const { data: orderedModels = EMPTY_ORDERED_MODELS, isLoading: isOrderedModelsLoading } =
         useGetApiKeyModelSelectionsQuery(apiKeyId);
 
     const [updateApiKey, updateApiKeyState] = useUpdateApiKeyMutation();
@@ -305,12 +307,14 @@ export default function ApiKeySettingsPage() {
 
                 <AddProviderSelection
                     availableProviders={availableProviders}
+                    isProvidersLoading={isProvidersLoading}
                     providerSearch={providerSearch}
                     onProviderSearchChange={setProviderSearch}
                     providerToAdd={providerToAdd}
                     onProviderToAddChange={setProviderToAdd}
                     providerMatches={providerMatches}
                     keyManagers={keyManagers}
+                    isKeyManagersLoading={isKeyManagersLoading}
                     vaultIds={vaultIds}
                     onVaultIdsChange={setVaultIds}
                     onAdd={handleAddSelection}
@@ -330,6 +334,16 @@ export default function ApiKeySettingsPage() {
                         className="sm:max-w-xs"
                     />
                 </div>
+                {filteredSelections.length === 0 ? (
+                    <EmptyState
+                        title="No provider selections found"
+                        description={
+                            query.trim()
+                                ? "No provider selections match the current filter."
+                                : "Add a provider selection to attach vault keys and generate routing models."
+                        }
+                    />
+                ) : null}
                 {filteredSelections.map((selection) => (
                     <ProviderSelectionCard
                         key={selection.id}
@@ -431,11 +445,17 @@ export default function ApiKeySettingsPage() {
                     )}
                 </CardHeader>
                 <CardContent className="grid gap-3">
-                    {draftedModels.length === 0 ? (
-                        <p className="text-sm text-(--color-text-secondary)">
-                            No model selections yet. Add a provider selection to
-                            generate model routing entries.
-                        </p>
+                    {isOrderedModelsLoading ? (
+                        Array.from({ length: 4 }).map((_, index) => (
+                            <Skeleton key={index} className="h-16 rounded-xl" />
+                        ))
+                    ) : draftedModels.length === 0 ? (
+                        <EmptyState
+                            compact
+                            title="No model priorities yet"
+                            description="Add a provider selection to generate routing entries and organize model priority."
+                            className="border-none bg-transparent"
+                        />
                     ) : (
                         <ModelPriorityList
                             models={draftedModels}

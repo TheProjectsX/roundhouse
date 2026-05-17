@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Input } from "@/shared/components/ui/input";
 import {
     useCreateKeysManagerMutation,
@@ -13,7 +14,7 @@ import {
     useGetKeysManagerQuery,
     useUnlockKeysMutation,
     useUpdateKeysManagerMutation,
-} from "@/shared/store/features/api/roundhouseApi";
+} from "@/shared/store/features/keysManager/keysManagerApi";
 import { lock, unlock } from "@/shared/store/unlock-slice";
 import { useAppDispatch, useAppSelector } from "@/shared/store/hooks";
 import { CreateKeyModal } from "./components/create-key-modal";
@@ -131,6 +132,14 @@ export default function KeysPage() {
             </Card>
             <section className="grid gap-4 xl:grid-cols-2">
                 {isLoading ? <KeySkeletons /> : null}
+                {!isLoading && keys.length === 0 ? (
+                    <div className="xl:col-span-2">
+                        <EmptyState
+                            title="No vault keys saved"
+                            description="Add provider API keys to the vault so they can be attached to provider selections."
+                        />
+                    </div>
+                ) : null}
                 {keys.map((key) => (
                     <VaultKeyCard
                         key={key.id}

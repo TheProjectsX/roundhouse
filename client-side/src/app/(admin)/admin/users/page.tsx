@@ -1,17 +1,23 @@
 "use client";
 
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { StatusBadge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { useDeleteAdminUserMutation, useGetAdminUsersQuery, useUpdateAdminUserStatusMutation } from "@/shared/store/features/api/roundhouseApi";
+import {
+    useDeleteAdminUserMutation,
+    useGetAdminUsersQuery,
+    useUpdateAdminUserStatusMutation,
+} from "@/shared/store/features/admin/adminApi";
 import { formatDate } from "@/shared/lib/utils";
 import { UserStatus } from "@/shared/types/enums";
 import { toast } from "sonner";
 import { UserRow } from "./components/user-row";
 
 export default function AdminUsersPage() {
-    const { data: users = [] } = useGetAdminUsersQuery();
+    const { data: users = [], isLoading } = useGetAdminUsersQuery();
     const [updateStatus, updateState] = useUpdateAdminUserStatusMutation();
     const [deleteUser, deleteState] = useDeleteAdminUserMutation();
 
@@ -55,16 +61,37 @@ export default function AdminUsersPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map((user) => (
-                                <UserRow
-                                    key={user.id}
-                                    user={user}
-                                    onUpdateStatus={handleUpdateStatus}
-                                    onDelete={handleDeleteUser}
-                                    isUpdating={updateState.isLoading}
-                                    isDeleting={deleteState.isLoading}
-                                />
-                            ))}
+                            {isLoading ? (
+                                Array.from({ length: 5 }).map((_, index) => (
+                                    <tr key={index}>
+                                        <td colSpan={7} className="py-2">
+                                            <Skeleton className="h-14 w-full rounded-xl" />
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : users.length === 0 ? (
+                                <tr>
+                                    <td colSpan={7} className="py-4">
+                                        <EmptyState
+                                            compact
+                                            title="No users found"
+                                            description="User accounts will appear here once people start signing up."
+                                            className="border-none bg-transparent"
+                                        />
+                                    </td>
+                                </tr>
+                            ) : (
+                                users.map((user) => (
+                                    <UserRow
+                                        key={user.id}
+                                        user={user}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onDelete={handleDeleteUser}
+                                        isUpdating={updateState.isLoading}
+                                        isDeleting={deleteState.isLoading}
+                                    />
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </CardContent>

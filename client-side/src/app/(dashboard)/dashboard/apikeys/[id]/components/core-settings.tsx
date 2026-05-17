@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { roundhouseMethodLabels } from "@/shared/lib/enum-labels";
 import { RoundhouseMethod } from "@/shared/types/enums";
 
 interface CoreSettingsProps {
@@ -105,7 +106,7 @@ export function CoreSettings({
                         >
                             {Object.values(RoundhouseMethod).map((method) => (
                                 <option key={method} value={method}>
-                                    {method}
+                                    {roundhouseMethodLabels[method]}
                                 </option>
                             ))}
                         </select>

@@ -1,6 +1,7 @@
 import React from "react";
 import { StatusBadge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { userStatusLabels } from "@/shared/lib/enum-labels";
 import { AdminUserListItem } from "@/shared/types/entities";
 import { UserStatus } from "@/shared/types/enums";
 import { formatDate } from "@/shared/lib/utils";
@@ -39,7 +40,7 @@ export function UserRow({
                     >
                         {Object.values(UserStatus).map((status) => (
                             <option key={status} value={status}>
-                                {status}
+                                {userStatusLabels[status]}
                             </option>
                         ))}
                     </select>

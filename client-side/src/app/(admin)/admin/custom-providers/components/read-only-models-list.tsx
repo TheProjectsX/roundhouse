@@ -1,5 +1,6 @@
 import React from "react";
-import { useGetAdminProviderModelsQuery } from "@/shared/store/features/api/roundhouseApi";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
+import { useGetAdminProviderModelsQuery } from "@/shared/store/features/admin/adminApi";
 import { ReadOnlyModelRow } from "./read-only-model-row";
 
 interface ReadOnlyModelsListProps {
@@ -56,11 +57,13 @@ export function ReadOnlyModelsList({ providerId }: ReadOnlyModelsListProps) {
                         <tbody className="divide-y divide-(--color-border-subtle)">
                             {models.length === 0 ? (
                                 <tr>
-                                    <td
-                                        colSpan={6}
-                                        className="px-4 py-8 text-center text-(--color-text-muted)"
-                                    >
-                                        No models found for this provider.
+                                    <td colSpan={6} className="px-4 py-6">
+                                        <EmptyState
+                                            compact
+                                            title="No models found"
+                                            description="This custom provider does not have any models available yet."
+                                            className="border-none bg-transparent"
+                                        />
                                     </td>
                                 </tr>
                             ) : (

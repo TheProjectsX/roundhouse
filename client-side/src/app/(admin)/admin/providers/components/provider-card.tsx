@@ -15,6 +15,7 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
+import { contentStatusLabels } from "@/shared/lib/enum-labels";
 import { ContentStatus } from "@/shared/types/enums";
 import { cn, formatDate, formatNumber } from "@/shared/lib/utils";
 import { StatItem } from "../../components/stat-item";
@@ -113,7 +114,7 @@ export function ProviderCard({
                         >
                             {Object.values(ContentStatus).map((status) => (
                                 <option key={status} value={status}>
-                                    {status}
+                                    {contentStatusLabels[status]}
                                 </option>
                             ))}
                         </select>

@@ -8,11 +8,12 @@ import { toast } from "sonner";
 import { Modal } from "@/shared/components/ui/modal";
 import { Button } from "@/shared/components/ui/button";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
     useDeleteProviderModelMutation,
     useGetProviderModelsQuery,
-} from "@/shared/store/features/api/roundhouseApi";
+} from "@/shared/store/features/providers/providersApi";
 import type { ProviderListItem } from "@/shared/types/entities";
 import { EditModelModal } from "./edit-model-modal";
 
@@ -187,9 +188,13 @@ export function ProviderModelsModal({
                           </div>
                       ))}
                 {!isLoading && models.length === 0 ? (
-                    <p className="text-sm text-(--color-text-secondary)">
-                        No active models found for this provider.
-                    </p>
+                    <div className="md:col-span-2">
+                        <EmptyState
+                            compact
+                            title="No models found"
+                            description="This provider does not have any models in its catalog yet."
+                        />
+                    </div>
                 ) : null}
             </div>
             {editModel ? (

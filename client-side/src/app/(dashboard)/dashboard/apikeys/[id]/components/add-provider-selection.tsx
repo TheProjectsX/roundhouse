@@ -4,19 +4,23 @@ import {
     KeyIcon,
     StackIcon,
 } from "@phosphor-icons/react";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 
 interface AddProviderSelectionProps {
     availableProviders: any[];
+    isProvidersLoading: boolean;
     providerSearch: string;
     onProviderSearchChange: (value: string) => void;
     providerToAdd: string;
     onProviderToAddChange: (id: string) => void;
     providerMatches: any[];
     keyManagers: any[];
+    isKeyManagersLoading: boolean;
     vaultIds: string[];
     onVaultIdsChange: (ids: string[]) => void;
     onAdd: () => Promise<void>;
@@ -25,12 +29,14 @@ interface AddProviderSelectionProps {
 
 export function AddProviderSelection({
     availableProviders,
+    isProvidersLoading,
     providerSearch,
     onProviderSearchChange,
     providerToAdd,
     onProviderToAddChange,
     providerMatches,
     keyManagers,
+    isKeyManagersLoading,
     vaultIds,
     onVaultIdsChange,
     onAdd,
@@ -65,8 +71,13 @@ export function AddProviderSelection({
                             onChange={(e) => onProviderSearchChange(e.target.value)}
                             placeholder="Search providers"
                         />
-                        <div className="grid max-h-82.5 gap-2 overflow-y-auto pr-1 grow">
-                            {providerMatches.map((provider) => {
+                        <div className="flex max-h-82.5 flex-col gap-2 overflow-y-auto pr-1">
+                            {isProvidersLoading
+                                ? Array.from({ length: 4 }).map((_, index) => (
+                                      <Skeleton key={index} className="h-28 rounded-xl" />
+                                  ))
+                                : null}
+                            {!isProvidersLoading && providerMatches.map((provider) => {
                                 const selected = provider.id === providerToAdd;
                                 return (
                                     <button
@@ -114,10 +125,12 @@ export function AddProviderSelection({
                                     </button>
                                 );
                             })}
-                            {providerMatches.length === 0 && (
-                                <div className="rounded-md border border-dashed border-(--color-border-primary) p-4 text-sm text-(--color-text-secondary)">
-                                    No unselected providers match this filter.
-                                </div>
+                            {!isProvidersLoading && providerMatches.length === 0 && (
+                                <EmptyState
+                                    compact
+                                    title="No matching providers"
+                                    description="Try a different search term or add more providers before creating a selection."
+                                />
                             )}
                         </div>
                     </div>
@@ -150,7 +163,12 @@ export function AddProviderSelection({
                             )}
                         </div>
                         <div className="grid max-h-64.5 gap-2 overflow-y-auto pr-1">
-                            {keyManagers.map((key) => {
+                            {isKeyManagersLoading
+                                ? Array.from({ length: 4 }).map((_, index) => (
+                                      <Skeleton key={index} className="h-24 rounded-xl" />
+                                  ))
+                                : null}
+                            {!isKeyManagersLoading && keyManagers.map((key) => {
                                 const checked = vaultIds.includes(key.id);
                                 return (
                                     <div
@@ -197,10 +215,12 @@ export function AddProviderSelection({
                                     </div>
                                 );
                             })}
-                            {keyManagers.length === 0 && (
-                                <div className="rounded-md border border-dashed border-(--color-border-primary) p-4 text-sm text-(--color-text-secondary)">
-                                    Add provider keys in Key Vault before selecting a provider.
-                                </div>
+                            {!isKeyManagersLoading && keyManagers.length === 0 && (
+                                <EmptyState
+                                    compact
+                                    title="No vault keys available"
+                                    description="Add provider keys in Key Vault before selecting a provider."
+                                />
                             )}
                         </div>
                     </div>

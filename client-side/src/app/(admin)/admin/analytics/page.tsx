@@ -2,19 +2,22 @@
 
 import {
     ActivityIcon,
-    ChartLineUpIcon,
+    ArrowSquareOutIcon,
     CoinsIcon,
     CpuIcon,
     GlobeIcon,
+    LightningIcon,
     PulseIcon,
     StackIcon,
     UsersIcon,
 } from "@phosphor-icons/react";
-import { motion } from "framer-motion";
+import Link from "next/link";
 import { PageHeader } from "@/shared/components/layout/page-header";
+import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
-import { useGetAdminAnalyticsQuery } from "@/shared/store/features/api/roundhouseApi";
+import { routes } from "@/shared/constants/routes";
+import { useGetAdminAnalyticsQuery } from "@/shared/store/features/admin/adminApi";
 import { formatNumber } from "@/shared/lib/utils";
 import { KPI } from "./components/kpi";
 import { Sparkline } from "./components/sparkline";
@@ -52,19 +55,126 @@ export default function AdminAnalyticsPage() {
 
     const totalRequestsTrend = dailyTrend.map((d) => d.requests);
     const tokenUsageTrend = dailyTrend.map((d) => d.tokens);
+    const maxRequests = Math.max(...totalRequestsTrend, 0);
+    const trendRows = dailyTrend.slice(-7);
+    const topProviders = data?.topProviders ?? [];
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-8 pb-12"
-        >
+        <div className="flex flex-col gap-8 pb-12">
             <PageHeader
-                title="Analytics & Insights"
-                description="Monitor platform health, usage trends, and model distribution."
+                title="Analytics"
+                description="Monitor demand, efficiency, provider mix, and platform throughput in a cleaner executive view."
+                actions={
+                    <>
+                        <Button asChild>
+                            <Link href={routes.admin}>
+                                Back to Dashboard
+                            </Link>
+                        </Button>
+                        <Button asChild variant="secondary">
+                            <Link href={routes.dashboard}>
+                                <ArrowSquareOutIcon size={18} />
+                                User Dashboard
+                            </Link>
+                        </Button>
+                    </>
+                }
             />
-
-            {/* KPI Section */}
+            <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+                <Card className="overflow-hidden border-(--color-border-subtle) bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--color-accent-primary)_15%,transparent),transparent_46%),linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-card)_95%,transparent),var(--color-bg-secondary))]">
+                    <CardContent className="grid gap-8 p-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+                        <div className="grid gap-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Badge>Executive Snapshot</Badge>
+                                <span className="text-xs uppercase tracking-[0.18em] text-(--color-text-muted)">
+                                    Last {dailyTrend.length || 0} tracked days
+                                </span>
+                            </div>
+                            <div className="grid gap-2">
+                                <h2 className="max-w-2xl text-2xl font-semibold tracking-tight sm:text-3xl">
+                                    The platform is processing requests across a
+                                    shared provider and model inventory with
+                                    measurable efficiency.
+                                </h2>
+                                <p className="max-w-2xl text-sm leading-6 text-(--color-text-secondary)">
+                                    Use this view for the high-level read:
+                                    request volume, success rate, token burn,
+                                    and which providers are carrying the most
+                                    load.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="grid gap-3 rounded-2xl border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-primary)_78%,transparent)] p-4">
+                            {[
+                                {
+                                    label: "Average success rate",
+                                    value: `${(summary?.averageSuccessRate ?? 0).toFixed(1)}%`,
+                                },
+                                {
+                                    label: "Total token usage",
+                                    value: formatCompactNumber(summary?.totalTokens ?? 0),
+                                },
+                                {
+                                    label: "Tracked request volume",
+                                    value: formatCompactNumber(summary?.totalRequests ?? 0),
+                                },
+                            ].map((item) => (
+                                <div
+                                    key={item.label}
+                                    className="flex items-center justify-between rounded-xl border border-(--color-border-subtle) bg-(--color-bg-card) px-4 py-3"
+                                >
+                                    <span className="text-sm text-(--color-text-secondary)">
+                                        {item.label}
+                                    </span>
+                                    <span className="font-mono text-lg font-bold text-(--color-text-primary)">
+                                        {item.value}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <div>
+                            <h2 className="text-lg font-semibold tracking-tight">
+                                Trend Notes
+                            </h2>
+                            <p className="mt-1 text-sm text-(--color-text-secondary)">
+                                Quick reading cues for operators and admins.
+                            </p>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="grid gap-3">
+                        {[
+                            {
+                                label: "User base",
+                                value: `${formatNumber(summary?.users ?? 0)} registered accounts`,
+                            },
+                            {
+                                label: "Provider catalog",
+                                value: `${formatNumber((summary?.globalProviders ?? 0) + (summary?.customProviders ?? 0))} total providers`,
+                            },
+                            {
+                                label: "Model inventory",
+                                value: `${formatNumber((summary?.models ?? 0) + (summary?.userModels ?? 0))} models available`,
+                            },
+                        ].map((item) => (
+                            <div
+                                key={item.label}
+                                className="rounded-xl border border-(--color-border-subtle) bg-(--color-bg-card) p-4"
+                            >
+                                <p className="font-medium text-(--color-text-primary)">
+                                    {item.label}
+                                </p>
+                                <p className="mt-1 text-sm text-(--color-text-secondary)">
+                                    {item.value}
+                                </p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </section>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <KPI
                     label="Total Tokens"
@@ -92,109 +202,115 @@ export default function AdminAnalyticsPage() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* Usage Trends Chart */}
-                <Card className="lg:col-span-2">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <div className="flex flex-col gap-1">
-                            <h2 className="text-lg font-bold">Usage Trends</h2>
-                            <p className="text-xs text-(--color-text-muted)">
-                                Daily request volume and token consumption (last 30 days)
-                            </p>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+                <Card>
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <h2 className="text-lg font-semibold tracking-tight">
+                                    Daily Request Trend
+                                </h2>
+                                <p className="mt-1 text-sm text-(--color-text-secondary)">
+                                    Request volume across the full captured period.
+                                </p>
+                            </div>
+                            <div className="grid size-10 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--color-accent-primary)_10%,transparent)] text-(--color-accent-primary)">
+                                <PulseIcon size={20} weight="duotone" />
+                            </div>
                         </div>
-                        <ChartLineUpIcon
-                            size={24}
-                            className="text-(--color-text-muted)"
-                        />
                     </CardHeader>
-                    <CardContent className="pt-6">
-                        <div className="relative h-64 w-full px-2">
-                            <div className="absolute inset-0 z-0 opacity-10">
+                    <CardContent className="grid gap-5">
+                        <div className="rounded-2xl border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-primary)_60%,transparent)] p-4">
+                            <div className="h-44">
+                                <Sparkline
+                                    data={totalRequestsTrend}
+                                    color="var(--color-accent-primary)"
+                                />
+                            </div>
+                            <div className="mt-4 flex items-center justify-between text-xs text-(--color-text-muted)">
+                                <span>Start</span>
+                                <span>Latest</span>
+                            </div>
+                        </div>
+                        <div className="grid gap-3">
+                            {trendRows.length > 0 ? (
+                                trendRows.map((item) => {
+                                    const width =
+                                        maxRequests > 0
+                                            ? Math.max(
+                                                  8,
+                                                  (item.requests / maxRequests) *
+                                                      100,
+                                              )
+                                            : 8;
+
+                                    return (
+                                        <div
+                                            key={item.date}
+                                            className="grid gap-2"
+                                        >
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-(--color-text-secondary)">
+                                                    {item.date}
+                                                </span>
+                                                <span className="font-mono font-medium text-(--color-text-primary)">
+                                                    {formatNumber(item.requests)} requests
+                                                </span>
+                                            </div>
+                                            <div className="h-2 rounded-full bg-(--color-bg-input)">
+                                                <div
+                                                    className="h-full rounded-full bg-(--color-accent-primary)"
+                                                    style={{ width: `${width}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="rounded-xl border border-dashed border-(--color-border-primary) p-6 text-sm text-(--color-text-secondary)">
+                                    Daily request data is not available yet.
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <h2 className="text-lg font-semibold tracking-tight">
+                                    Token Consumption
+                                </h2>
+                                <p className="mt-1 text-sm text-(--color-text-secondary)">
+                                    Overlay of token demand for the same reporting window.
+                                </p>
+                            </div>
+                            <div className="grid size-10 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--color-accent-secondary)_10%,transparent)] text-(--color-accent-secondary)">
+                                <LightningIcon size={20} weight="duotone" />
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="grid gap-5">
+                        <div className="rounded-2xl border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-primary)_60%,transparent)] p-4">
+                            <div className="h-44">
                                 <Sparkline
                                     data={tokenUsageTrend}
                                     color="var(--color-accent-secondary)"
                                 />
                             </div>
-                            <div className="relative z-10 h-full">
-                                <Sparkline data={totalRequestsTrend} />
-                            </div>
-
-                            <div className="mt-4 flex justify-between px-1 text-[10px] font-bold text-(--color-text-muted)">
-                                <span>30 days ago</span>
-                                <span>Today</span>
+                            <div className="mt-4 flex items-center justify-between text-xs text-(--color-text-muted)">
+                                <span>Start</span>
+                                <span>Latest</span>
                             </div>
                         </div>
-
-                        <div className="mt-8 flex gap-6">
-                            <div className="flex items-center gap-2">
-                                <div className="size-2 rounded-full bg-(--color-accent-primary)" />
-                                <span className="text-xs font-medium">Requests</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="size-2 rounded-full bg-(--color-accent-secondary)" />
-                                <span className="text-xs font-medium">Tokens</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Efficiency Distribution */}
-                <Card>
-                    <CardHeader>
-                        <h2 className="text-lg font-bold">Platform Efficiency</h2>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-8 pt-4">
-                        <div className="flex items-center justify-center py-4">
-                            <div className="relative grid size-32 place-items-center">
-                                <svg
-                                    viewBox="0 0 36 36"
-                                    className="size-full -rotate-90"
-                                >
-                                    <path
-                                        className="text-(--color-bg-input)"
-                                        stroke="currentColor"
-                                        strokeWidth="3"
-                                        fill="none"
-                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                    <path
-                                        className="text-(--color-status-success) transition-all duration-1000 ease-out"
-                                        stroke="currentColor"
-                                        strokeWidth="3"
-                                        strokeDasharray={`${summary?.averageSuccessRate ?? 0}, 100`}
-                                        strokeLinecap="round"
-                                        fill="none"
-                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    />
-                                </svg>
-                                <div className="absolute flex flex-col items-center">
-                                    <span className="text-xl font-black">
-                                        {(summary?.averageSuccessRate ?? 0).toFixed(0)}%
-                                    </span>
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-(--color-text-muted)">
-                                        Success
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid gap-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-1.5 rounded-full bg-(--color-status-success)" />
-                                    <span className="text-sm font-medium">Successful</span>
-                                </div>
-                                <span className="font-mono text-sm font-bold">
-                                    {formatCompactNumber(data?.summary.totalRequests || 0)}
+                        <div className="rounded-xl border border-(--color-border-subtle) bg-(--color-bg-card) p-4">
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-sm text-(--color-text-secondary)">
+                                    Total tracked token usage
                                 </span>
-                            </div>
-                            <div className="h-2 w-full rounded-full bg-(--color-bg-input) overflow-hidden">
-                                <div
-                                    className="h-full bg-(--color-status-success)"
-                                    style={{
-                                        width: `${summary?.averageSuccessRate ?? 0}%`,
-                                    }}
-                                />
+                                <span className="font-mono text-lg font-bold text-(--color-text-primary)">
+                                    {formatCompactNumber(summary?.totalTokens ?? 0)}
+                                </span>
                             </div>
                         </div>
                     </CardContent>
@@ -202,10 +318,11 @@ export default function AdminAnalyticsPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                {/* Provider Distribution */}
                 <Card>
                     <CardHeader>
-                        <h2 className="text-lg font-bold">Operational Mix</h2>
+                        <h2 className="text-lg font-semibold tracking-tight">
+                            Operational Mix
+                        </h2>
                     </CardHeader>
                     <CardContent className="grid gap-6 pt-2">
                         <div className="grid gap-4">
@@ -236,32 +353,43 @@ export default function AdminAnalyticsPage() {
                                     label={item.label}
                                     value={item.value}
                                     icon={item.icon}
-                                    totalModels={summary?.models ?? 1}
+                                    totalModels={
+                                        (summary?.models ?? 0) +
+                                            (summary?.userModels ?? 0) || 1
+                                    }
                                 />
                             ))}
                         </div>
                     </CardContent>
                 </Card>
-
-                {/* Top Performers */}
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
-                        <h2 className="text-lg font-bold">Top Performing Resources</h2>
-                        <Badge className="px-2 py-0.5 text-[10px]">SUCCESS RANK</Badge>
+                        <h2 className="text-lg font-semibold tracking-tight">
+                            Top Performing Providers
+                        </h2>
+                        <Badge className="px-2 py-0.5 text-[10px]">
+                            Success Rank
+                        </Badge>
                     </CardHeader>
                     <CardContent className="pt-2">
                         <div className="divide-y divide-(--color-border-subtle)">
-                            {data?.topProviders.map((resource: any, index: number) => (
-                                <TopPerformerItem
-                                    key={index}
-                                    resource={resource}
-                                    index={index}
-                                />
-                            ))}
+                            {topProviders.length > 0 ? (
+                                topProviders.map((resource: any, index: number) => (
+                                    <TopPerformerItem
+                                        key={index}
+                                        resource={resource}
+                                        index={index}
+                                    />
+                                ))
+                            ) : (
+                                <div className="rounded-xl border border-dashed border-(--color-border-primary) p-6 text-sm text-(--color-text-secondary)">
+                                    Top provider rankings are not available yet.
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
             </div>
-        </motion.div>
+        </div>
     );
 }

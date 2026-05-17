@@ -3,6 +3,10 @@ import { Modal } from "@/shared/components/ui/modal";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
+import {
+    contentStatusLabels,
+    providerTypeLabels,
+} from "@/shared/lib/enum-labels";
 import { ContentStatus, ProviderType } from "@/shared/types/enums";
 
 interface CreateProviderModalProps {
@@ -110,7 +114,7 @@ export function CreateProviderModal({
                         >
                             {Object.values(ProviderType).map((value) => (
                                 <option key={value} value={value}>
-                                    {value}
+                                    {providerTypeLabels[value]}
                                 </option>
                             ))}
                         </select>
@@ -124,7 +128,7 @@ export function CreateProviderModal({
                         >
                             {Object.values(ContentStatus).map((value) => (
                                 <option key={value} value={value}>
-                                    {value}
+                                    {contentStatusLabels[value]}
                                 </option>
                             ))}
                         </select>

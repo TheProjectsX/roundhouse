@@ -3,6 +3,7 @@ import { Modal } from "@/shared/components/ui/modal";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
+import { roundhouseMethodLabels } from "@/shared/lib/enum-labels";
 import { RoundhouseMethod } from "@/shared/types/enums";
 
 interface CreateApiKeyModalProps {
@@ -80,7 +81,7 @@ export function CreateApiKeyModal({
                 >
                     {Object.values(RoundhouseMethod).map((method) => (
                         <option key={method} value={method}>
-                            {method}
+                            {roundhouseMethodLabels[method]}
                         </option>
                     ))}
                 </select>

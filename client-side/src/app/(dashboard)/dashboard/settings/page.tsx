@@ -12,7 +12,7 @@ import {
     useChangePasswordMutation,
     useGetMeQuery,
     useUpdateMeMutation,
-} from "@/shared/store/features/api/roundhouseApi";
+} from "@/shared/store/features/auth/authApi";
 import { ProfileForm } from "./components/profile-form";
 import { SecurityForm } from "./components/security-form";
 import { PreferenceItem } from "./components/preference-item";

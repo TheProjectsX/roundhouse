@@ -3,12 +3,13 @@ import { CheckCircleIcon, PowerIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
     useDeselectApiKeyProviderModelsMutation,
-    useGetProviderModelsQuery,
     useSelectApiKeyProviderModelsMutation,
-} from "@/shared/store/features/api/roundhouseApi";
+} from "@/shared/store/features/apikeys/apikeysApi";
+import { useGetProviderModelsQuery } from "@/shared/store/features/providers/providersApi";
 
 interface ProviderModelConfiguratorProps {
     apiKeyId: string;
@@ -51,6 +52,15 @@ export function ProviderModelConfigurator({
 
     return (
         <div className="grid gap-3 md:grid-cols-2">
+            {providerModels.length === 0 ? (
+                <div className="md:col-span-2">
+                    <EmptyState
+                        compact
+                        title="No models available"
+                        description="This provider has no models to enable for routing yet."
+                    />
+                </div>
+            ) : null}
             {providerModels.map((model) => {
                 const selected = selectedById.get(model.id);
                 const active = selected?.active ?? false;

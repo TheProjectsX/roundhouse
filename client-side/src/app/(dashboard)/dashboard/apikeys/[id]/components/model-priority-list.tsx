@@ -100,6 +100,7 @@ export function ModelPriorityList({ models, onReorder }: ModelPriorityListProps)
                         </p>
                     </div>
                     <div className="flex flex-wrap justify-end gap-2">
+                        <Badge>{formatNumber(item.stats.tokenUsage)} tokens</Badge>
                         <Badge>{formatNumber(item.stats.successCount)} ok</Badge>
                         <Badge>{formatNumber(item.stats.failureCount)} fail</Badge>
                     </div>

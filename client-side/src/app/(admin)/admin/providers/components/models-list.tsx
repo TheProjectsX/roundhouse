@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { PlusIcon, PenIcon, TrashIcon } from "@phosphor-icons/react";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Button } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import { cn, formatNumber } from "@/shared/lib/utils";
 import { ContentStatus } from "@/shared/types/enums";
 import {
-    useGetAdminProviderModelsQuery,
     useCreateAdminProviderModelMutation,
+    useDeleteAdminProviderModelMutation,
+    useGetAdminProviderModelsQuery,
     useUpdateAdminProviderModelMutation,
     useUpdateAdminProviderModelStatusMutation,
-    useDeleteAdminProviderModelMutation,
-} from "@/shared/store/features/api/roundhouseApi";
+} from "@/shared/store/features/admin/adminApi";
 import { CreateModelModal } from "./create-model-modal";
 import { EditModelModal } from "./edit-model-modal";
 import { ModelRow } from "./model-row";
@@ -113,11 +114,13 @@ export function ModelsList({ providerId }: ModelsListProps) {
                         <tbody className="divide-y divide-(--color-border-subtle)">
                             {models.length === 0 ? (
                                 <tr>
-                                    <td
-                                        colSpan={7}
-                                        className="px-4 py-8 text-center text-(--color-text-muted)"
-                                    >
-                                        No models found for this provider.
+                                    <td colSpan={7} className="px-4 py-6">
+                                        <EmptyState
+                                            compact
+                                            title="No models found"
+                                            description="Add a model to this provider to start exposing it in the global catalog."
+                                            className="border-none bg-transparent"
+                                        />
                                     </td>
                                 </tr>
                             ) : (

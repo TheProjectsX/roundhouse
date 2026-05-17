@@ -1,6 +1,7 @@
 import React from "react";
 import { PenIcon, TrashIcon } from "@phosphor-icons/react";
 import { Button } from "@/shared/components/ui/button";
+import { contentStatusLabels } from "@/shared/lib/enum-labels";
 import { cn, formatNumber } from "@/shared/lib/utils";
 import { ContentStatus } from "@/shared/types/enums";
 
@@ -88,7 +89,7 @@ export function ModelRow({
                 >
                     {Object.values(ContentStatus).map((status) => (
                         <option key={status} value={status}>
-                            {status}
+                            {contentStatusLabels[status]}
                         </option>
                     ))}
                 </select>

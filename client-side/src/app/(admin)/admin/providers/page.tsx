@@ -1,23 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Button } from "@/shared/components/ui/button";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
     useCreateAdminProviderMutation,
     useDeleteAdminProviderMutation,
     useGetAdminProvidersQuery,
     useUpdateAdminProviderStatusMutation,
-    useUpdateCustomProviderMutation,
-} from "@/shared/store/features/api/roundhouseApi";
+} from "@/shared/store/features/admin/adminApi";
+import { useUpdateCustomProviderMutation } from "@/shared/store/features/providers/providersApi";
 import { ContentStatus } from "@/shared/types/enums";
 import { CreateProviderModal } from "./components/create-provider-modal";
 import { EditProviderModal } from "./components/edit-provider-modal";
 import { ProviderCard } from "./components/provider-card";
 
 export default function AdminProvidersPage() {
-    const { data: providers = [] } = useGetAdminProvidersQuery();
+    const { data: providers = [], isLoading } = useGetAdminProvidersQuery();
     const [showCreate, setShowCreate] = useState(false);
     const [editingProvider, setEditingProvider] = useState<any>(null);
     const [expandedProviderId, setExpandedProviderId] = useState<string | null>(
@@ -79,7 +81,19 @@ export default function AdminProvidersPage() {
             )}
 
             <section className="grid gap-6">
-                {providers.map((provider: any) => (
+                {isLoading
+                    ? Array.from({ length: 3 }).map((_, index) => (
+                          <Skeleton key={index} className="h-56 rounded-2xl" />
+                      ))
+                    : null}
+                {!isLoading && providers.length === 0 ? (
+                    <EmptyState
+                        title="No providers in the global catalog"
+                        description="Create a provider to start building the platform-wide provider catalog."
+                    />
+                ) : null}
+                {!isLoading &&
+                    providers.map((provider: any) => (
                     <ProviderCard
                         key={provider.id}
                         provider={provider}

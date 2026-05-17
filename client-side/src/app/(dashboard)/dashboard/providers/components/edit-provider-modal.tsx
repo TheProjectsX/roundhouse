@@ -3,7 +3,7 @@ import { Modal } from "@/shared/components/ui/modal";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
-import { useUpdateCustomProviderMutation } from "@/shared/store/features/api/roundhouseApi";
+import { useUpdateCustomProviderMutation } from "@/shared/store/features/providers/providersApi";
 import type { ProviderListItem } from "@/shared/types/entities";
 
 interface EditProviderModalProps {

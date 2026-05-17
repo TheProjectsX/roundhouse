@@ -118,7 +118,45 @@ h6 {
     }
 }
 
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.marquee-track {
+    animation: marquee 28s linear infinite;
+}
+
+.marquee-fade::before,
+.marquee-fade::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4rem;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.marquee-fade::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--color-bg-secondary), transparent);
+}
+
+.marquee-fade::after {
+    right: 0;
+    background: linear-gradient(270deg, var(--color-bg-secondary), transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+        animation: none;
+    }
+
     *,
     *::before,
     *::after {

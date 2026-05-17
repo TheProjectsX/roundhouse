@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { toast } from "sonner";
 import { PageHeader } from "@/shared/components/layout/page-header";
 import { Button } from "@/shared/components/ui/button";
@@ -9,7 +10,7 @@ import {
     useDeleteCustomProviderMutation,
     useGetProvidersQuery,
     useUpdateCustomProviderStatusMutation,
-} from "@/shared/store/features/api/roundhouseApi";
+} from "@/shared/store/features/providers/providersApi";
 import { ContentStatus } from "@/shared/types/enums";
 import type { ProviderListItem } from "@/shared/types/entities";
 import { CreateProviderModal } from "./components/create-provider-modal";
@@ -86,8 +87,11 @@ export default function ProvidersPage() {
                 <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                     {isLoading ? <ProviderSkeletons /> : null}
                     {!isLoading && userProviders.length === 0 && (
-                        <div className="col-span-full rounded-md border border-dashed border-(--color-border-primary) p-8 text-center text-sm text-(--color-text-secondary)">
-                            No custom providers found. Add one above to get started.
+                        <div className="col-span-full">
+                            <EmptyState
+                                title="No custom providers found"
+                                description="Add your first custom provider to connect a private or self-managed model endpoint."
+                            />
                         </div>
                     )}
                     {userProviders.map((provider) => (
@@ -117,8 +121,11 @@ export default function ProvidersPage() {
                         <ProviderSkeletons />
                     ) : null}
                     {!isLoading && globalProviders.length === 0 && (
-                        <div className="col-span-full rounded-md border border-dashed border-(--color-border-primary) p-8 text-center text-sm text-(--color-text-secondary)">
-                            No global providers available.
+                        <div className="col-span-full">
+                            <EmptyState
+                                title="No global providers available"
+                                description="Global providers will appear here after they are created from the admin workspace."
+                            />
                         </div>
                     )}
                     {globalProviders.map((provider) => (

@@ -3,7 +3,11 @@ import authReducer from "../auth-slice";
 import uiReducer from "../ui-slice";
 import unlockReducer from "../unlock-slice";
 import { roundhouseApi } from "../features/api/baseApi";
-import "../features/api/roundhouseApi";
+import "../features/admin/adminApi";
+import "../features/apikeys/apikeysApi";
+import "../features/auth/authApi";
+import "../features/keysManager/keysManagerApi";
+import "../features/providers/providersApi";
 
 const rootReducer = combineReducers({
     auth: authReducer,

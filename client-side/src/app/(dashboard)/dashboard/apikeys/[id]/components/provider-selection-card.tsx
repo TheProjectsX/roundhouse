@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
+import { formatNumber } from "@/shared/lib/utils";
 import { Metric } from "./metric";
 import { ProviderModelConfigurator } from "./provider-model-configurator";
 
@@ -36,6 +37,11 @@ export function ProviderSelectionCard({
     pendingModelStatusKey,
     onPendingModelStatusKeyChange,
 }: ProviderSelectionCardProps) {
+    const totalTokenUsage = selection.models.reduce(
+        (total: number, model: any) => total + (model.stats?.tokenUsage ?? 0),
+        0,
+    );
+
     return (
         <Card>
             <CardHeader>
@@ -99,7 +105,7 @@ export function ProviderSelectionCard({
             </CardHeader>
             {expanded && (
                 <CardContent className="grid gap-5">
-                    <div className="grid gap-3 md:grid-cols-3">
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <Metric
                             label="Vault Keys"
                             value={selection.apiKeysManagers.length}
@@ -109,6 +115,10 @@ export function ProviderSelectionCard({
                             value={selection.models.filter((m: any) => m.active).length}
                         />
                         <Metric label="Total Models" value={selection.models.length} />
+                        <Metric
+                            label="Token Usage"
+                            value={formatNumber(totalTokenUsage)}
+                        />
                     </div>
                     <ProviderModelConfigurator
                         apiKeyId={apiKeyId}

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { PageHeader } from "@/shared/components/layout/page-header";
-import { Card, CardContent } from "@/shared/components/ui/card";
-import { useGetAdminProvidersQuery } from "@/shared/store/features/api/roundhouseApi";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { useGetAdminProvidersQuery } from "@/shared/store/features/admin/adminApi";
 import { CustomProviderCard } from "./components/custom-provider-card";
 
 export default function CustomProvidersPage() {
-    const { data: providers = [] } = useGetAdminProvidersQuery({
+    const { data: providers = [], isLoading } = useGetAdminProvidersQuery({
         customOnly: true,
     });
     const [expandedProviderId, setExpandedProviderId] = useState<string | null>(
@@ -22,13 +23,18 @@ export default function CustomProvidersPage() {
             />
 
             <section className="grid gap-6">
-                {providers.length === 0 ? (
-                    <Card>
-                        <CardContent className="flex h-40 items-center justify-center text-(--color-text-muted)">
-                            No custom providers found.
-                        </CardContent>
-                    </Card>
+                {isLoading
+                    ? Array.from({ length: 3 }).map((_, index) => (
+                          <Skeleton key={index} className="h-48 rounded-2xl" />
+                      ))
+                    : null}
+                {!isLoading && providers.length === 0 ? (
+                    <EmptyState
+                        title="No custom providers found"
+                        description="User-created providers will appear here for admin review once they are added from the user dashboard."
+                    />
                 ) : (
+                    !isLoading &&
                     providers.map((provider: any) => (
                         <CustomProviderCard
                             key={provider.id}
