@@ -45,7 +45,7 @@ const architectureCards = [
         body:
             "Roundhouse sits in front of provider APIs so existing OpenAI SDK flows can keep moving while routing decisions happen inside your control plane.",
         eyebrow: "/v1 compatibility",
-        className: "xl:col-span-7",
+        className: "md:col-span-12 xl:col-span-7",
         icon: CodeBlockIcon,
     },
     {
@@ -53,7 +53,7 @@ const architectureCards = [
         body:
             "Each API key can attach provider selections, model selections, vault keys, and activation state without collapsing those decisions into hidden defaults.",
         eyebrow: "Configuration depth",
-        className: "xl:col-span-5",
+        className: "md:col-span-12 xl:col-span-5",
         icon: StackIcon,
     },
     {
@@ -73,20 +73,20 @@ const architectureCards = [
         icon: SwapIcon,
     },
     {
-        title: "Custom providers belong in the same workspace",
-        body:
-            "User-created providers and admin-managed globals share the same operator language, making private endpoints feel first-class instead of bolted on.",
-        eyebrow: "Shared inventory",
-        className: "xl:col-span-8",
-        icon: CirclesThreePlusIcon,
-    },
-    {
         title: "Key reveal stays temporary",
         body:
             "Vault keys are masked by default and only revealed in memory after password confirmation, which keeps credential work visible without leaving secrets exposed.",
         eyebrow: "Security posture",
-        className: "xl:col-span-4",
+        className: "md:col-span-12 xl:col-span-4",
         icon: LockKeyIcon,
+    },
+    {
+        title: "Custom providers belong in the same workspace",
+        body:
+            "User-created providers and admin-managed globals share the same operator language, making private endpoints feel first-class instead of bolted on.",
+        eyebrow: "Shared inventory",
+        className: "md:col-span-12 xl:col-span-8",
+        icon: CirclesThreePlusIcon,
     },
 ];
 
@@ -236,6 +236,7 @@ const faqs = [
 export function LandingPage() {
     const [activeMode, setActiveMode] = useState(routingModes[0].key);
     const [openFaq, setOpenFaq] = useState(faqs[0].question);
+    const [activePanelKey, setActivePanelKey] = useState(stackPanels[0].label);
 
     useEffect(() => {
         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -281,52 +282,6 @@ export function LandingPage() {
 
             const mm = gsap.matchMedia();
 
-            mm.add("(min-width: 1024px)", () => {
-                const cards = gsap.utils.toArray<HTMLElement>("[data-stack-card]");
-                if (!cards.length) return;
-
-                cards.forEach((card, index) => {
-                    gsap.set(card, {
-                        y: index * 26,
-                        scale: 1 - index * 0.04,
-                        opacity: 1 - index * 0.08,
-                        transformOrigin: "center top",
-                    });
-                });
-
-                const tl = gsap.timeline({
-                    scrollTrigger: {
-                        trigger: "[data-story-pin]",
-                        start: "top top",
-                        end: `+=${cards.length * 320}`,
-                        pin: true,
-                        scrub: 1,
-                    },
-                });
-
-                cards.slice(1).forEach((card, index) => {
-                    tl.to(
-                        cards[index],
-                        {
-                            y: -88,
-                            scale: 0.92,
-                            opacity: 0.2,
-                            ease: "none",
-                        },
-                        index,
-                    ).to(
-                        card,
-                        {
-                            y: 0,
-                            scale: 1,
-                            opacity: 1,
-                            ease: "none",
-                        },
-                        index,
-                    );
-                });
-            });
-
             const disposers: Array<() => void> = [];
             gsap.utils.toArray<HTMLElement>("[data-hover-float]").forEach((item) => {
                 const moveX = gsap.quickTo(item, "x", { duration: 0.45, ease: "power3.out" });
@@ -356,6 +311,16 @@ export function LandingPage() {
                     item.removeEventListener("pointerleave", handleLeave);
                 });
             });
+
+            const track = document.querySelector(".marquee-track");
+            if (track) {
+                gsap.to(track, {
+                    xPercent: -50,
+                    repeat: -1,
+                    duration: 25,
+                    ease: "linear",
+                });
+            }
 
             return () => {
                 disposers.forEach((dispose) => dispose());
@@ -432,10 +397,10 @@ export function LandingPage() {
                             OpenAI-compatible orchestration
                         </div>
                         <div className="grid gap-6">
-                            <h1 className="max-w-6xl text-5xl font-semibold tracking-tight leading-none text-balance sm:text-6xl lg:text-7xl">
+                            <h1 className="max-w-5xl text-4xl font-semibold tracking-tight leading-[1.15] text-balance sm:text-5xl lg:text-6xl">
                                 Route every AI request through one control plane built for failover.
                             </h1>
-                            <p className="max-w-3xl text-base leading-8 text-(--color-text-secondary) sm:text-lg">
+                            <p className="max-w-2xl text-base leading-8 text-(--color-text-secondary) sm:text-lg">
                                 Roundhouse gives developers and operators one place to shape provider selections, model
                                 priorities, vault-backed credentials, and retry behavior before live traffic hits
                                 OpenAI, Anthropic, Gemini, or a custom endpoint.
@@ -468,10 +433,10 @@ export function LandingPage() {
                     </div>
 
                     <div className="relative" data-reveal data-media-scale data-hover-float>
-                        <div className="absolute -left-4 top-10 rounded-full border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_82%,transparent)] px-4 py-2 text-xs uppercase tracking-[0.2em] text-(--color-text-secondary) shadow-[0_20px_80px_-48px_var(--color-shadow)] backdrop-blur-xl sm:-left-8">
+                        <div className="absolute left-2 sm:-left-6 top-10 z-10 rounded-full border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_95%,transparent)] px-4 py-2 text-xs uppercase tracking-[0.2em] text-(--color-text-primary) shadow-[0_20px_80px_-48px_var(--color-shadow)] backdrop-blur-xl">
                             Provider vault linked
                         </div>
-                        <div className="absolute -right-3 bottom-16 rounded-full border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_82%,transparent)] px-4 py-2 text-xs uppercase tracking-[0.2em] text-(--color-text-secondary) shadow-[0_20px_80px_-48px_var(--color-shadow)] backdrop-blur-xl sm:-right-8">
+                        <div className="absolute right-2 sm:-right-6 bottom-16 z-10 rounded-full border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_95%,transparent)] px-4 py-2 text-xs uppercase tracking-[0.2em] text-(--color-text-primary) shadow-[0_20px_80px_-48px_var(--color-shadow)] backdrop-blur-xl">
                             Retry loop active
                         </div>
 
@@ -561,7 +526,7 @@ export function LandingPage() {
 
                 <section className="border-y border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_48%,transparent)]">
                     <div className={cn(shellClass, "overflow-hidden py-6")}>
-                        <div className="marquee-fade relative overflow-hidden">
+                        <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
                             <div className="marquee-track flex w-max items-center gap-8 whitespace-nowrap text-sm uppercase tracking-[0.24em] text-(--color-text-muted)">
                                 {marqueeSignals.map((item, index) => (
                                     <span key={`${item}-${index}`} className="shrink-0">
@@ -627,7 +592,7 @@ export function LandingPage() {
                     <div className="mb-10 grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
                         <div data-reveal>
                             <p className="text-sm uppercase tracking-[0.28em] text-(--color-text-muted)">Routing systems</p>
-                            <h2 className="mt-4 text-4xl font-semibold tracking-tight leading-none sm:text-5xl">
+                            <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight leading-[1.1] sm:text-5xl">
                                 Three routing modes, one operator language.
                             </h2>
                         </div>
@@ -637,8 +602,8 @@ export function LandingPage() {
                         </p>
                     </div>
 
-                    <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-start">
-                        <div className="grid gap-4">
+                    <div className="grid gap-4">
+                        <div className="grid gap-4 sm:grid-cols-3">
                             {routingModes.map((mode) => {
                                 const active = activeMode === mode.key;
                                 return (
@@ -658,7 +623,7 @@ export function LandingPage() {
                                     >
                                         <p className="text-xs uppercase tracking-[0.22em] text-(--color-text-muted)">{mode.name}</p>
                                         <h3 className="mt-3 text-xl font-semibold tracking-tight">{mode.title}</h3>
-                                        <p className="mt-3 text-sm leading-7 text-(--color-text-secondary)">{mode.body}</p>
+                                        <p className={cn("mt-3 text-sm leading-7", active ? "text-(--color-text-primary)" : "text-(--color-text-secondary)")}>{mode.body}</p>
                                     </button>
                                 );
                             })}
@@ -710,40 +675,53 @@ export function LandingPage() {
                             </p>
                         </div>
 
-                        <div className="grid gap-10 lg:grid-cols-[0.58fr_1.42fr] lg:items-start" data-story-pin>
+                        <div className="grid gap-10 lg:grid-cols-[0.58fr_1.42fr] lg:items-start">
                             <div className="grid gap-4 lg:pt-6" data-reveal>
-                                {stackPanels.map((panel) => (
-                                    <div
-                                        key={panel.label}
-                                        className="rounded-[1.5rem] border border-(--color-border-primary) bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_96%,transparent),var(--color-bg-card))] p-5"
-                                    >
-                                        <p className="text-xs uppercase tracking-[0.22em] text-(--color-text-muted)">{panel.label}</p>
-                                        <h3 className="mt-3 text-xl font-semibold tracking-tight">{panel.title}</h3>
-                                        <p className="mt-3 text-sm leading-7 text-(--color-text-secondary)">{panel.body}</p>
-                                    </div>
-                                ))}
+                                {stackPanels.map((panel) => {
+                                    const active = activePanelKey === panel.label;
+                                    return (
+                                        <button
+                                            key={panel.label}
+                                            type="button"
+                                            onMouseEnter={() => setActivePanelKey(panel.label)}
+                                            onFocus={() => setActivePanelKey(panel.label)}
+                                            onClick={() => setActivePanelKey(panel.label)}
+                                            className={cn(
+                                                "rounded-[1.5rem] border border-(--color-border-primary) p-5 text-left transition-all duration-300",
+                                                active
+                                                    ? "bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_96%,transparent),var(--color-bg-card))] shadow-[0_24px_72px_-48px_var(--color-shadow)]"
+                                                    : "bg-transparent",
+                                            )}
+                                        >
+                                            <p className="text-xs uppercase tracking-[0.22em] text-(--color-text-muted)">{panel.label}</p>
+                                            <h3 className="mt-3 text-xl font-semibold tracking-tight">{panel.title}</h3>
+                                            <p className={cn("mt-3 text-sm leading-7", active ? "text-(--color-text-primary)" : "text-(--color-text-secondary)")}>{panel.body}</p>
+                                        </button>
+                                    );
+                                })}
                             </div>
 
                             <div className="relative min-h-[34rem] rounded-[2rem] border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_72%,transparent)] p-3 lg:min-h-[42rem]">
-                                {stackPanels.map((panel) => (
-                                    <Card
-                                        key={panel.title}
-                                        className="absolute inset-3 rounded-[1.6rem] border-(--color-border-primary) bg-[linear-gradient(180deg,var(--color-bg-secondary),var(--color-bg-card))] p-6 shadow-[0_40px_120px_-72px_var(--color-shadow)]"
-                                        data-stack-card
-                                    >
+                                {(() => {
+                                    const activePanel = stackPanels.find(p => p.label === activePanelKey) || stackPanels[0];
+                                    return (
+                                        <Card
+                                            key={activePanel.title}
+                                            className="absolute inset-3 rounded-[1.6rem] border-(--color-border-primary) bg-(--color-bg-primary) p-6 shadow-[0_40px_120px_-72px_var(--color-shadow)] animate-in fade-in zoom-in-95 duration-500"
+                                        >
                                         <div className="flex h-full flex-col justify-between gap-10">
                                             <div>
-                                                <p className="text-xs uppercase tracking-[0.22em] text-(--color-text-muted)">{panel.label}</p>
+                                                <p className="text-xs uppercase tracking-[0.22em] text-(--color-text-muted)">{activePanel.label}</p>
                                                 <h3 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-                                                    {panel.title}
+                                                    {activePanel.title}
                                                 </h3>
                                                 <p className="mt-4 max-w-2xl text-sm leading-8 text-(--color-text-secondary)">
-                                                    {panel.body}
+                                                    {activePanel.body}
                                                 </p>
                                             </div>
 
                                             <div className="grid gap-3 sm:grid-cols-3">
-                                                {panel.lines.map((line) => (
+                                                {activePanel.lines.map((line) => (
                                                     <div
                                                         key={line}
                                                         className="rounded-2xl border border-(--color-border-primary) bg-(--color-bg-secondary) px-4 py-4 text-sm text-(--color-text-secondary)"
@@ -779,7 +757,8 @@ export function LandingPage() {
                                             </div>
                                         </div>
                                     </Card>
-                                ))}
+                                    );
+                                })()}
                             </div>
                         </div>
                     </div>
@@ -1004,8 +983,8 @@ export function LandingPage() {
                     >
                         <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
                             <div>
-                                <p className="text-sm uppercase tracking-[0.28em] text-(--color-text-muted)">Massive call to action</p>
-                                <h2 className="mt-4 max-w-4xl text-[2rem] font-semibold tracking-tight leading-none sm:text-[2.6rem] lg:text-[3.2rem]">
+                                <p className="text-sm uppercase tracking-[0.28em] text-(--color-text-muted)">Get Started</p>
+                                <h2 className="mt-4 max-w-4xl text-[2rem] font-semibold tracking-tight leading-[1.1] sm:text-[2.6rem] lg:text-[3.2rem]">
                                     Put your provider inventory, retry logic, and key security behind one deliberate front door.
                                 </h2>
                                 <p className="mt-6 max-w-3xl text-base leading-8 text-(--color-text-secondary)">
