@@ -6,7 +6,7 @@ const protectedPrefixes = [routes.dashboard];
 const adminPrefixes = ["/admin"];
 const authPrefixes = ["/login", "/register", "/admin/login"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const token = request.cookies.get(appConfig.tokenStorageKey)?.value;
     const isAuthRoute = authPrefixes.some((prefix) => pathname === prefix);
