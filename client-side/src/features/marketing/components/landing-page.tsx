@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
     ArrowRightIcon,
     ArrowUpRightIcon,
@@ -341,15 +342,19 @@ export function LandingPage() {
             style={{ fontFamily: '"Geist", "Ubuntu", system-ui, sans-serif' }}
         >
             <div className="relative isolate bg-(--color-bg-primary) text-(--color-text-primary)">
-                <div className="absolute inset-x-0 top-0 -z-10 h-[42rem] bg-[radial-gradient(circle_at_top,color-mix(in_srgb,var(--color-accent-primary)_18%,transparent),transparent_58%)]" />
-                <div className="absolute inset-x-0 top-0 -z-10 h-[38rem] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_55%,transparent),transparent)]" />
+                <div className="absolute inset-x-0 top-0 -z-10 h-168 bg-[radial-gradient(circle_at_top,color-mix(in_srgb,var(--color-accent-primary)_18%,transparent),transparent_58%)]" />
+                <div className="absolute inset-x-0 top-0 -z-10 h-152 bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_55%,transparent),transparent)]" />
 
-                <header className="sticky top-0 z-40 border-b border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-primary)_86%,transparent)] backdrop-blur-xl">
+                <header className="fixed left-0 right-0 top-0 z-40 border-b border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-primary)_86%,transparent)] backdrop-blur-xl">
                     <div className={cn(shellClass, "flex items-center justify-between gap-6 py-4")}>
                         <Link href="/" className="flex items-center gap-3">
-                            <span className="grid size-11 place-items-center rounded-2xl border border-(--color-border-primary) bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_95%,transparent),color-mix(in_srgb,var(--color-bg-card)_82%,transparent))] text-lg font-semibold tracking-tight">
-                                R
-                            </span>
+                            <Image
+                                src="/logo.png"
+                                alt="Roundhouse"
+                                width={44}
+                                height={44}
+                                className="rounded-2xl"
+                            />
                             <div>
                                 <div className="text-sm font-medium uppercase tracking-[0.26em] text-(--color-text-muted)">
                                     Roundhouse
@@ -440,7 +445,7 @@ export function LandingPage() {
                             Retry loop active
                         </div>
 
-                        <div className="overflow-hidden rounded-[2rem] border border-(--color-border-primary) bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_96%,transparent),color-mix(in_srgb,var(--color-bg-card)_92%,transparent))] p-5 shadow-[0_40px_120px_-64px_var(--color-shadow)]">
+                        <div className="overflow-hidden rounded-4xl border border-(--color-border-primary) bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_96%,transparent),color-mix(in_srgb,var(--color-bg-card)_92%,transparent))] p-5 shadow-[0_40px_120px_-64px_var(--color-shadow)]">
                             <div className="mb-5 flex items-center justify-between border-b border-(--color-border-primary) pb-4">
                                 <div>
                                     <p className="text-xs uppercase tracking-[0.24em] text-(--color-text-muted)">
@@ -454,7 +459,7 @@ export function LandingPage() {
                             </div>
 
                             <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                                <Card className="rounded-[1.5rem] border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_38%,transparent)] p-5">
+                                <Card className="rounded-3xl border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_38%,transparent)] p-5">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-xs uppercase tracking-[0.2em] text-(--color-text-muted)">
@@ -483,7 +488,7 @@ export function LandingPage() {
                                 </Card>
 
                                 <div className="grid gap-4">
-                                    <Card className="rounded-[1.5rem] border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_34%,transparent)] p-5">
+                                    <Card className="rounded-3xl border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_34%,transparent)] p-5">
                                         <p className="text-xs uppercase tracking-[0.2em] text-(--color-text-muted)">
                                             Current path
                                         </p>
@@ -508,7 +513,7 @@ export function LandingPage() {
                                         </div>
                                     </Card>
 
-                                    <Card className="rounded-[1.5rem] border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_34%,transparent)] p-5">
+                                    <Card className="rounded-3xl border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_34%,transparent)] p-5">
                                         <p className="text-xs uppercase tracking-[0.2em] text-(--color-text-muted)">
                                             Request notes
                                         </p>
@@ -526,7 +531,7 @@ export function LandingPage() {
 
                 <section className="border-y border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_48%,transparent)]">
                     <div className={cn(shellClass, "overflow-hidden py-6")}>
-                        <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+                        <div className="relative overflow-hidden mask-[linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
                             <div className="marquee-track flex w-max items-center gap-8 whitespace-nowrap text-sm uppercase tracking-[0.24em] text-(--color-text-muted)">
                                 {marqueeSignals.map((item, index) => (
                                     <span key={`${item}-${index}`} className="shrink-0">
@@ -614,7 +619,7 @@ export function LandingPage() {
                                         onFocus={() => setActiveMode(mode.key)}
                                         onClick={() => setActiveMode(mode.key)}
                                         className={cn(
-                                            "rounded-[1.5rem] border border-(--color-border-primary) p-5 text-left transition-all duration-300",
+                                            "rounded-3xl border border-(--color-border-primary) p-5 text-left transition-all duration-300",
                                             active
                                                 ? "bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-accent-primary)_10%,var(--color-bg-secondary)),color-mix(in_srgb,var(--color-bg-card)_92%,transparent))] shadow-[0_24px_72px_-48px_var(--color-shadow)]"
                                                 : "bg-(--color-bg-secondary)",
@@ -687,7 +692,7 @@ export function LandingPage() {
                                             onFocus={() => setActivePanelKey(panel.label)}
                                             onClick={() => setActivePanelKey(panel.label)}
                                             className={cn(
-                                                "rounded-[1.5rem] border border-(--color-border-primary) p-5 text-left transition-all duration-300",
+                                                "rounded-3xl border border-(--color-border-primary) p-5 text-left transition-all duration-300",
                                                 active
                                                     ? "bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_96%,transparent),var(--color-bg-card))] shadow-[0_24px_72px_-48px_var(--color-shadow)]"
                                                     : "bg-transparent",
@@ -701,7 +706,7 @@ export function LandingPage() {
                                 })}
                             </div>
 
-                            <div className="relative min-h-[34rem] rounded-[2rem] border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_72%,transparent)] p-3 lg:min-h-[42rem]">
+                            <div className="relative min-h-136 rounded-4xl border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-secondary)_72%,transparent)] p-3 lg:min-h-168">
                                 {(() => {
                                     const activePanel = stackPanels.find(p => p.label === activePanelKey) || stackPanels[0];
                                     return (
@@ -732,7 +737,7 @@ export function LandingPage() {
                                             </div>
 
                                             <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
-                                                <div className="rounded-[1.5rem] border border-(--color-border-primary) bg-(--color-bg-secondary) p-5">
+                                                <div className="rounded-3xl border border-(--color-border-primary) bg-(--color-bg-secondary) p-5">
                                                     <p className="text-xs uppercase tracking-[0.22em] text-(--color-text-muted)">Operator view</p>
                                                     <div className="mt-4 grid gap-3">
                                                         {["Provider status", "Model ordering", "Vault key attachment"].map((item) => (
@@ -746,7 +751,7 @@ export function LandingPage() {
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <div className="rounded-[1.5rem] border border-(--color-border-primary) bg-(--color-bg-secondary) p-5">
+                                                <div className="rounded-3xl border border-(--color-border-primary) bg-(--color-bg-secondary) p-5">
                                                     <p className="text-xs uppercase tracking-[0.22em] text-(--color-text-muted)">Runtime notes</p>
                                                     <div className="mt-4 space-y-3 font-mono text-sm leading-7 text-(--color-text-secondary)">
                                                         <div>load candidate pool once</div>
@@ -837,7 +842,7 @@ export function LandingPage() {
                                 <h3 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight">
                                     Existing OpenAI request shapes stay usable while routing gets smarter behind the edge.
                                 </h3>
-                                <div className="mt-8 rounded-[1.5rem] border border-(--color-border-primary) bg-(--color-bg-card) p-5">
+                                <div className="mt-8 rounded-3xl border border-(--color-border-primary) bg-(--color-bg-card) p-5">
                                     <div className="mb-4 flex items-center justify-between">
                                         <span className="text-sm font-medium">Normalized request flow</span>
                                         <CursorClickIcon size={20} className="text-(--color-accent-primary)" />
@@ -909,7 +914,7 @@ export function LandingPage() {
                             {reliabilityNotes.map((item) => (
                                 <Card
                                     key={item}
-                                    className="rounded-[1.5rem] border-(--color-border-primary) bg-(--color-bg-secondary) p-5"
+                                    className="rounded-3xl border-(--color-border-primary) bg-(--color-bg-secondary) p-5"
                                     data-reveal
                                     data-hover-float
                                 >
@@ -977,7 +982,7 @@ export function LandingPage() {
 
                 <section className={cn(shellClass, "py-24 md:py-32")}>
                     <Card
-                        className="overflow-hidden rounded-[2rem] border-(--color-border-primary) bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_98%,transparent),color-mix(in_srgb,var(--color-bg-card)_92%,transparent))] px-6 py-10 shadow-[0_40px_120px_-70px_var(--color-shadow)] sm:px-10 sm:py-12"
+                        className="overflow-hidden rounded-4xl border-(--color-border-primary) bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-secondary)_98%,transparent),color-mix(in_srgb,var(--color-bg-card)_92%,transparent))] px-6 py-10 shadow-[0_40px_120px_-70px_var(--color-shadow)] sm:px-10 sm:py-12"
                         data-reveal
                         data-media-scale
                     >
@@ -1011,9 +1016,13 @@ export function LandingPage() {
                     <div className={cn(shellClass, "grid gap-10 py-10 lg:grid-cols-[1fr_auto]")}>
                         <div>
                             <div className="flex items-center gap-3">
-                                <span className="grid size-11 place-items-center rounded-2xl border border-(--color-border-primary) bg-(--color-bg-secondary) text-lg font-semibold">
-                                    R
-                                </span>
+                                <Image
+                                    src="/logo.png"
+                                    alt="Roundhouse"
+                                    width={44}
+                                    height={44}
+                                    className="rounded-2xl"
+                                />
                                 <div>
                                     <p className="text-sm font-medium uppercase tracking-[0.26em] text-(--color-text-muted)">
                                         Roundhouse
