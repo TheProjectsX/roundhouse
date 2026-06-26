@@ -7,7 +7,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Sidebar />
             <div className="min-w-0 flex-1">
                 <Topbar />
-                <main className="mx-auto grid max-w-[1400px] gap-8 px-4 py-6 lg:px-6">{children}</main>
+                <main className="mx-auto grid max-w-350 gap-8 px-4 py-6 lg:px-6">{children}</main>
             </div>
         </div>
     );
