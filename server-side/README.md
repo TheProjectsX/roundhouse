@@ -1,25 +1,60 @@
-# roundhouse
+# Roundhouse (server)
 
-TypeScript Node.js API starter with Express and CORS.
+NestJS TypeScript API for Roundhouse.
 
-## Prisma
+## What this server does
 
-This project is initialized with Prisma 6 and MongoDB.
+- Provides REST endpoints for core system management (API keys, providers, models, selections).
+- Implements the model-selection + retry loop described in `md/ROUNDHOUSE.md`.
+- Supports admin-scoped provider/model management under the `iv1` API namespace.
 
-1. Copy `.env.example` to `.env` and set `DATABASE_URL` to your MongoDB connection string.
-2. Run `npm install` to install Prisma packages.
-3. Run `npm run prisma:generate` to generate the Prisma client.
-4. Run `npm run prisma:push` to apply the schema to MongoDB.
+## Setup
 
-## Scripts
+### 1) Environment variables
 
-- `npm run dev` starts the server with live reload.
-- `npm run build` compiles TypeScript into `dist/`.
-- `npm start` runs the compiled server.
-- `npm run prisma:generate` generates the Prisma client.
-- `npm run prisma:push` syncs the Prisma schema to MongoDB.
-- `npm run prisma:studio` opens Prisma Studio.
+1. Copy `.env.example` to `.env`.
+2. Configure the database URL (e.g. `DATABASE_URL`) and any provider/model credentials your deployment requires.
 
-## Default route
+### 2) Install & generate Prisma client
 
-`GET /` returns a simple JSON health response.
+```bash
+npm install
+npm run prisma:generate
+npm run prisma:push
+```
+
+## Development
+
+```bash
+npm run dev
+```
+
+## Production
+
+```bash
+npm run build
+npm run start:prod
+```
+
+## Common scripts
+
+- `npm run dev` — start with live reload
+- `npm run build` — compile to `dist/`
+- `npm start` — run compiled server
+- `npm run prisma:generate` — generate Prisma client
+- `npm run prisma:push` — apply Prisma schema
+- `npm run prisma:studio` — open Prisma Studio
+
+## API docs (Swagger)
+
+- Swagger spec is available at `swagger-spec.json`.
+- Backend Swagger UI is generated from the NestJS Swagger decorators.
+
+## Where to look in the codebase
+
+- `src/main.ts` — bootstrap
+- `src/modules/iv1/` — versioned API modules
+- `src/modules/openai/` and `src/core/` — model/provider execution
+- `src/core/services/roundhouse/` — core retry + selection logic
+- `md/` — architecture notes and endpoint instructions
+
