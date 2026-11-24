@@ -4,10 +4,12 @@ import { DocsSidebar } from "./_components/docs-sidebar";
 export default function DocsLayout({ children }: { children: ReactNode }) {
     return (
         <main className="min-h-dvh bg-(--color-bg-primary)">
-            <div className="mx-auto max-w-[1400px] px-4 py-6 lg:px-6">
-                <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
-                    <DocsSidebar />
-                    <div className="min-w-0 rounded-[28px] border border-(--color-border-primary) bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-card)_96%,var(--color-accent-secondary)_4%),var(--color-bg-card))] p-5 shadow-(--color-shadow) sm:p-8">
+            <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:py-8">
+                <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+                    <div className="lg:w-[260px] lg:shrink-0">
+                        <DocsSidebar />
+                    </div>
+                    <div className="min-w-0 flex-1">
                         {children}
                     </div>
                 </div>

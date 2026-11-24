@@ -1,5 +1,6 @@
 import { AuthModule } from "@/modules/iv1/auth/auth.module";
 import { OpenaiModule } from "@/modules/openai/openai.module";
+import { AnthropicModule } from "@/modules/anthropic/anthropic.module";
 import { MeModule } from "@/modules/iv1/me/me.module";
 import { ProvidersModule } from "@/modules/iv1/providers/providers.module";
 import { ApikeysModule } from "@/modules/iv1/apikeys/apikeys.module";
@@ -44,6 +45,7 @@ import { RequestLoggingMiddleware } from "@/middlewares/request-logging.middlewa
         AuthModule,
         MeModule,
         OpenaiModule,
+        AnthropicModule,
         ProvidersModule,
         ApikeysModule,
         ModelsModule,

@@ -2,6 +2,41 @@ import { checkApiKeyError } from "@/core/utils/errorChecker.util";
 import { InternalResponses } from "@/core/constants/response";
 import { createDevLogger } from "@/common/utils/logger";
 import { PrismaClient } from "@prisma/client";
+import { decryptVaultKey } from "@/common/utils/vault-crypto";
+import {
+    classifyProviderError,
+    type ClassifiedProviderError,
+} from "@/core/utils/providerError.util";
+import {
+    fitsContextWindowStrict,
+    fitsContextWindowWithMargin,
+} from "@/core/utils/preflight.util";
+import {
+    acquireLease,
+    canUseCandidateKey,
+    getKeyHeadroomFactor,
+    recordUsage,
+    releaseLease,
+} from "@/core/utils/ratelimit.util";
+import {
+    computeBanditScore,
+    recordModelLatency,
+} from "@/core/utils/scoring.util";
+import {
+    getStickyModelSelectionId,
+    recordStickySession,
+} from "@/core/utils/stickySession.util";
+import {
+    buildKeyModelCooldownKey,
+    buildKeyProviderCooldownKey,
+    buildModelCooldownKey,
+    clearModelFailureStreak,
+    formatCooldownEta,
+    getSoonestCooldownExpiry,
+    isOnCooldown,
+    recordModelFailureStreak,
+    setCooldown,
+} from "@/core/utils/cooldown.util";
 
 export type SelectProviderError = {
     success: false;
@@ -25,6 +60,13 @@ type RoundhouseModel = {
     name: string;
     status: "ACTIVE" | "INACTIVE" | "DEPRECATED" | "TESTING" | "UPCOMING";
     maxTokens: number | null;
+    contextWindow?: number | null;
+    supportsTools?: boolean | null;
+    supportsVision?: boolean | null;
+    rpmLimit?: number | null;
+    rpdLimit?: number | null;
+    tpmLimit?: number | null;
+    tpdLimit?: number | null;
     efficiencyScore: number | null;
     provider: RoundhouseProvider;
 };
@@ -52,6 +94,7 @@ export type RoundhouseSelectedApiKeysManager = {
 
 type RoundhouseFailureResult = {
     success: false;
+    error?: unknown;
 };
 
 type RoundhouseSuccessResult<T> = {
@@ -82,6 +125,11 @@ export type RoundhouseFilters = {
     provider?: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
     modelKeys?: Set<string>;
     strategy?: "random" | "efficiency" | "priority";
+    retryBudgetMs?: number;
+    estimatedTokens?: number;
+    requireVision?: boolean;
+    requireTools?: boolean;
+    stickySessionKey?: string;
 };
 
 type BoundRoundhouseExecutor = <T>(
@@ -100,6 +148,7 @@ type BoundRoundhouseCandidateLister = (
 
 const DEFAULT_SCORE = 0.5;
 const DEFAULT_MAX_ITERATIONS = 5;
+const DEFAULT_RETRY_BUDGET_MS = 45_000;
 const logger = createDevLogger("roundhouse");
 
 const buildProviderRecord = (providerSelection: {
@@ -159,6 +208,8 @@ const buildCandidates = (
             id: string;
             active: boolean;
             priority: number;
+            successCount?: number;
+            failureCount?: number;
             model?: Omit<RoundhouseModel, "provider"> | null;
             userModel?: Omit<RoundhouseModel, "provider"> | null;
         }>;
@@ -204,6 +255,8 @@ const buildCandidates = (
                 return {
                     modelSelectionId: ms.id,
                     priority: ms.priority,
+                    successCount: ms.successCount ?? 0,
+                    failureCount: ms.failureCount ?? 0,
                     model: { ...model, provider } as Omit<
                         RoundhouseModel,
                         "provider"
@@ -218,6 +271,33 @@ const buildCandidates = (
             }
 
             if (filters?.provider && model.provider.type !== filters.provider) {
+                continue;
+            }
+
+            if (filters?.requireVision && model.supportsVision === false) {
+                continue;
+            }
+
+            if (filters?.requireTools && model.supportsTools === false) {
+                continue;
+            }
+
+            if (
+                filters?.estimatedTokens &&
+                !fitsContextWindowStrict(
+                    model.contextWindow,
+                    filters.estimatedTokens,
+                )
+            ) {
+                continue;
+            }
+
+            if (
+                filters?.estimatedTokens &&
+                model.tpmLimit != null &&
+                model.tpmLimit > 0 &&
+                filters.estimatedTokens > model.tpmLimit
+            ) {
                 continue;
             }
 
@@ -239,12 +319,26 @@ const buildCandidates = (
                 }
             }
 
+            const useBandit =
+                !filters?.strategy || filters.strategy === "efficiency";
+            const score = useBandit
+                ? computeBanditScore({
+                      modelId: model.id,
+                      efficiencyScore: model.efficiencyScore,
+                      successCount: entry.successCount,
+                      failureCount: entry.failureCount,
+                      apiKeysManagerIds: activeApiKeysManagers.map((k) => k.id),
+                      limits: model,
+                      providerType: model.provider.type,
+                  })
+                : (model.efficiencyScore ?? DEFAULT_SCORE);
+
             candidates.push({
                 modelSelectionId: entry.modelSelectionId,
                 providerSelectionId: providerSelection.id,
                 model,
                 apiKeysManagers: activeApiKeysManagers,
-                score: model.efficiencyScore ?? DEFAULT_SCORE,
+                score,
                 priority: entry.priority ?? 1,
             });
         }
@@ -275,11 +369,46 @@ const buildCandidates = (
         sortByEfficiency(candidates);
     }
 
+    // Soft-defer models whose context window fits strictly but lacks the 1.25x safety margin.
+    const estimatedTokens = filters?.estimatedTokens;
+    const orderedCandidates =
+        estimatedTokens && estimatedTokens > 0
+            ? [
+                  ...candidates.filter((c) =>
+                      fitsContextWindowWithMargin(
+                          c.model.contextWindow,
+                          estimatedTokens,
+                      ),
+                  ),
+                  ...candidates.filter(
+                      (c) =>
+                          !fitsContextWindowWithMargin(
+                              c.model.contextWindow,
+                              estimatedTokens,
+                          ),
+                  ),
+              ]
+            : candidates;
+
+    // Sticky session: promote the session's last successful model to front of chain
+    const stickyModelSelectionId = getStickyModelSelectionId(
+        filters?.stickySessionKey,
+    );
+    if (stickyModelSelectionId) {
+        const stickyIdx = orderedCandidates.findIndex(
+            (c) => c.modelSelectionId === stickyModelSelectionId,
+        );
+        if (stickyIdx > 0) {
+            const [stickyCandidate] = orderedCandidates.splice(stickyIdx, 1);
+            orderedCandidates.unshift(stickyCandidate);
+        }
+    }
+
     logger.log("Finished building candidates", {
-        candidateCount: candidates.length,
+        candidateCount: orderedCandidates.length,
     });
 
-    return candidates;
+    return orderedCandidates;
 };
 
 const getApiKeyWithSelections = async (
@@ -400,15 +529,37 @@ const getCandidatePool = async (
 const createExcludedKey = (modelId: string, apiKeysManagerId: string) =>
     `${modelId}:${apiKeysManagerId}`;
 
-const selectRandomApiKeysManager = (
+const selectBestApiKeysManager = (
     apiKeysManagers: RoundhouseApiKeysManagerRecord[],
+    model: RoundhouseModel,
+    now: number,
 ) => {
-    const index = Math.floor(Math.random() * apiKeysManagers.length);
-    const apiKeysManager = apiKeysManagers[index];
+    let bestHeadroom = -1;
+    let bestPool: RoundhouseApiKeysManagerRecord[] = [];
+
+    for (const manager of apiKeysManagers) {
+        const headroom = getKeyHeadroomFactor(
+            manager.id,
+            model.id,
+            model,
+            model.provider.type,
+            now,
+        );
+        if (headroom > bestHeadroom + 0.01) {
+            bestHeadroom = headroom;
+            bestPool = [manager];
+        } else if (Math.abs(headroom - bestHeadroom) <= 0.01) {
+            bestPool.push(manager);
+        }
+    }
+
+    const pool = bestPool.length > 0 ? bestPool : apiKeysManagers;
+    const index = Math.floor(Math.random() * pool.length);
+    const apiKeysManager = pool[index];
 
     return {
         id: apiKeysManager.id,
-        key: apiKeysManager.key,
+        key: decryptVaultKey(apiKeysManager.key),
     };
 };
 
@@ -438,7 +589,7 @@ export const createListRoundhouseCandidates = (prisma: PrismaClient) => {
 };
 
 export const createRoundhouseExecutor = (prisma: PrismaClient) => {
-    return (async <T>(
+    return (async <T,>(
         apiKey: string,
         execute: RoundhouseExecute<T>,
         maxIterations = DEFAULT_MAX_ITERATIONS,
@@ -457,27 +608,96 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
             DEFAULT_MAX_ITERATIONS;
         const effectiveStrategy =
             filters?.strategy ?? candidatePool.apiKeyRoundhouseMethod;
+        const retryBudgetMs = filters?.retryBudgetMs ?? DEFAULT_RETRY_BUDGET_MS;
+        const startedAt = Date.now();
+        const skipProviders = new Set<string>();
+        const skipModels = new Set<string>();
+        const cooldownKeysChecked = new Set<string>();
+        let lastClassifiedError: ClassifiedProviderError | null = null;
+        let rateLimitedByLedger = false;
         let iteration = 0;
 
         while (iteration < effectiveMaxIterations) {
+            if (
+                iteration >= 2 &&
+                retryBudgetMs > 0 &&
+                Date.now() - startedAt >= retryBudgetMs
+            ) {
+                logger.warn("Wall-clock retry budget exceeded", {
+                    iteration,
+                    elapsedMs: Date.now() - startedAt,
+                    retryBudgetMs,
+                });
+                break;
+            }
+
             iteration += 1;
+            const now = Date.now();
 
             let available = candidates
+                .filter(
+                    (candidate) =>
+                        !skipProviders.has(candidate.model.provider.id) &&
+                        !skipModels.has(candidate.model.id),
+                )
+                .filter((candidate) => {
+                    const modelCooldownKey = buildModelCooldownKey(
+                        candidate.model.id,
+                    );
+                    cooldownKeysChecked.add(modelCooldownKey);
+                    return !isOnCooldown(modelCooldownKey, now);
+                })
                 .map((candidate) => ({
                     candidate,
                     availableApiKeysManagers: candidate.apiKeysManagers.filter(
-                        (apiKeysManager) =>
-                            !excluded.has(
-                                createExcludedKey(
-                                    candidate.modelSelectionId,
+                        (apiKeysManager) => {
+                            if (
+                                excluded.has(
+                                    createExcludedKey(
+                                        candidate.modelSelectionId,
+                                        apiKeysManager.id,
+                                    ),
+                                )
+                            ) {
+                                return false;
+                            }
+
+                            const keyProviderCooldownKey =
+                                buildKeyProviderCooldownKey(
                                     apiKeysManager.id,
-                                ),
-                            ),
+                                    candidate.model.provider.id,
+                                );
+                            const keyModelCooldownKey =
+                                buildKeyModelCooldownKey(
+                                    apiKeysManager.id,
+                                    candidate.modelSelectionId,
+                                );
+                            cooldownKeysChecked.add(keyProviderCooldownKey);
+                            cooldownKeysChecked.add(keyModelCooldownKey);
+
+                            const withinLedger = canUseCandidateKey(
+                                apiKeysManager.id,
+                                candidate.model.id,
+                                candidate.model,
+                                filters?.estimatedTokens ?? 0,
+                                candidate.model.provider.type,
+                                now,
+                            );
+                            if (!withinLedger) {
+                                rateLimitedByLedger = true;
+                            }
+
+                            return (
+                                !isOnCooldown(keyProviderCooldownKey, now) &&
+                                !isOnCooldown(keyModelCooldownKey, now) &&
+                                withinLedger
+                            );
+                        },
                     ),
                 }))
                 .filter((entry) => entry.availableApiKeysManagers.length > 0);
 
-            if (available.length === 0) {
+            if (available.length === 0 && excluded.size > 0) {
                 excluded.clear();
 
                 runInBackground(
@@ -486,17 +706,96 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                     }),
                 );
 
-                available = candidates.map((candidate) => ({
-                    candidate,
-                    availableApiKeysManagers: [...candidate.apiKeysManagers],
-                }));
+                available = candidates
+                    .filter(
+                        (candidate) =>
+                            !skipProviders.has(candidate.model.provider.id) &&
+                            !skipModels.has(candidate.model.id),
+                    )
+                    .filter(
+                        (candidate) =>
+                            !isOnCooldown(
+                                buildModelCooldownKey(candidate.model.id),
+                                now,
+                            ),
+                    )
+                    .map((candidate) => ({
+                        candidate,
+                        availableApiKeysManagers:
+                            candidate.apiKeysManagers.filter(
+                                (apiKeysManager) =>
+                                    !isOnCooldown(
+                                        buildKeyProviderCooldownKey(
+                                            apiKeysManager.id,
+                                            candidate.model.provider.id,
+                                        ),
+                                        now,
+                                    ) &&
+                                    !isOnCooldown(
+                                        buildKeyModelCooldownKey(
+                                            apiKeysManager.id,
+                                            candidate.modelSelectionId,
+                                        ),
+                                        now,
+                                    ) &&
+                                    canUseCandidateKey(
+                                        apiKeysManager.id,
+                                        candidate.model.id,
+                                        candidate.model,
+                                        filters?.estimatedTokens ?? 0,
+                                        candidate.model.provider.type,
+                                        now,
+                                    ),
+                            ),
+                    }))
+                    .filter(
+                        (entry) => entry.availableApiKeysManagers.length > 0,
+                    );
+            }
 
-                if (available.length === 0) {
+            if (available.length === 0) {
+                const soonestExpiry = getSoonestCooldownExpiry(
+                    Array.from(cooldownKeysChecked),
+                    now,
+                );
+                const eta = formatCooldownEta(soonestExpiry, now);
+                const etaSuffix = eta ? ` Soonest reset ${eta}.` : "";
+
+                if (lastClassifiedError?.category === "context_too_large") {
                     return {
                         success: false,
-                        ...InternalResponses.NO_AVAILABLE_MODELS,
+                        code: "RH413",
+                        status_code: 413,
+                        message: `Prompt exceeds the context window of all available models.${etaSuffix}`,
                     };
                 }
+
+                if (
+                    soonestExpiry !== null ||
+                    rateLimitedByLedger ||
+                    lastClassifiedError?.category === "rate_limit"
+                ) {
+                    return {
+                        success: false,
+                        code: "RH429",
+                        status_code: 429,
+                        message: `All candidate models/keys are currently rate-limited or cooling down.${etaSuffix}`,
+                    };
+                }
+
+                if (lastClassifiedError) {
+                    return {
+                        success: false,
+                        code: "RH502",
+                        status_code: lastClassifiedError.status || 502,
+                        message: `All candidate models failed. Last error: ${lastClassifiedError.message}`,
+                    };
+                }
+
+                return {
+                    success: false,
+                    ...InternalResponses.NO_AVAILABLE_MODELS,
+                };
             }
 
             const selectedIndex =
@@ -505,15 +804,48 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                     : 0;
             const { candidate, availableApiKeysManagers } =
                 available[selectedIndex];
-            const apiKeysManager = selectRandomApiKeysManager(
+            const apiKeysManager = selectBestApiKeysManager(
                 availableApiKeysManagers,
+                candidate.model,
+                now,
             );
-            const result = await execute(candidate, apiKeysManager);
+            const leaseId = acquireLease(
+                apiKeysManager.id,
+                candidate.model.id,
+                filters?.estimatedTokens ?? 0,
+                now,
+            );
+            const attemptStartedAt = Date.now();
+            let result: RoundhouseExecutionResult<T>;
+            try {
+                result = await execute(candidate, apiKeysManager);
+            } finally {
+                releaseLease(leaseId);
+            }
 
             if (result.success) {
+                recordModelLatency(
+                    candidate.model.id,
+                    Date.now() - attemptStartedAt,
+                );
+                recordStickySession(
+                    filters?.stickySessionKey,
+                    candidate.modelSelectionId,
+                );
+                recordUsage(
+                    apiKeysManager.id,
+                    candidate.model.id,
+                    filters?.estimatedTokens ?? 0,
+                );
+                clearModelFailureStreak(candidate.model.id);
+
                 runInBackground(
                     prisma.lastError.deleteMany({
-                        where: { apiKeyId },
+                        where: {
+                            apiKeyId,
+                            modelId: candidate.modelSelectionId,
+                            apiKeysManagerId: apiKeysManager.id,
+                        },
                     }),
                 );
 
@@ -535,6 +867,48 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                     apiKeysManager,
                     iteration,
                 };
+            }
+
+            const classified = classifyProviderError(
+                "error" in result ? result.error : undefined,
+            );
+            lastClassifiedError = classified;
+            const failureTime = Date.now();
+
+            if (classified.cooldownScope === "key_provider") {
+                setCooldown(
+                    buildKeyProviderCooldownKey(
+                        apiKeysManager.id,
+                        candidate.model.provider.id,
+                    ),
+                    classified.cooldownMs,
+                    classified.category,
+                    failureTime,
+                );
+            } else if (classified.cooldownScope === "model") {
+                setCooldown(
+                    buildModelCooldownKey(candidate.model.id),
+                    classified.cooldownMs,
+                    classified.category,
+                    failureTime,
+                );
+                skipModels.add(candidate.model.id);
+            } else if (classified.cooldownScope === "request_provider") {
+                skipProviders.add(candidate.model.provider.id);
+            } else if (classified.cooldownScope === "key_model") {
+                setCooldown(
+                    buildKeyModelCooldownKey(
+                        apiKeysManager.id,
+                        candidate.modelSelectionId,
+                    ),
+                    classified.cooldownMs,
+                    classified.category,
+                    failureTime,
+                );
+            }
+
+            if (classified.category !== "context_too_large") {
+                recordModelFailureStreak(candidate.model.id, failureTime);
             }
 
             excluded.add(
@@ -564,6 +938,18 @@ export const createRoundhouseExecutor = (prisma: PrismaClient) => {
                     },
                 }),
             );
+        }
+
+        if (lastClassifiedError) {
+            return {
+                success: false,
+                code: "RH301",
+                status_code:
+                    lastClassifiedError.category === "rate_limit"
+                        ? 429
+                        : lastClassifiedError.status || 409,
+                message: `Maximum roundhouse attempts reached. Last error: ${lastClassifiedError.message}`,
+            };
         }
 
         return {

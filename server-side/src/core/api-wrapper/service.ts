@@ -8,6 +8,7 @@ import type {
     OpenAIResponsesResponse,
 } from "../models/types";
 import { callProviderChatCompletion, listProviderModels } from "../models";
+import { rescueInlineToolCalls } from "@/core/utils/toolCallRescue.util";
 import {
     normalizeOpenAIRequest,
     toOpenAIChatCompletion,
@@ -172,6 +173,19 @@ export const createChatCompletion = async (
 ): Promise<OpenAICompatibleResponse> => {
     const { provider, params } = buildProviderContext(body, context);
     const response = await callProviderChatCompletion(provider, params);
+
+    if (
+        body.tools?.length &&
+        (!response.toolCalls || response.toolCalls.length === 0) &&
+        response.content
+    ) {
+        const rescued = rescueInlineToolCalls(response.content, body.tools);
+        if (rescued.rescued && rescued.toolCalls?.length) {
+            response.content = rescued.content;
+            response.toolCalls = rescued.toolCalls;
+            response.finishReason = "tool_calls";
+        }
+    }
 
     return toOpenAIChatCompletion(response);
 };

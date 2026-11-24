@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
     CheckCircleIcon,
     KeyIcon,
+    PlusIcon,
     StackIcon,
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/shared/components/data-display/empty-state";
@@ -10,6 +11,8 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { useCreateKeysManagerMutation } from "@/shared/store/features/keysManager/keysManagerApi";
+import { CreateKeyModal } from "../../../keys/components/create-key-modal";
 
 interface AddProviderSelectionProps {
     availableProviders: any[];
@@ -42,9 +45,41 @@ export function AddProviderSelection({
     onAdd,
     isLoading,
 }: AddProviderSelectionProps) {
+    const [vaultSearch, setVaultSearch] = useState("");
+    const [showCreateKey, setShowCreateKey] = useState(false);
+    const [createKey, createKeyState] = useCreateKeysManagerMutation();
+
     const selectedProvider = availableProviders.find(
         (p) => p.id === providerToAdd,
     );
+
+    const isMatchingProviderKey = (key: any) => {
+        if (!selectedProvider || !key.provider) return false;
+        const hint = String(key.provider).toLowerCase();
+        return (
+            hint === String(selectedProvider.code).toLowerCase() ||
+            hint === String(selectedProvider.type).toLowerCase()
+        );
+    };
+
+    const filteredAndSortedKeys = useMemo(() => {
+        const term = vaultSearch.trim().toLowerCase();
+        const filtered = keyManagers.filter((key) => {
+            if (!term) return true;
+            return [key.name, key.provider].some((val) =>
+                String(val ?? "")
+                    .toLowerCase()
+                    .includes(term),
+            );
+        });
+        return [...filtered].sort((a, b) => {
+            const aMatch = isMatchingProviderKey(a) && a.active ? 1 : 0;
+            const bMatch = isMatchingProviderKey(b) && b.active ? 1 : 0;
+            if (aMatch !== bMatch) return bMatch - aMatch;
+            if (a.active !== b.active) return a.active ? -1 : 1;
+            return 0;
+        });
+    }, [keyManagers, vaultSearch, selectedProvider]);
 
     return (
         <Card>
@@ -54,7 +89,8 @@ export function AddProviderSelection({
                         <StackIcon size={20} /> Add Provider Selection
                     </h2>
                     <p className="mt-1 text-sm text-(--color-text-secondary)">
-                        Connect one provider to this API key using one or more vault keys.
+                        Connect one provider to this API key using one or more
+                        vault keys.
                     </p>
                 </div>
             </CardHeader>
@@ -63,83 +99,117 @@ export function AddProviderSelection({
                     {/* Step 1: Choose Provider */}
                     <div className="flex flex-col gap-3">
                         <div className="flex items-center justify-between gap-3">
-                            <h3 className="text-sm font-semibold">1. Choose Provider</h3>
-                            <Badge>{availableProviders.length} available</Badge>
+                            <h3 className="text-sm font-semibold">
+                                1. Choose Provider
+                            </h3>
+                            <Badge>
+                                {availableProviders.length} available
+                            </Badge>
                         </div>
                         <Input
                             value={providerSearch}
-                            onChange={(e) => onProviderSearchChange(e.target.value)}
+                            onChange={(e) =>
+                                onProviderSearchChange(e.target.value)
+                            }
                             placeholder="Search providers"
                         />
                         <div className="flex max-h-82.5 flex-col gap-2 overflow-y-auto pr-1">
                             {isProvidersLoading
                                 ? Array.from({ length: 4 }).map((_, index) => (
-                                      <Skeleton key={index} className="h-28 rounded-xl" />
+                                      <Skeleton
+                                          key={index}
+                                          className="h-28 rounded-xl"
+                                      />
                                   ))
                                 : null}
-                            {!isProvidersLoading && providerMatches.map((provider) => {
-                                const selected = provider.id === providerToAdd;
-                                return (
-                                    <button
-                                        key={provider.id}
-                                        type="button"
-                                        className={`grid cursor-pointer gap-2 rounded-md border p-3 text-left transition-colors ${
-                                            selected
-                                                ? "border-(--color-accent-primary) bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
-                                                : "border-(--color-border-primary) bg-(--color-bg-input) hover:bg-(--color-bg-card-hover)"
-                                        }`}
-                                        onClick={() => onProviderToAddChange(provider.id)}
-                                    >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <p className="truncate text-sm font-semibold">
-                                                    {provider.name}
-                                                </p>
-                                                <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
-                                                    {provider.code}
-                                                </p>
+                            {!isProvidersLoading &&
+                                providerMatches.map((provider) => {
+                                    const selected =
+                                        provider.id === providerToAdd;
+                                    return (
+                                        <button
+                                            key={provider.id}
+                                            type="button"
+                                            className={`grid cursor-pointer gap-2 rounded-md border p-3 text-left transition-colors ${
+                                                selected
+                                                    ? "border-(--color-accent-primary) bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
+                                                    : "border-(--color-border-primary) bg-(--color-bg-input) hover:bg-(--color-bg-card-hover)"
+                                            }`}
+                                            onClick={() =>
+                                                onProviderToAddChange(
+                                                    provider.id,
+                                                )
+                                            }
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-semibold">
+                                                        {provider.name}
+                                                    </p>
+                                                    <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
+                                                        {provider.code}
+                                                    </p>
+                                                </div>
+                                                {selected ? (
+                                                    <CheckCircleIcon
+                                                        size={20}
+                                                        weight="fill"
+                                                        className="text-(--color-accent-primary)"
+                                                    />
+                                                ) : (
+                                                    <StatusBadge
+                                                        status={provider.status}
+                                                    />
+                                                )}
                                             </div>
-                                            {selected ? (
-                                                <CheckCircleIcon
-                                                    size={20}
-                                                    weight="fill"
-                                                    className="text-(--color-accent-primary)"
-                                                />
-                                            ) : (
-                                                <StatusBadge status={provider.status} />
-                                            )}
-                                        </div>
-                                        <p className="line-clamp-2 text-xs text-(--color-text-secondary)">
-                                            {provider.description ?? provider.type}
-                                        </p>
-                                        <div className="flex flex-wrap gap-2">
-                                            <Badge>{provider.type}</Badge>
-                                            <Badge>
-                                                {provider.activeModelsCount}/
-                                                {provider.modelsCount} models
-                                            </Badge>
-                                            <Badge>
-                                                {provider.isCustom ? "Custom" : "Global"}
-                                            </Badge>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                            {!isProvidersLoading && providerMatches.length === 0 && (
-                                <EmptyState
-                                    compact
-                                    title="No matching providers"
-                                    description="Try a different search term or add more providers before creating a selection."
-                                />
-                            )}
+                                            <p className="line-clamp-2 text-xs text-(--color-text-secondary)">
+                                                {provider.description ??
+                                                    provider.type}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Badge>{provider.type}</Badge>
+                                                <Badge>
+                                                    {provider.activeModelsCount}
+                                                    /{provider.modelsCount}{" "}
+                                                    models
+                                                </Badge>
+                                                <Badge>
+                                                    {provider.isCustom
+                                                        ? "Custom"
+                                                        : "Global"}
+                                                </Badge>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            {!isProvidersLoading &&
+                                providerMatches.length === 0 && (
+                                    <EmptyState
+                                        compact
+                                        title="No matching providers"
+                                        description="Try a different search term or add more providers before creating a selection."
+                                    />
+                                )}
                         </div>
                     </div>
 
                     {/* Step 2: Attach Vault Keys */}
-                    <div className="grid gap-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <h3 className="text-sm font-semibold">2. Attach Vault Keys</h3>
-                            <Badge>{vaultIds.length} selected</Badge>
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between gap-2">
+                            <h3 className="text-sm font-semibold">
+                                2. Attach Vault Keys
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                <Badge>{vaultIds.length} selected</Badge>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => setShowCreateKey(true)}
+                                >
+                                    <PlusIcon size={14} /> Add Key
+                                </Button>
+                            </div>
                         </div>
                         <div className="rounded-md border border-(--color-border-primary) bg-(--color-bg-input) p-3">
                             {selectedProvider ? (
@@ -152,92 +222,152 @@ export function AddProviderSelection({
                                             {selectedProvider.name}
                                         </Badge>
                                         <p className="mt-1 text-xs text-(--color-text-secondary)">
-                                            Models are created automatically after selection.
+                                            Active matching vault keys are
+                                            listed first. Models are seeded
+                                            automatically.
                                         </p>
                                     </div>
                                 </div>
                             ) : (
                                 <p className="text-sm text-(--color-text-secondary)">
-                                    Select a provider to enable vault-key assignment.
+                                    Select a provider to highlight matching
+                                    vault keys.
                                 </p>
                             )}
                         </div>
+                        {keyManagers.length > 0 && (
+                            <Input
+                                value={vaultSearch}
+                                onChange={(e) => setVaultSearch(e.target.value)}
+                                placeholder="Filter vault keys"
+                            />
+                        )}
                         <div className="grid max-h-64.5 gap-2 overflow-y-auto pr-1">
                             {isKeyManagersLoading
                                 ? Array.from({ length: 4 }).map((_, index) => (
-                                      <Skeleton key={index} className="h-24 rounded-xl" />
+                                      <Skeleton
+                                          key={index}
+                                          className="h-24 rounded-xl"
+                                      />
                                   ))
                                 : null}
-                            {!isKeyManagersLoading && keyManagers.map((key) => {
-                                const checked = vaultIds.includes(key.id);
-                                return (
-                                    <div
-                                        key={key.id}
-                                        className={`flex items-start gap-3 rounded-md border p-3 transition-colors ${
-                                            checked
-                                                ? "border-(--color-accent-primary) bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
-                                                : "border-(--color-border-primary) bg-(--color-bg-input) hover:bg-(--color-bg-card-hover)"
-                                        }`}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={checked}
-                                            id={`vault-key-${key.id}`}
-                                            onChange={(e) => {
-                                                onVaultIdsChange(
-                                                    e.target.checked
-                                                        ? [...vaultIds, key.id]
-                                                        : vaultIds.filter((id) => id !== key.id),
-                                                );
-                                            }}
-                                            className="mt-1 size-4 cursor-pointer accent-(--color-accent-primary)"
-                                        />
-                                        <label
-                                            htmlFor={`vault-key-${key.id}`}
-                                            className="min-w-0 flex-1 cursor-pointer"
+                            {!isKeyManagersLoading &&
+                                filteredAndSortedKeys.map((key) => {
+                                    const checked = vaultIds.includes(key.id);
+                                    const matchesProvider =
+                                        isMatchingProviderKey(key);
+                                    return (
+                                        <div
+                                            key={key.id}
+                                            className={`flex items-start gap-3 rounded-md border p-3 transition-colors ${
+                                                checked
+                                                    ? "border-(--color-accent-primary) bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)]"
+                                                    : "border-(--color-border-primary) bg-(--color-bg-input) hover:bg-(--color-bg-card-hover)"
+                                            } ${!key.active ? "opacity-60" : ""}`}
                                         >
-                                            <div className="flex items-center gap-2">
-                                                <KeyIcon size={16} />
-                                                <p className="truncate text-sm font-semibold">
-                                                    {key.name}
+                                            <input
+                                                type="checkbox"
+                                                checked={checked}
+                                                id={`vault-key-${key.id}`}
+                                                onChange={(e) => {
+                                                    onVaultIdsChange(
+                                                        e.target.checked
+                                                            ? [
+                                                                  ...vaultIds,
+                                                                  key.id,
+                                                              ]
+                                                            : vaultIds.filter(
+                                                                  (id) =>
+                                                                      id !==
+                                                                      key.id,
+                                                              ),
+                                                    );
+                                                }}
+                                                className="mt-1 size-4 cursor-pointer accent-(--color-accent-primary)"
+                                            />
+                                            <label
+                                                htmlFor={`vault-key-${key.id}`}
+                                                className="min-w-0 flex-1 cursor-pointer"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <KeyIcon size={16} />
+                                                    <p className="truncate text-sm font-semibold">
+                                                        {key.name}
+                                                    </p>
+                                                    <StatusBadge
+                                                        status={key.active}
+                                                    />
+                                                </div>
+                                                <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
+                                                    {key.key}
                                                 </p>
-                                                <StatusBadge status={key.active} />
-                                            </div>
-                                            <p className="mt-1 truncate font-mono text-xs text-(--color-text-muted)">
-                                                {key.key}
-                                            </p>
-                                            <div className="mt-2 flex flex-wrap gap-2">
-                                                <Badge className="bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)] text-(--color-accent-secondary)">
-                                                    {key.provider ?? "Unassigned provider"}
-                                                </Badge>
-                                            </div>
-                                        </label>
-                                    </div>
-                                );
-                            })}
-                            {!isKeyManagersLoading && keyManagers.length === 0 && (
-                                <EmptyState
-                                    compact
-                                    title="No vault keys available"
-                                    description="Add provider keys in Key Vault before selecting a provider."
-                                />
-                            )}
+                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                    <Badge className="bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)] text-(--color-accent-secondary)">
+                                                        {key.provider ??
+                                                            "Unassigned provider"}
+                                                    </Badge>
+                                                    {matchesProvider && (
+                                                        <Badge className="bg-[color-mix(in_srgb,var(--color-status-success)_14%,transparent)] text-(--color-status-success)">
+                                                            Matches provider
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </label>
+                                        </div>
+                                    );
+                                })}
+                            {!isKeyManagersLoading &&
+                                keyManagers.length === 0 && (
+                                    <EmptyState
+                                        compact
+                                        title="No vault keys available"
+                                        description="Add a provider key to your Key Vault to attach it here."
+                                        action={
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                onClick={() =>
+                                                    setShowCreateKey(true)
+                                                }
+                                            >
+                                                <PlusIcon size={14} /> Add Vault
+                                                Key
+                                            </Button>
+                                        }
+                                    />
+                                )}
                         </div>
                     </div>
                 </div>
                 <div className="flex flex-col gap-3 border-t border-(--color-border-subtle) pt-4 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-(--color-text-secondary)">
-                        Provider selection creates the provider group, links selected vault keys, and seeds model routing entries.
+                        Provider selection creates the provider group, links
+                        selected vault keys, and seeds active models.
                     </p>
                     <Button
                         className="sm:min-w-40"
-                        disabled={!providerToAdd || vaultIds.length === 0 || isLoading}
+                        disabled={
+                            !providerToAdd || vaultIds.length === 0 || isLoading
+                        }
                         onClick={onAdd}
                     >
                         Add Selection
                     </Button>
                 </div>
             </CardContent>
+            {showCreateKey && (
+                <CreateKeyModal
+                    onClose={() => setShowCreateKey(false)}
+                    createKey={createKey}
+                    isLoading={createKeyState.isLoading}
+                    defaultProviderCode={selectedProvider?.code ?? ""}
+                    onCreated={(created: { id: string }) => {
+                        if (created?.id && !vaultIds.includes(created.id)) {
+                            onVaultIdsChange([...vaultIds, created.id]);
+                        }
+                    }}
+                />
+            )}
         </Card>
     );
 }

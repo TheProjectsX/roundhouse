@@ -4,6 +4,7 @@ import type {
     ProviderCallParams,
     ProviderModelRecord,
 } from "../types";
+import { createProviderHttpError } from "@/core/utils/providerError.util";
 
 const normalizeBaseApi = (baseApi: string) => {
     return baseApi.endsWith("/") ? baseApi.slice(0, -1) : baseApi;
@@ -67,7 +68,8 @@ export const callOpenAIModel = async (
 
     if (!response.ok) {
         console.error("OpenAI API error response:", data);
-        throw new Error(
+        throw createProviderHttpError(
+            response,
             ("error" in data && data.error?.message) ||
                 "OpenAI-compatible API request failed",
         );

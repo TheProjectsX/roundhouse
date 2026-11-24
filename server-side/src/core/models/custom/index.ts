@@ -1,3 +1,4 @@
+import { createProviderHttpError } from "@/core/utils/providerError.util";
 import type {
     NormalizedAssistantResponse,
     OpenAICompatibleResponse,
@@ -64,7 +65,8 @@ export const callCustomChatCompletion = async (
           };
 
     if (!response.ok) {
-        throw new Error(
+        throw createProviderHttpError(
+            response,
             ("error" in data && data.error?.message) ||
                 "Custom model API request failed",
         );

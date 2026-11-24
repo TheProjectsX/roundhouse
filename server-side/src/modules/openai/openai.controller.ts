@@ -19,9 +19,42 @@ export class OpenaiController {
             res.setHeader("Content-Type", "text/event-stream");
             res.setHeader("Cache-Control", "no-cache");
             res.setHeader("Connection", "keep-alive");
+            res.setHeader("X-Accel-Buffering", "no");
             res.flushHeaders();
-            res.write(result.chunks.join(""));
-            return res.end();
+
+            const onClientClose = () => {
+                if (!res.writableEnded) {
+                    result.preparedStream.abort();
+                }
+            };
+            req.on("close", onClientClose);
+
+            try {
+                res.write(result.preparedStream.firstChunk);
+                for await (const chunk of result.preparedStream.rest) {
+                    if (res.writableEnded) {
+                        break;
+                    }
+                    res.write(chunk);
+                }
+            } catch (error) {
+                if (!res.writableEnded) {
+                    const message =
+                        error instanceof Error
+                            ? error.message
+                            : "Upstream stream interrupted";
+                    res.write(
+                        `data: ${JSON.stringify({ error: { message } })}\n\ndata: [DONE]\n\n`,
+                    );
+                }
+            } finally {
+                req.off("close", onClientClose);
+                result.onComplete(result.preparedStream.getUsage());
+                if (!res.writableEnded) {
+                    res.end();
+                }
+            }
+            return;
         }
 
         return res.status(result.statusCode).json(result.body);

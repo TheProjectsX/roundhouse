@@ -36,29 +36,41 @@ export function SecurityForm({ changePassword, isLoading }: SecurityFormProps) {
                     }).unwrap();
                     toast.success("Password changed");
                     event.currentTarget.reset();
-                } catch {
-                    toast.error("Could not change password");
+                } catch (err: any) {
+                    toast.error(err?.data?.message || "Could not change password");
                 }
             }}
         >
-            <Input
-                name="oldPassword"
-                type="password"
-                placeholder="Current password"
-                autoComplete="current-password"
-            />
-            <Input
-                name="newPassword"
-                type="password"
-                placeholder="New password"
-                autoComplete="new-password"
-            />
-            <Input
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirm new password"
-                autoComplete="new-password"
-            />
+            <label className="grid gap-1.5 text-sm font-medium">
+                Current password
+                <Input
+                    name="oldPassword"
+                    type="password"
+                    placeholder="Current password"
+                    autoComplete="current-password"
+                    required
+                />
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">
+                New password
+                <Input
+                    name="newPassword"
+                    type="password"
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                    required
+                />
+            </label>
+            <label className="grid gap-1.5 text-sm font-medium">
+                Confirm new password
+                <Input
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="Repeat new password"
+                    autoComplete="new-password"
+                    required
+                />
+            </label>
             <Button type="submit" variant="secondary" disabled={isLoading}>
                 Change Password
             </Button>

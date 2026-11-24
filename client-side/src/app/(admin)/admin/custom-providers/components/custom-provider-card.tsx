@@ -60,7 +60,7 @@ export function CustomProviderCard({
                                 <h2 className="text-lg font-bold tracking-tight text-(--color-text-primary)">
                                     {provider.name}
                                 </h2>
-                                <Badge className="font-mono text-[10px]">
+                                <Badge className="font-mono text-[11px]">
                                     {provider.code}
                                 </Badge>
                                 <StatusBadge status={provider.status} />

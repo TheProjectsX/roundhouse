@@ -1,14 +1,37 @@
-import { Controller, Get, HttpStatus, Param, Query } from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Get,
+    HttpStatus,
+    Param,
+    Post,
+    Query,
+} from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ResponseService } from "@/common/interceptors/response";
 import { ReqField } from "@/common/decorators/request.decorator";
 import { UserPayload } from "@/common/guards/auth.guard";
+import { TestProviderDto } from "./dto/body.dto";
 import { ProvidersService } from "./providers.service";
+import { CatalogSyncService } from "./catalog-sync.service";
 
 @ApiTags("Providers")
 @Controller("")
 export class ProvidersController {
-    constructor(private providersService: ProvidersService) {}
+    constructor(
+        private providersService: ProvidersService,
+        private catalogSyncService: CatalogSyncService,
+    ) {}
+
+    @Get("catalog-status")
+    @ApiOperation({ summary: "Get automatic global catalog sync status" })
+    getCatalogStatus() {
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: "Catalog status fetched",
+            data: this.catalogSyncService.getStatus(),
+        });
+    }
 
     @Get()
     @ApiOperation({ summary: "List providers (with filters)" })
@@ -55,6 +78,28 @@ export class ProvidersController {
     ) {
         const result = await this.providersService.fetchProviderModels(
             id,
+            user,
+        );
+
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Post(":id/test")
+    @ApiOperation({
+        summary: "Test a provider (specific model or random active model)",
+    })
+    async testProvider(
+        @Param("id") id: string,
+        @Body() payload: TestProviderDto,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.providersService.testProvider(
+            id,
+            payload,
             user,
         );
 

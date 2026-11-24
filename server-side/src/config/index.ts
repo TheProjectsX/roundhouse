@@ -7,6 +7,9 @@ export default {
     env: process.env.NODE_ENV,
     port: process.env.PORT || 5000,
     company_name: process.env.COMPANY_NAME,
+    cors: {
+        origins: process.env.CORS_ORIGINS,
+    },
     url: {
         frontend: process.env.FRONTEND_URL,
         backend: process.env.BACKEND_URL,

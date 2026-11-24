@@ -9,6 +9,7 @@ import {
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import QueryBuilder from "@/common/utils/queryBuilder";
+import { listProviderModels } from "@/core/models";
 import {
     CreateProviderDto,
     CreateProviderModelDto,
@@ -497,6 +498,179 @@ export class AdminProvidersService {
             isCustom,
             createdAt: provider.createdAt,
             updatedAt: provider.updatedAt,
+        };
+    }
+
+    async syncProviderModels(
+        id: string,
+        options?: { apiKey?: string; freeOnly?: boolean },
+    ) {
+        const provider = await this.prisma.provider.findUnique({
+            where: { id },
+        });
+
+        if (!provider) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+
+        const isOpenRouter =
+            provider.code.toLowerCase().includes("openrouter") ||
+            provider.baseApi.toLowerCase().includes("openrouter.ai");
+
+        type SyncCandidate = {
+            code: string;
+            name: string;
+            contextWindow?: number;
+            maxTokens?: number;
+            supportsTools?: boolean;
+            supportsVision?: boolean;
+        };
+
+        let candidates: SyncCandidate[] = [];
+
+        if (isOpenRouter) {
+            const response = await fetch("https://openrouter.ai/api/v1/models");
+            if (!response.ok) {
+                throw new ApiError(
+                    HttpStatus.BAD_GATEWAY,
+                    "Failed to fetch OpenRouter catalog",
+                );
+            }
+            const payload = (await response.json()) as {
+                data?: Array<{
+                    id?: string;
+                    name?: string;
+                    context_length?: number;
+                    top_provider?: { max_completion_tokens?: number | null };
+                    pricing?: { prompt?: string; completion?: string };
+                    supported_parameters?: string[];
+                    architecture?: {
+                        input_modalities?: string[];
+                        modality?: string;
+                    };
+                }>;
+            };
+
+            const rows = Array.isArray(payload.data) ? payload.data : [];
+            candidates = rows
+                .filter((row) => {
+                    if (!row.id) return false;
+                    if (!options?.freeOnly) return true;
+                    const isFreeId = row.id.endsWith(":free");
+                    const isZeroPrice =
+                        row.pricing?.prompt === "0" &&
+                        row.pricing?.completion === "0";
+                    return isFreeId || isZeroPrice;
+                })
+                .map((row) => {
+                    const inputModalities =
+                        row.architecture?.input_modalities ?? [];
+                    const modalityStr = row.architecture?.modality ?? "";
+                    const supportsVision =
+                        inputModalities.includes("image") ||
+                        modalityStr.includes("image");
+                    const supportsTools = Array.isArray(
+                        row.supported_parameters,
+                    )
+                        ? row.supported_parameters.includes("tools")
+                        : undefined;
+
+                    return {
+                        code: row.id!,
+                        name: row.name || row.id!,
+                        contextWindow:
+                            typeof row.context_length === "number" &&
+                            row.context_length > 0
+                                ? row.context_length
+                                : undefined,
+                        maxTokens:
+                            typeof row.top_provider?.max_completion_tokens ===
+                                "number" &&
+                            row.top_provider.max_completion_tokens > 0
+                                ? row.top_provider.max_completion_tokens
+                                : undefined,
+                        supportsTools,
+                        supportsVision,
+                    };
+                });
+        } else {
+            const upstream = await listProviderModels(provider.type, {
+                baseApi: provider.baseApi,
+                apiKey: options?.apiKey,
+                headers: {},
+                request: {
+                    model: "gpt-4o-mini",
+                    messages: [],
+                    stream: false,
+                    params: {},
+                    rawBody: {},
+                },
+            });
+
+            candidates = upstream.map((item) => ({
+                code: item.id,
+                name: item.id,
+            }));
+        }
+
+        let createdCount = 0;
+        let updatedCount = 0;
+
+        for (const item of candidates) {
+            const existing = await this.prisma.model.findUnique({
+                where: {
+                    code_provider: {
+                        code: item.code,
+                        provider: provider.code,
+                    },
+                },
+                select: { id: true },
+            });
+
+            if (existing) {
+                await this.prisma.model.update({
+                    where: { id: existing.id },
+                    data: {
+                        name: item.name,
+                        ...(item.contextWindow !== undefined
+                            ? { contextWindow: item.contextWindow }
+                            : {}),
+                        ...(item.maxTokens !== undefined
+                            ? { maxTokens: item.maxTokens }
+                            : {}),
+                        ...(item.supportsTools !== undefined
+                            ? { supportsTools: item.supportsTools }
+                            : {}),
+                        ...(item.supportsVision !== undefined
+                            ? { supportsVision: item.supportsVision }
+                            : {}),
+                    },
+                });
+                updatedCount += 1;
+            } else {
+                await this.prisma.model.create({
+                    data: {
+                        name: item.name,
+                        code: item.code,
+                        provider: provider.code,
+                        contextWindow: item.contextWindow,
+                        maxTokens: item.maxTokens,
+                        supportsTools: item.supportsTools,
+                        supportsVision: item.supportsVision,
+                        status: ContentStatus.ACTIVE,
+                    },
+                });
+                createdCount += 1;
+            }
+        }
+
+        return {
+            message: "Provider models synced",
+            data: {
+                syncedCount: candidates.length,
+                createdCount,
+                updatedCount,
+            },
         };
     }
 

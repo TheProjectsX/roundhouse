@@ -13,9 +13,11 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { PageHeader } from "@/shared/components/layout/page-header";
+import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { routes } from "@/shared/constants/routes";
 import { useGetAdminAnalyticsQuery } from "@/shared/store/features/admin/adminApi";
 import { formatNumber } from "@/shared/lib/utils";
@@ -32,20 +34,37 @@ function formatCompactNumber(value: number) {
 }
 
 export default function AdminAnalyticsPage() {
-    const { data, isLoading } = useGetAdminAnalyticsQuery();
+    const { data, isLoading, isError, refetch } = useGetAdminAnalyticsQuery();
 
     if (isLoading) {
         return (
-            <div className="flex flex-col gap-8">
-                <PageHeader title="Analytics" description="..." />
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex flex-col gap-6">
+                <PageHeader
+                    title="Analytics"
+                    description="Request volume, token consumption, success rates, and provider distribution."
+                />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {[1, 2, 3, 4].map((i) => (
-                        <div
-                            key={i}
-                            className="h-32 animate-pulse rounded-2xl bg-(--color-bg-secondary)"
-                        />
+                        <Skeleton key={i} className="h-28 rounded-md" />
                     ))}
                 </div>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex flex-col gap-6">
+                <PageHeader title="Analytics" />
+                <EmptyState
+                    title="Could not load analytics"
+                    description="Check your admin session or backend connection and retry."
+                    action={
+                        <Button variant="secondary" onClick={() => refetch()}>
+                            Retry
+                        </Button>
+                    }
+                />
             </div>
         );
     }
@@ -60,127 +79,33 @@ export default function AdminAnalyticsPage() {
     const topProviders = data?.topProviders ?? [];
 
     return (
-        <div className="flex flex-col gap-8 pb-12">
+        <div className="flex flex-col gap-6 pb-8">
             <PageHeader
                 title="Analytics"
-                description="Monitor demand, efficiency, provider mix, and platform throughput in a cleaner executive view."
+                description={`Tracking ${dailyTrend.length} days of request volume, token consumption, and provider efficiency.`}
                 actions={
                     <>
-                        <Button asChild>
+                        <Button asChild variant="secondary">
                             <Link href={routes.admin}>
                                 Back to Dashboard
                             </Link>
                         </Button>
                         <Button asChild variant="secondary">
                             <Link href={routes.dashboard}>
-                                <ArrowSquareOutIcon size={18} />
+                                <ArrowSquareOutIcon size={16} />
                                 User Dashboard
                             </Link>
                         </Button>
                     </>
                 }
             />
-            <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-                <Card className="overflow-hidden border-(--color-border-subtle) bg-[radial-gradient(circle_at_top_left,color-mix(in_srgb,var(--color-accent-primary)_15%,transparent),transparent_46%),linear-gradient(180deg,color-mix(in_srgb,var(--color-bg-card)_95%,transparent),var(--color-bg-secondary))]">
-                    <CardContent className="grid gap-8 p-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
-                        <div className="grid gap-4">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <Badge>Executive Snapshot</Badge>
-                                <span className="text-xs uppercase tracking-[0.18em] text-(--color-text-muted)">
-                                    Last {dailyTrend.length || 0} tracked days
-                                </span>
-                            </div>
-                            <div className="grid gap-2">
-                                <h2 className="max-w-2xl text-2xl font-semibold tracking-tight sm:text-3xl">
-                                    The platform is processing requests across a
-                                    shared provider and model inventory with
-                                    measurable efficiency.
-                                </h2>
-                                <p className="max-w-2xl text-sm leading-6 text-(--color-text-secondary)">
-                                    Use this view for the high-level read:
-                                    request volume, success rate, token burn,
-                                    and which providers are carrying the most
-                                    load.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="grid gap-3 rounded-2xl border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-primary)_78%,transparent)] p-4">
-                            {[
-                                {
-                                    label: "Average success rate",
-                                    value: `${(summary?.averageSuccessRate ?? 0).toFixed(1)}%`,
-                                },
-                                {
-                                    label: "Total token usage",
-                                    value: formatCompactNumber(summary?.totalTokens ?? 0),
-                                },
-                                {
-                                    label: "Tracked request volume",
-                                    value: formatCompactNumber(summary?.totalRequests ?? 0),
-                                },
-                            ].map((item) => (
-                                <div
-                                    key={item.label}
-                                    className="flex items-center justify-between rounded-xl border border-(--color-border-subtle) bg-(--color-bg-card) px-4 py-3"
-                                >
-                                    <span className="text-sm text-(--color-text-secondary)">
-                                        {item.label}
-                                    </span>
-                                    <span className="font-mono text-lg font-bold text-(--color-text-primary)">
-                                        {item.value}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <div>
-                            <h2 className="text-lg font-semibold tracking-tight">
-                                Trend Notes
-                            </h2>
-                            <p className="mt-1 text-sm text-(--color-text-secondary)">
-                                Quick reading cues for operators and admins.
-                            </p>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="grid gap-3">
-                        {[
-                            {
-                                label: "User base",
-                                value: `${formatNumber(summary?.users ?? 0)} registered accounts`,
-                            },
-                            {
-                                label: "Provider catalog",
-                                value: `${formatNumber((summary?.globalProviders ?? 0) + (summary?.customProviders ?? 0))} total providers`,
-                            },
-                            {
-                                label: "Model inventory",
-                                value: `${formatNumber((summary?.models ?? 0) + (summary?.userModels ?? 0))} models available`,
-                            },
-                        ].map((item) => (
-                            <div
-                                key={item.label}
-                                className="rounded-xl border border-(--color-border-subtle) bg-(--color-bg-card) p-4"
-                            >
-                                <p className="font-medium text-(--color-text-primary)">
-                                    {item.label}
-                                </p>
-                                <p className="mt-1 text-sm text-(--color-text-secondary)">
-                                    {item.value}
-                                </p>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            </section>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <KPI
                     label="Total Tokens"
                     value={formatCompactNumber(summary?.totalTokens ?? 0)}
                     icon={CoinsIcon}
-                    description="Total consumption"
+                    description="Cumulative consumption"
                 />
                 <KPI
                     label="Active Users"
@@ -195,41 +120,41 @@ export default function AdminAnalyticsPage() {
                     description="API interactions"
                 />
                 <KPI
-                    label="Avg. Efficiency"
+                    label="Avg. Success Rate"
                     value={`${(summary?.averageSuccessRate ?? 0).toFixed(1)}%`}
                     icon={ActivityIcon}
-                    description="Platform-wide success rate"
+                    description="Platform-wide reliability"
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr]">
                 <Card>
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between gap-3">
+                    <CardHeader>
+                        <div className="flex w-full items-center justify-between gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold tracking-tight">
+                                <h2 className="text-base font-semibold tracking-tight">
                                     Daily Request Trend
                                 </h2>
-                                <p className="mt-1 text-sm text-(--color-text-secondary)">
-                                    Request volume across the full captured period.
+                                <p className="mt-1 text-xs text-(--color-text-secondary)">
+                                    Request volume across the captured window.
                                 </p>
                             </div>
-                            <div className="grid size-10 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--color-accent-primary)_10%,transparent)] text-(--color-accent-primary)">
-                                <PulseIcon size={20} weight="duotone" />
-                            </div>
+                            <PulseIcon size={18} className="text-(--color-text-muted)" />
                         </div>
                     </CardHeader>
                     <CardContent className="grid gap-5">
-                        <div className="rounded-2xl border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-primary)_60%,transparent)] p-4">
-                            <div className="h-44">
+                        <div className="rounded-sm border border-(--color-border-primary) bg-(--color-bg-primary) p-4">
+                            <div className="h-40">
                                 <Sparkline
                                     data={totalRequestsTrend}
-                                    color="var(--color-accent-primary)"
+                                    label="Daily request volume trend"
+                                    color="var(--color-text-primary)"
                                 />
                             </div>
-                            <div className="mt-4 flex items-center justify-between text-xs text-(--color-text-muted)">
-                                <span>Start</span>
-                                <span>Latest</span>
+                            <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-(--color-text-muted)">
+                                <span>{dailyTrend[0]?.date ?? "Start"}</span>
+                                <span>Peak: {formatNumber(maxRequests)}</span>
+                                <span>{dailyTrend[dailyTrend.length - 1]?.date ?? "Latest"}</span>
                             </div>
                         </div>
                         <div className="grid gap-3">
@@ -238,28 +163,25 @@ export default function AdminAnalyticsPage() {
                                     const width =
                                         maxRequests > 0
                                             ? Math.max(
-                                                  8,
+                                                  6,
                                                   (item.requests / maxRequests) *
                                                       100,
                                               )
-                                            : 8;
+                                            : 6;
 
                                     return (
-                                        <div
-                                            key={item.date}
-                                            className="grid gap-2"
-                                        >
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-(--color-text-secondary)">
+                                        <div key={item.date} className="grid gap-1.5">
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="font-mono text-(--color-text-secondary)">
                                                     {item.date}
                                                 </span>
                                                 <span className="font-mono font-medium text-(--color-text-primary)">
-                                                    {formatNumber(item.requests)} requests
+                                                    {formatNumber(item.requests)} req
                                                 </span>
                                             </div>
-                                            <div className="h-2 rounded-full bg-(--color-bg-input)">
+                                            <div className="h-1.5 rounded-sm bg-(--color-bg-input)">
                                                 <div
-                                                    className="h-full rounded-full bg-(--color-accent-primary)"
+                                                    className="h-full rounded-sm bg-(--color-accent-primary)"
                                                     style={{ width: `${width}%` }}
                                                 />
                                             </div>
@@ -267,111 +189,109 @@ export default function AdminAnalyticsPage() {
                                     );
                                 })
                             ) : (
-                                <div className="rounded-xl border border-dashed border-(--color-border-primary) p-6 text-sm text-(--color-text-secondary)">
-                                    Daily request data is not available yet.
-                                </div>
+                                <EmptyState
+                                    compact
+                                    title="No daily request data yet"
+                                    description="Request metrics will appear once API traffic is recorded."
+                                />
                             )}
                         </div>
                     </CardContent>
                 </Card>
+
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center justify-between gap-3">
+                        <div className="flex w-full items-center justify-between gap-3">
                             <div>
-                                <h2 className="text-lg font-semibold tracking-tight">
+                                <h2 className="text-base font-semibold tracking-tight">
                                     Token Consumption
                                 </h2>
-                                <p className="mt-1 text-sm text-(--color-text-secondary)">
-                                    Overlay of token demand for the same reporting window.
+                                <p className="mt-1 text-xs text-(--color-text-secondary)">
+                                    Token demand for the same reporting window.
                                 </p>
                             </div>
-                            <div className="grid size-10 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--color-accent-secondary)_10%,transparent)] text-(--color-accent-secondary)">
-                                <LightningIcon size={20} weight="duotone" />
-                            </div>
+                            <LightningIcon size={18} className="text-(--color-text-muted)" />
                         </div>
                     </CardHeader>
-                    <CardContent className="grid gap-5">
-                        <div className="rounded-2xl border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-primary)_60%,transparent)] p-4">
-                            <div className="h-44">
+                    <CardContent className="grid gap-4">
+                        <div className="rounded-sm border border-(--color-border-primary) bg-(--color-bg-primary) p-4">
+                            <div className="h-40">
                                 <Sparkline
                                     data={tokenUsageTrend}
+                                    label="Daily token consumption trend"
                                     color="var(--color-accent-secondary)"
                                 />
                             </div>
-                            <div className="mt-4 flex items-center justify-between text-xs text-(--color-text-muted)">
-                                <span>Start</span>
-                                <span>Latest</span>
+                            <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-(--color-text-muted)">
+                                <span>{dailyTrend[0]?.date ?? "Start"}</span>
+                                <span>{dailyTrend[dailyTrend.length - 1]?.date ?? "Latest"}</span>
                             </div>
                         </div>
-                        <div className="rounded-xl border border-(--color-border-subtle) bg-(--color-bg-card) p-4">
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="text-sm text-(--color-text-secondary)">
-                                    Total tracked token usage
-                                </span>
-                                <span className="font-mono text-lg font-bold text-(--color-text-primary)">
-                                    {formatCompactNumber(summary?.totalTokens ?? 0)}
-                                </span>
-                            </div>
+                        <div className="flex items-center justify-between rounded-sm border border-(--color-border-subtle) bg-(--color-bg-secondary) p-3.5">
+                            <span className="text-xs text-(--color-text-secondary)">
+                                Total tracked tokens
+                            </span>
+                            <span className="font-mono text-base font-bold text-(--color-text-primary)">
+                                {formatCompactNumber(summary?.totalTokens ?? 0)}
+                            </span>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <h2 className="text-lg font-semibold tracking-tight">
+                        <h2 className="text-base font-semibold tracking-tight">
                             Operational Mix
                         </h2>
                     </CardHeader>
-                    <CardContent className="grid gap-6 pt-2">
-                        <div className="grid gap-4">
-                            {[
-                                {
-                                    label: "Global Providers",
-                                    value: summary?.globalProviders,
-                                    icon: StackIcon,
-                                },
-                                {
-                                    label: "Custom Providers",
-                                    value: summary?.customProviders,
-                                    icon: GlobeIcon,
-                                },
-                                {
-                                    label: "Standard Models",
-                                    value: summary?.models,
-                                    icon: CpuIcon,
-                                },
-                                {
-                                    label: "Custom Models",
-                                    value: summary?.userModels,
-                                    icon: CpuIcon,
-                                },
-                            ].map((item) => (
-                                <OperationalMixItem
-                                    key={item.label}
-                                    label={item.label}
-                                    value={item.value}
-                                    icon={item.icon}
-                                    totalModels={
-                                        (summary?.models ?? 0) +
-                                            (summary?.userModels ?? 0) || 1
-                                    }
-                                />
-                            ))}
-                        </div>
+                    <CardContent className="grid gap-4">
+                        {[
+                            {
+                                label: "Global Providers",
+                                value: summary?.globalProviders,
+                                icon: StackIcon,
+                            },
+                            {
+                                label: "Custom Providers",
+                                value: summary?.customProviders,
+                                icon: GlobeIcon,
+                            },
+                            {
+                                label: "Standard Models",
+                                value: summary?.models,
+                                icon: CpuIcon,
+                            },
+                            {
+                                label: "Custom Models",
+                                value: summary?.userModels,
+                                icon: CpuIcon,
+                            },
+                        ].map((item) => (
+                            <OperationalMixItem
+                                key={item.label}
+                                label={item.label}
+                                value={item.value}
+                                icon={item.icon}
+                                totalModels={
+                                    (summary?.models ?? 0) +
+                                        (summary?.userModels ?? 0) || 1
+                                }
+                            />
+                        ))}
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <h2 className="text-lg font-semibold tracking-tight">
+                    <CardHeader>
+                        <h2 className="text-base font-semibold tracking-tight">
                             Top Performing Providers
                         </h2>
-                        <Badge className="px-2 py-0.5 text-[10px]">
+                        <Badge className="font-mono text-[11px]">
                             Success Rank
                         </Badge>
                     </CardHeader>
-                    <CardContent className="pt-2">
+                    <CardContent>
                         <div className="divide-y divide-(--color-border-subtle)">
                             {topProviders.length > 0 ? (
                                 topProviders.map((resource: any, index: number) => (
@@ -382,9 +302,11 @@ export default function AdminAnalyticsPage() {
                                     />
                                 ))
                             ) : (
-                                <div className="rounded-xl border border-dashed border-(--color-border-primary) p-6 text-sm text-(--color-text-secondary)">
-                                    Top provider rankings are not available yet.
-                                </div>
+                                <EmptyState
+                                    compact
+                                    title="No provider rankings yet"
+                                    description="Top provider rankings will appear after requests complete."
+                                />
                             )}
                         </div>
                     </CardContent>

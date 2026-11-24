@@ -1,4 +1,5 @@
 import { getMessageText } from "../../api-wrapper/normalize";
+import { createProviderHttpError } from "@/core/utils/providerError.util";
 import type {
     NormalizedAssistantResponse,
     OpenAIChatMessage,
@@ -236,7 +237,10 @@ export const callAnthropicModel = async (
     const data = (await response.json()) as AnthropicMessageResponse;
 
     if (!response.ok) {
-        throw new Error(data.error?.message || "Anthropic API request failed");
+        throw createProviderHttpError(
+            response,
+            data.error?.message || "Anthropic API request failed",
+        );
     }
 
     return toNormalizedResponse(data, params.request.model);

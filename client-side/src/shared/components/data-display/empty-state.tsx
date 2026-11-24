@@ -22,16 +22,16 @@ export function EmptyState({
     return (
         <div
             className={cn(
-                "grid justify-items-center gap-3 rounded-xl border border-dashed border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-card)_65%,transparent)] text-center",
+                "grid justify-items-center gap-3 rounded-md border border-dashed border-(--color-border-primary) bg-(--color-bg-secondary) text-center",
                 compact ? "p-5" : "p-8",
                 className,
             )}
         >
-            <div className="grid size-11 place-items-center rounded-full bg-[color-mix(in_srgb,var(--color-accent-primary)_12%,transparent)] text-(--color-accent-primary)">
-                {icon ?? <InfoIcon size={20} weight="duotone" />}
+            <div className="grid size-9 place-items-center rounded-sm border border-(--color-border-primary) bg-(--color-bg-card) text-(--color-text-secondary)">
+                {icon ?? <InfoIcon size={18} weight="regular" />}
             </div>
             <div className="grid gap-1">
-                <p className="font-medium text-(--color-text-primary)">{title}</p>
+                <p className="text-sm font-medium text-(--color-text-primary)">{title}</p>
                 {description ? (
                     <p className="max-w-xl text-sm text-(--color-text-secondary)">
                         {description}

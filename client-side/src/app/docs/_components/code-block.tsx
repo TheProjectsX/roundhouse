@@ -9,6 +9,7 @@ import { cn } from "@/shared/lib/utils";
 type CodeBlockProps = {
     code: string;
     language?: string;
+    title?: string;
     className?: string;
 };
 
@@ -16,6 +17,7 @@ const keywordSets: Record<string, Set<string>> = {
     json: new Set(["true", "false", "null"]),
     ts: new Set(["import", "from", "const", "await", "new", "return", "async"]),
     js: new Set(["import", "from", "const", "await", "new", "return", "async"]),
+    python: new Set(["from", "import", "True", "False", "None", "await", "async"]),
     bash: new Set(["curl"]),
     http: new Set(["GET", "POST", "PATCH", "DELETE", "Authorization", "Content-Type"]),
 };
@@ -32,23 +34,23 @@ function getTokenClass(token: string, language: string) {
     }
 
     if (/^".*":$/.test(token.trim())) {
-        return "text-[color:var(--color-accent-secondary)]";
+        return "text-(--color-accent-secondary)";
     }
 
     if (token.startsWith('"') && token.endsWith('"')) {
-        return "text-[color:var(--color-status-success)]";
+        return "text-(--color-status-success)";
     }
 
     if (/^\d/.test(token)) {
-        return "text-[color:var(--color-status-warning)]";
+        return "text-(--color-status-warning)";
     }
 
     if (keywords.has(token) || keywordSets.json.has(token)) {
-        return "text-[color:var(--color-accent-primary)]";
+        return "text-(--color-accent-primary)";
     }
 
     if (normalized === "http" && token.endsWith(":")) {
-        return "text-[color:var(--color-accent-secondary)]";
+        return "text-(--color-accent-secondary)";
     }
 
     return "text-(--color-text-primary)";
@@ -91,35 +93,41 @@ function highlightCode(code: string, language: string) {
     });
 }
 
-export function CodeBlock({ code, language = "text", className }: CodeBlockProps) {
+export function CodeBlock({ code, language = "text", title, className }: CodeBlockProps) {
     const [copied, setCopied] = useState(false);
 
     return (
         <div
             className={cn(
-                "overflow-hidden rounded-2xl border border-(--color-border-primary) bg-[color-mix(in_srgb,var(--color-bg-card)_82%,black_18%)] shadow-(--color-shadow)",
+                "overflow-hidden rounded-md border border-(--color-border-primary) bg-(--color-bg-primary)",
                 className,
             )}
         >
-            <div className="flex items-center justify-between gap-3 border-b border-(--color-border-primary) px-4 py-3">
-                <span className="font-mono text-xs uppercase tracking-[0.24em] text-(--color-text-muted)">
-                    {language}
-                </span>
+            <div className="flex items-center justify-between gap-3 border-b border-(--color-border-primary) bg-(--color-bg-card) px-4 py-2">
+                <div className="flex items-center gap-2.5">
+                    <span className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-(--color-text-muted)">
+                        {language}
+                    </span>
+                    {title ? (
+                        <span className="text-xs text-(--color-text-secondary)">· {title}</span>
+                    ) : null}
+                </div>
                 <Button
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="h-7 px-2.5 text-xs"
                     onClick={async () => {
                         await navigator.clipboard.writeText(code);
                         setCopied(true);
                         window.setTimeout(() => setCopied(false), 1600);
                     }}
                 >
-                    {copied ? <CheckIcon size={16} /> : <CopyIcon size={16} />}
+                    {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
                     {copied ? "Copied" : "Copy"}
                 </Button>
             </div>
-            <pre className="overflow-x-auto p-4 text-sm leading-6 text-(--color-text-primary)">
+            <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-6 text-(--color-text-primary)">
                 <code>{highlightCode(code, language)}</code>
             </pre>
         </div>

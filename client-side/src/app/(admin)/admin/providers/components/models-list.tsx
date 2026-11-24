@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { PlusIcon, PenIcon, TrashIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Button } from "@/shared/components/ui/button";
+import { ConfirmModal } from "@/shared/components/ui/confirm-modal";
 import { toast } from "sonner";
-import { cn, formatNumber } from "@/shared/lib/utils";
 import { ContentStatus } from "@/shared/types/enums";
 import {
     useCreateAdminProviderModelMutation,
@@ -34,10 +34,14 @@ export function ModelsList({ providerId }: ModelsListProps) {
 
     const [showCreate, setShowCreate] = useState(false);
     const [editingModel, setEditingModel] = useState<any>(null);
+    const [confirmDelete, setConfirmDelete] = useState<{
+        id: string;
+        name: string;
+    } | null>(null);
 
     if (isLoading) {
         return (
-            <div className="border-t border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_40%,transparent)] p-12 text-center">
+            <div className="border-t border-(--color-border-subtle) bg-(--color-bg-secondary) p-8 text-center">
                 <p className="text-sm text-(--color-text-secondary)">
                     Loading models...
                 </p>
@@ -52,63 +56,50 @@ export function ModelsList({ providerId }: ModelsListProps) {
         try {
             await updateStatus({ modelId, status }).unwrap();
             toast.success("Model status updated");
-        } catch {
-            toast.error("Could not update status");
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Could not update status");
         }
     };
 
     const handleDeleteModel = async (modelId: string, name: string) => {
-        if (!window.confirm(`Delete ${name}?`)) return;
+        setConfirmDelete({ id: modelId, name });
+    };
+
+    const confirmDeleteModel = async () => {
+        if (!confirmDelete) return;
         try {
-            await deleteModel(modelId).unwrap();
+            await deleteModel(confirmDelete.id).unwrap();
             toast.success("Model deleted");
-        } catch {
-            toast.error("Could not delete model");
+            setConfirmDelete(null);
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Could not delete model");
         }
     };
 
     return (
-        <div className="border-t border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_40%,transparent)]">
-            <div className="flex items-center justify-between px-6 py-4">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-(--color-text-muted)">
+        <div className="border-t border-(--color-border-subtle) bg-(--color-bg-secondary)">
+            <div className="flex items-center justify-between px-5 py-3.5">
+                <h3 className="font-mono text-[11px] font-semibold uppercase tracking-widest text-(--color-text-muted)">
                     Models Catalog ({models.length})
                 </h3>
-                <Button
-                    size="sm"
-                    className="h-8 gap-1.5 px-3 text-xs"
-                    onClick={() => setShowCreate(true)}
-                >
+                <Button size="sm" onClick={() => setShowCreate(true)}>
                     <PlusIcon size={14} weight="bold" />
                     Add Model
                 </Button>
             </div>
 
-            <div className="px-6 pb-6">
-                <div className="overflow-hidden rounded-lg border border-(--color-border-subtle) bg-(--color-bg-secondary)">
-                    <table className="w-full text-left text-sm">
+            <div className="px-5 pb-5">
+                <div className="overflow-x-auto rounded-sm border border-(--color-border-primary) bg-(--color-bg-primary)">
+                    <table className="w-full min-w-170 text-left text-sm">
                         <thead>
-                            <tr className="border-b border-(--color-border-subtle) bg-[color-mix(in_srgb,var(--color-bg-primary)_30%,transparent)]">
-                                <th className="px-4 py-3 font-semibold text-(--color-text-secondary)">
-                                    Name
-                                </th>
-                                <th className="px-4 py-3 font-semibold text-(--color-text-secondary)">
-                                    Code
-                                </th>
-                                <th className="px-4 py-3 font-semibold text-(--color-text-secondary)">
-                                    Max Tokens
-                                </th>
-                                <th className="px-4 py-3 font-semibold text-(--color-text-secondary)">
-                                    Efficiency
-                                </th>
-                                <th className="px-4 py-3 font-semibold text-(--color-text-secondary)">
-                                    Success / Failure
-                                </th>
-                                <th className="px-4 py-3 font-semibold text-(--color-text-secondary)">
-                                    Status
-                                </th>
-                                <th className="px-4 py-3 text-right font-semibold text-(--color-text-secondary)">
-                                    Actions
-                                </th>
+                            <tr className="border-b border-(--color-border-primary) bg-(--color-bg-card) font-mono text-[11px] uppercase tracking-wider text-(--color-text-muted)">
+                                <th className="px-4 py-2.5 font-medium">Name</th>
+                                <th className="px-4 py-2.5 font-medium">Code</th>
+                                <th className="px-4 py-2.5 font-medium">Max Tokens</th>
+                                <th className="px-4 py-2.5 font-medium">Efficiency</th>
+                                <th className="px-4 py-2.5 font-medium">Success / Failure</th>
+                                <th className="px-4 py-2.5 font-medium">Status</th>
+                                <th className="px-4 py-2.5 text-right font-medium">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-(--color-border-subtle)">
@@ -158,6 +149,16 @@ export function ModelsList({ providerId }: ModelsListProps) {
                     onClose={() => setEditingModel(null)}
                     updateModel={updateModel}
                     isLoading={updateModelState.isLoading}
+                />
+            )}
+
+            {confirmDelete && (
+                <ConfirmModal
+                    title="Delete Global Model"
+                    description={`Delete "${confirmDelete.name}" from this global provider catalog?`}
+                    isLoading={deleteModelState.isLoading}
+                    onConfirm={confirmDeleteModel}
+                    onCancel={() => setConfirmDelete(null)}
                 />
             )}
         </div>

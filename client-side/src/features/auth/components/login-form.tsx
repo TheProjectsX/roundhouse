@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -27,7 +26,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm({ admin = false }: { admin?: boolean }) {
     const [showPassword, setShowPassword] = useState(false);
-    const router = useRouter();
     const dispatch = useAppDispatch();
     const [login, loginState] = useLoginMutation();
     const [adminLogin, adminLoginState] = useAdminLoginMutation();
@@ -48,6 +46,9 @@ export function LoginForm({ admin = false }: { admin?: boolean }) {
                     const session = await (
                         admin ? adminLogin(values) : login(values)
                     ).unwrap();
+                    if (!session?.accessToken) {
+                        throw new Error("Login failed: missing access token");
+                    }
                     dispatch(
                         setSession({
                             token: session.accessToken,
@@ -55,15 +56,25 @@ export function LoginForm({ admin = false }: { admin?: boolean }) {
                             user: session.user ?? null,
                         }),
                     );
-                    router.push(admin ? routes.admin : routes.dashboard);
+                    const defaultTarget = admin ? routes.admin : routes.dashboard;
+                    const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+                    const isSafeRedirect =
+                        redirectParam &&
+                        redirectParam.startsWith("/") &&
+                        !redirectParam.startsWith("//") &&
+                        (admin ? redirectParam.startsWith("/admin") : !redirectParam.startsWith("/admin"));
+                    // Full navigation bypasses stale App Router cache redirects from proxy.ts
+                    window.location.replace(isSafeRedirect ? redirectParam : defaultTarget);
                 } catch (error) {
+                    const apiMessage = (error as { data?: { message?: string } })?.data?.message;
                     toast.error(
-                        error instanceof Error ? error.message : "Login failed",
+                        apiMessage ||
+                            (error instanceof Error ? error.message : "Login failed"),
                     );
                 }
             })}
         >
-            <label className="grid gap-2 text-sm font-medium">
+            <label className="grid gap-1.5 text-sm font-medium text-(--color-text-primary)">
                 Email
                 <Input
                     type="email"
@@ -77,30 +88,28 @@ export function LoginForm({ admin = false }: { admin?: boolean }) {
                     </span>
                 ) : null}
             </label>
-            <label className="grid gap-2 text-sm font-medium">
+            <label className="grid gap-1.5 text-sm font-medium text-(--color-text-primary)">
                 Password
                 <div className="relative">
                     <Input
                         type={showPassword ? "text" : "password"}
-                        autoComplete={
-                            admin ? "current-password" : "current-password"
-                        }
+                        autoComplete="current-password"
                         placeholder="Enter your password"
                         className="pr-11"
                         {...register("password")}
                     />
                     <button
                         type="button"
-                        className="absolute right-1 top-1 grid size-8 place-items-center rounded-sm text-(--color-text-muted) hover:bg-(--color-bg-card-hover)"
+                        className="absolute right-0 top-0 grid size-9 place-items-center rounded-r-sm text-(--color-text-muted) hover:bg-(--color-bg-card-hover) hover:text-(--color-text-primary)"
                         onClick={() => setShowPassword((value) => !value)}
                         aria-label={
                             showPassword ? "Hide password" : "Show password"
                         }
                     >
                         {showPassword ? (
-                            <EyeSlashIcon size={18} />
+                            <EyeSlashIcon size={17} />
                         ) : (
-                            <EyeIcon size={18} />
+                            <EyeIcon size={17} />
                         )}
                     </button>
                 </div>
@@ -110,17 +119,17 @@ export function LoginForm({ admin = false }: { admin?: boolean }) {
                     </span>
                 ) : null}
             </label>
-            <Button type="submit" disabled={pending} className="mt-2">
+            <Button type="submit" disabled={pending} className="mt-1">
                 {pending
                     ? "Signing in..."
                     : admin
                       ? "Open admin console"
                       : "Sign in"}
             </Button>
-            <div className="flex items-center justify-between text-sm text-(--color-text-secondary)">
+            <div className="flex items-center justify-between border-t border-(--color-border-subtle) pt-4 text-sm text-(--color-text-secondary)">
                 {admin ? (
                     <Link
-                        className="hover:text-(--color-accent-primary)"
+                        className="hover:text-(--color-text-primary)"
                         href={routes.login}
                     >
                         Back to user login
@@ -128,16 +137,16 @@ export function LoginForm({ admin = false }: { admin?: boolean }) {
                 ) : (
                     <>
                         <Link
-                            className="hover:text-(--color-accent-primary)"
+                            className="hover:text-(--color-text-primary)"
                             href={routes.register}
                         >
                             Create account
                         </Link>
                         <Link
-                            className="hover:text-(--color-accent-primary)"
+                            className="hover:text-(--color-text-primary)"
                             href={routes.adminLogin}
                         >
-                            Admin
+                            Admin login
                         </Link>
                     </>
                 )}

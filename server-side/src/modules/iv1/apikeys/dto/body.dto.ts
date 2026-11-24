@@ -142,3 +142,9 @@ export class UpdateApiKeyProviderModelsStatusDto {
     @IsBoolean()
     active: boolean;
 }
+
+export class TestProviderSelectionDto {
+    @IsOptional()
+    @IsString()
+    modelId?: string;
+}

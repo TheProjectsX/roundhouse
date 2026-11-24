@@ -59,34 +59,36 @@ export function CreateModelModal({
             >
                 <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-1.5">
-                        <label className="text-xs font-bold uppercase text-(--color-text-muted)">
+                        <label htmlFor="admin-model-name" className="text-xs font-semibold uppercase tracking-wider text-(--color-text-muted)">
                             Model Name
                         </label>
-                        <Input name="name" placeholder="GPT-4o" required />
+                        <Input id="admin-model-name" name="name" placeholder="GPT-4o" required />
                     </div>
                     <div className="grid gap-1.5">
-                        <label className="text-xs font-bold uppercase text-(--color-text-muted)">
+                        <label htmlFor="admin-model-code" className="text-xs font-semibold uppercase tracking-wider text-(--color-text-muted)">
                             Model Code
                         </label>
-                        <Input name="code" placeholder="gpt-4o" required />
+                        <Input id="admin-model-code" name="code" placeholder="gpt-4o" required />
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-1.5">
-                        <label className="text-xs font-bold uppercase text-(--color-text-muted)">
+                        <label htmlFor="admin-model-max-tokens" className="text-xs font-semibold uppercase tracking-wider text-(--color-text-muted)">
                             Max Tokens
                         </label>
                         <Input
+                            id="admin-model-max-tokens"
                             name="maxTokens"
                             type="number"
                             placeholder="128000"
                         />
                     </div>
                     <div className="grid gap-1.5">
-                        <label className="text-xs font-bold uppercase text-(--color-text-muted)">
+                        <label htmlFor="admin-model-efficiency" className="text-xs font-semibold uppercase tracking-wider text-(--color-text-muted)">
                             Efficiency Score (%)
                         </label>
                         <Input
+                            id="admin-model-efficiency"
                             name="efficiencyScore"
                             type="number"
                             placeholder="80"

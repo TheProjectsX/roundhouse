@@ -4,6 +4,7 @@ import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
 import { BcryptService } from "@/common/utils/bcrypt.service";
+import { decryptVaultKey, encryptVaultKey } from "@/common/utils/vault-crypto";
 import {
     CreateApiKeysManagerDto,
     UnlockApiKeysDto,
@@ -47,7 +48,7 @@ export class ApikeysManagerService {
             return Object.fromEntries(
                 Object.entries(item).map(([key, value]) => {
                     if (key === "key" && typeof value === "string") {
-                        return [key, this.maskApiKey(value)];
+                        return [key, this.maskApiKey(decryptVaultKey(value))];
                     }
 
                     return [key, this.censorApiKeys(value)];
@@ -110,13 +111,20 @@ export class ApikeysManagerService {
             },
         });
 
-        return { message: "Api Keys unlocked", data };
+        return {
+            message: "Api Keys unlocked",
+            data: data.map((item) => ({
+                id: item.id,
+                key: decryptVaultKey(item.key),
+            })),
+        };
     }
 
     async createApiKey(payload: CreateApiKeysManagerDto, user: UserPayload) {
         const created = await this.prisma.apiKeysManager.create({
             data: {
                 ...payload,
+                key: encryptVaultKey(payload.key),
                 user: { connect: { id: user.id } },
             },
         });
@@ -141,6 +149,9 @@ export class ApikeysManagerService {
             where: { id: entity.id },
             data: {
                 ...payload,
+                ...(payload.key !== undefined
+                    ? { key: encryptVaultKey(payload.key) }
+                    : {}),
             },
         });
 

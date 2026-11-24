@@ -40,7 +40,7 @@ export function CreateApiKeyModal({
 
                     const form = new FormData(event.currentTarget);
                     const name = String(form.get("name") ?? "").trim();
-                    const maxIterations = Number(form.get("maxIterations") ?? 3);
+                    const maxIterations = Number(form.get("maxIterations") ?? 5);
                     const roundhouseMethod = String(
                         form.get("roundhouseMethod"),
                     ) as RoundhouseMethod;
@@ -59,32 +59,42 @@ export function CreateApiKeyModal({
                         }).unwrap();
                         toast.success("API key created");
                         onClose();
-                    } catch {
-                        toast.error("Could not create API key");
+                    } catch (err: any) {
+                        toast.error(err?.data?.message || "Could not create API key");
                     } finally {
                         setIsSubmitting(false);
                     }
                 }}
             >
-                <Input name="name" placeholder="Production gateway" required />
-                <Input
-                    name="maxIterations"
-                    type="number"
-                    min={1}
-                    defaultValue={3}
-                    aria-label="Max retries"
-                />
-                <select
-                    name="roundhouseMethod"
-                    defaultValue={RoundhouseMethod.EFFICIENCY}
-                    className="min-h-10 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none"
-                >
-                    {Object.values(RoundhouseMethod).map((method) => (
-                        <option key={method} value={method}>
-                            {roundhouseMethodLabels[method]}
-                        </option>
-                    ))}
-                </select>
+                <label className="grid gap-1.5 text-sm font-medium">
+                    Key Name
+                    <Input name="name" placeholder="Production gateway" required />
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="grid gap-1.5 text-sm font-medium">
+                        Max Iterations
+                        <Input
+                            name="maxIterations"
+                            type="number"
+                            min={1}
+                            defaultValue={5}
+                        />
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium">
+                        Routing Method
+                        <select
+                            name="roundhouseMethod"
+                            defaultValue={RoundhouseMethod.EFFICIENCY}
+                            className="min-h-9 rounded-sm border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-sm text-(--color-text-primary) outline-none focus:border-(--color-border-focused)"
+                        >
+                            {Object.values(RoundhouseMethod).map((method) => (
+                                <option key={method} value={method}>
+                                    {roundhouseMethodLabels[method]}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                </div>
                 <div className="flex justify-end gap-2 border-t border-(--color-border-subtle) pt-4">
                     <Button variant="secondary" type="button" onClick={onClose}>
                         Cancel

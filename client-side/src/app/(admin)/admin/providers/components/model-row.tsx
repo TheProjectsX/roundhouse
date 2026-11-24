@@ -30,50 +30,51 @@ export function ModelRow({
     isUpdatingStatus,
 }: ModelRowProps) {
     return (
-        <tr className="transition-colors hover:bg-[color-mix(in_srgb,var(--color-accent-primary)_2%,transparent)]">
+        <tr className="transition-colors hover:bg-(--color-bg-card)">
             <td className="px-4 py-3 font-medium">
                 <div className="flex items-center gap-2">
-                    <div
+                    <span
+                        aria-hidden="true"
                         className={cn(
-                            "size-1.5 rounded-full",
+                            "size-1.5 rounded-xs",
                             model.status === ContentStatus.ACTIVE
-                                ? "bg-(--color-status-success) shadow-[0_0_8px_var(--color-status-success)]"
+                                ? "bg-(--color-status-success)"
                                 : "bg-(--color-text-muted)",
                         )}
                     />
-                    {model.name}
+                    <span>{model.name}</span>
                 </div>
             </td>
-            <td className="px-4 py-3 text-xs font-mono text-(--color-text-secondary)">
+            <td className="px-4 py-3 font-mono text-xs text-(--color-text-secondary)">
                 {model.code}
             </td>
-            <td className="px-4 py-3 text-(--color-text-secondary)">
+            <td className="px-4 py-3 font-mono text-xs text-(--color-text-secondary)">
                 {model.maxTokens
                     ? formatCompactNumber(model.maxTokens)
                     : "Unlimited"}
             </td>
             <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-(--color-bg-primary)">
+                    <div className="h-1.5 w-16 overflow-hidden rounded-sm bg-(--color-bg-card)">
                         <div
-                            className="h-full bg-(--color-accent-secondary)"
+                            className="h-full bg-(--color-accent-primary)"
                             style={{
                                 width: `${(model.efficiencyScore ?? 0) * 100}%`,
                             }}
                         />
                     </div>
-                    <span className="text-xs font-bold">
+                    <span className="font-mono text-xs font-semibold">
                         {((model.efficiencyScore ?? 0) * 100).toFixed(0)}%
                     </span>
                 </div>
             </td>
             <td className="px-4 py-3">
-                <div className="flex items-center gap-1.5">
-                    <span className="font-mono text-xs font-bold text-(--color-status-success)">
+                <div className="flex items-center gap-1.5 font-mono text-xs font-semibold">
+                    <span className="text-(--color-status-success)">
                         {formatNumber(model.totalSuccessCount)}
                     </span>
                     <span className="text-(--color-text-muted)">/</span>
-                    <span className="font-mono text-xs font-bold text-(--color-status-error)">
+                    <span className="text-(--color-status-error)">
                         {formatNumber(model.totalFailureCount)}
                     </span>
                 </div>
@@ -81,8 +82,9 @@ export function ModelRow({
             <td className="px-4 py-3">
                 <select
                     value={model.status}
+                    aria-label={`Status for ${model.name}`}
                     disabled={isUpdatingStatus}
-                    className="h-7 rounded border border-(--color-border-primary) bg-(--color-bg-input) px-2 text-[10px] font-bold uppercase text-(--color-text-primary) outline-none"
+                    className="h-8 rounded-sm border border-(--color-border-primary) bg-(--color-bg-input) px-2 text-xs font-medium text-(--color-text-primary) outline-none focus:border-(--color-border-focused)"
                     onChange={(event) =>
                         onUpdateStatus(model.id, event.target.value as ContentStatus)
                     }
@@ -95,11 +97,12 @@ export function ModelRow({
                 </select>
             </td>
             <td className="px-4 py-3 text-right">
-                <div className="flex justify-end gap-1">
+                <div className="flex justify-end gap-1.5">
                     <Button
-                        variant="primary:outline"
+                        variant="secondary"
                         size="icon"
-                        className="size-7"
+                        className="size-8"
+                        aria-label={`Edit ${model.name}`}
                         onClick={onEdit}
                     >
                         <PenIcon size={14} />
@@ -107,7 +110,8 @@ export function ModelRow({
                     <Button
                         variant="danger:outline"
                         size="icon"
-                        className="size-7"
+                        className="size-8"
+                        aria-label={`Delete ${model.name}`}
                         disabled={isDeleting}
                         onClick={() => onDelete(model.id, model.name)}
                     >

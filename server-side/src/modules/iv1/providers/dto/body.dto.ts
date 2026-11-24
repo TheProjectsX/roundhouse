@@ -112,6 +112,46 @@ export class CreateProviderModelDto {
     @IsBoolean()
     @toBoolean()
     thinking?: boolean;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    contextWindow?: number;
+
+    @IsOptional()
+    @IsBoolean()
+    @toBoolean()
+    supportsTools?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    @toBoolean()
+    supportsVision?: boolean;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    rpmLimit?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    rpdLimit?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    tpmLimit?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    tpdLimit?: number;
 }
 
 export class UpdateProviderModelDto extends PartialType(
@@ -126,4 +166,24 @@ export class UpdateProviderModelStatusDto {
     })
     @IsEnum(ContentStatus)
     status: ContentStatus;
+}
+
+export class FetchProviderModelsDto {
+    @IsOptional()
+    @IsString()
+    apiKeyId?: string;
+
+    @IsOptional()
+    @IsString()
+    apiKey?: string;
+}
+
+export class TestProviderDto {
+    @IsOptional()
+    @IsString()
+    modelId?: string;
+
+    @IsOptional()
+    @IsString()
+    apiKeyId?: string;
 }

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: roundhouse-server
+    runtime: node
+    rootDir: server-side
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: https://roundhouse-api.vercel.app
+      - key: CORS_ORIGINS
+        value: https://roundhouse-api.vercel.app
+      - key: BACKEND_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: REFRESH_TOKEN_SECRET
+        sync: false
+      - key: RESET_TOKEN_SECRET
+        sync: false

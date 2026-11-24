@@ -28,6 +28,8 @@ export interface ApiKeyListItem {
 
 export interface ApiKeysManagerEntry {
     id: string;
+    name?: string;
+    provider?: string | null;
     maskedKey: string;
     active: boolean;
     successCount: number;
@@ -42,6 +44,13 @@ export interface ModelSelectionEntry {
     code: string;
     maxTokens: number | null;
     tokenResetInterval: number | null;
+    contextWindow?: number | null;
+    supportsTools?: boolean | null;
+    supportsVision?: boolean | null;
+    rpmLimit?: number | null;
+    rpdLimit?: number | null;
+    tpmLimit?: number | null;
+    tpdLimit?: number | null;
     efficiencyScore: number | null;
     bestFor: string[];
     thinking: boolean;
@@ -68,6 +77,13 @@ export interface ApiKeyModelSelectionListItem {
         code: string;
         maxTokens: number | null;
         tokenResetInterval: number | null;
+        contextWindow?: number | null;
+        supportsTools?: boolean | null;
+        supportsVision?: boolean | null;
+        rpmLimit?: number | null;
+        rpdLimit?: number | null;
+        tpmLimit?: number | null;
+        tpdLimit?: number | null;
         efficiencyScore: number | null;
         bestFor: string[];
         thinking: boolean;
@@ -145,11 +161,27 @@ export interface ProviderModelListItem {
     code: string;
     maxTokens: number | null;
     tokenResetInterval: number | null;
+    contextWindow?: number | null;
+    supportsTools?: boolean | null;
+    supportsVision?: boolean | null;
+    rpmLimit?: number | null;
+    rpdLimit?: number | null;
+    tpmLimit?: number | null;
+    tpdLimit?: number | null;
     efficiencyScore: number | null;
     bestFor: string[];
     thinking: boolean;
     status: ContentStatus;
     isCustom: boolean;
+}
+
+export interface FetchedProviderModelItem {
+    id: string;
+    name: string;
+    code: string;
+    ownedBy: string | null;
+    created: number | null;
+    alreadyAdded: boolean;
 }
 
 export interface ApiKeysManagerItem {
@@ -165,6 +197,27 @@ export interface ApiKeysManagerItem {
 export interface UnlockedKey {
     id: string;
     key: string;
+}
+
+export interface ModelTestResult {
+    success: boolean;
+    provider: {
+        id: string;
+        name: string;
+        code: string;
+    };
+    model: {
+        id: string;
+        name: string;
+        code: string;
+    };
+    vaultKey: {
+        id: string;
+        name: string;
+    };
+    latencyMs: number;
+    reply?: string;
+    error?: string;
 }
 
 export interface AdminAnalytics {

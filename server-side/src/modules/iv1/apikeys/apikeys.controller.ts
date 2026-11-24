@@ -16,6 +16,7 @@ import { UserPayload } from "@/common/guards/auth.guard";
 import {
     CreateApiKeyDto,
     CreateApiKeyProviderDto,
+    TestProviderSelectionDto,
     UpdateApiKeyDto,
     UpdateApiKeyModelSelectionPriorityDto,
     UpdateApiKeyProviderModelsDto,
@@ -61,6 +62,7 @@ export class ApikeysController {
         });
     }
 
+
     @Post()
     @ApiOperation({ summary: "Create API key" })
     async createApiKey(
@@ -96,6 +98,7 @@ export class ApikeysController {
         });
     }
 
+
     @Get(":id/models")
     @ApiOperation({ summary: "Get all model selections for an API key" })
     async fetchApiKeyModelSelections(
@@ -113,6 +116,7 @@ export class ApikeysController {
             data: result.data,
         });
     }
+
 
     @Patch(":id/models/priority")
     @ApiOperation({
@@ -136,6 +140,7 @@ export class ApikeysController {
         });
     }
 
+
     @Patch(":id/settings")
     @ApiOperation({ summary: "Update API key settings" })
     async updateApiKeySettings(
@@ -156,6 +161,7 @@ export class ApikeysController {
         });
     }
 
+
     @Patch(":id/status")
     @ApiOperation({ summary: "Update API key status" })
     async updateApiKeyStatus(
@@ -175,6 +181,7 @@ export class ApikeysController {
             data: result.data,
         });
     }
+
 
     @Delete(":id")
     @ApiOperation({ summary: "Delete API key" })
@@ -212,6 +219,7 @@ export class ApikeysController {
         });
     }
 
+
     @Delete(":id/selections/:selectionId")
     @ApiOperation({ summary: "Remove provider selection from API key" })
     async deleteApiKeySelection(
@@ -222,6 +230,54 @@ export class ApikeysController {
         const result = await this.apikeysService.deleteApiKeySelection(
             id,
             selectionId,
+            user,
+        );
+
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+
+    @Patch(":id/selections/:selectionId/keys")
+    @ApiOperation({ summary: "Update vault keys for a provider selection" })
+    async updateApiKeySelectionKeys(
+        @Param("id") id: string,
+        @Param("selectionId") selectionId: string,
+        @Body() payload: CreateApiKeyProviderDto,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.apikeysService.updateApiKeySelectionKeys(
+            id,
+            selectionId,
+            payload,
+            user,
+        );
+
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+
+    @Post(":id/selections/:selectionId/test")
+    @ApiOperation({
+        summary: "Test a provider selection (specific or random active model)",
+    })
+    async testApiKeySelection(
+        @Param("id") id: string,
+        @Param("selectionId") selectionId: string,
+        @Body() payload: TestProviderSelectionDto,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.apikeysService.testApiKeySelection(
+            id,
+            selectionId,
+            payload,
             user,
         );
 
@@ -254,6 +310,7 @@ export class ApikeysController {
         });
     }
 
+
     @Delete(":id/providers/:providerId/models")
     @ApiOperation({ summary: "Deselect models for provider under API key" })
     async deselectApiKeyProviderModels(
@@ -275,6 +332,7 @@ export class ApikeysController {
             data: result.data,
         });
     }
+
 
     @Patch(":id/providers/:providerId/status")
     @ApiOperation({ summary: "Update provider selection status under API key" })
@@ -298,6 +356,7 @@ export class ApikeysController {
         });
     }
 
+
     @Patch(":id/models/:modelId/status")
     @ApiOperation({ summary: "Update model selection status under API key" })
     async updateApiKeyModelStatus(
@@ -319,4 +378,5 @@ export class ApikeysController {
             data: result.data,
         });
     }
+
 }

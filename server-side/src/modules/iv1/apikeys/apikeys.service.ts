@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { ContentStatus, Prisma } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
@@ -7,6 +7,7 @@ import QueryBuilder from "@/common/utils/queryBuilder";
 import {
     CreateApiKeyDto,
     CreateApiKeyProviderDto,
+    TestProviderSelectionDto,
     UpdateApiKeyDto,
     UpdateApiKeyModelSelectionPriorityDto,
     UpdateApiKeyProviderModelsDto,
@@ -15,6 +16,8 @@ import {
     UpdateApiKeyStatusDto,
 } from "./dto/body.dto";
 import { generateApiKey } from "./apikeys.util";
+import { decryptVaultKey } from "@/common/utils/vault-crypto";
+import { executeModelTest } from "@/core/utils/modelTest.util";
 
 type ApiKeyDetails = Prisma.ApiKeyGetPayload<{
     include: {
@@ -376,13 +379,6 @@ export class ApikeysService {
             },
         );
 
-        if (existingSelection) {
-            throw new ApiError(
-                HttpStatus.CONFLICT,
-                "Provider already selected for this API key",
-            );
-        }
-
         const apiKeysManagerIds = Array.from(
             new Set(payload.apiKeysManagerIds ?? []),
         );
@@ -410,7 +406,42 @@ export class ApikeysService {
             );
         }
 
-        const modelIds = await this.fetchProviderModelIds(providerEntity);
+        if (existingSelection) {
+            const existingLinks =
+                await this.prisma.providerSelectionApiKeysManager.findMany({
+                    where: {
+                        providerSelectionId: existingSelection.id,
+                        apiKeysManagerId: { in: apiKeysManagerIds },
+                    },
+                    select: { apiKeysManagerId: true },
+                });
+            const linkedSet = new Set(
+                existingLinks.map((l) => l.apiKeysManagerId),
+            );
+            const newIds = apiKeysManagerIds.filter((id) => !linkedSet.has(id));
+
+            if (newIds.length > 0) {
+                await this.prisma.providerSelectionApiKeysManager.createMany({
+                    data: newIds.map((apiKeysManagerId) => ({
+                        providerSelectionId: existingSelection.id,
+                        apiKeysManagerId,
+                    })),
+                });
+            }
+
+            return {
+                message: "Keys linked to provider",
+                data: {
+                    id: existingSelection.id,
+                    apiKeysManagerIds,
+                },
+            };
+        }
+
+        const modelIds = await this.fetchProviderModelIds(
+            providerEntity,
+            user.id,
+        );
 
         const providerSelection = await this.prisma.providerSelection.create({
             data: {
@@ -485,6 +516,215 @@ export class ApikeysService {
         });
 
         return { message: "Provider deselected", data: { id: deleted.id } };
+    }
+
+    async updateApiKeySelectionKeys(
+        apiKeyId: string,
+        selectionId: string,
+        payload: CreateApiKeyProviderDto,
+        user: UserPayload,
+    ) {
+        await this.ensureOwnedApiKey(apiKeyId, user.id);
+
+        const providerSelection = await this.ensureOwnedProviderSelection(
+            apiKeyId,
+            selectionId,
+            user.id,
+        );
+
+        const apiKeysManagerIds = Array.from(
+            new Set(payload.apiKeysManagerIds ?? []),
+        );
+        if (apiKeysManagerIds.length === 0) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "At least one ApiKeysManager id must be provided",
+            );
+        }
+
+        const apiKeysManagerRecords = await this.prisma.apiKeysManager.findMany(
+            {
+                where: {
+                    id: { in: apiKeysManagerIds },
+                    userId: user.id,
+                },
+                select: { id: true },
+            },
+        );
+
+        if (apiKeysManagerRecords.length !== apiKeysManagerIds.length) {
+            throw new ApiError(
+                HttpStatus.NOT_FOUND,
+                "One or more ApiKeysManager ids are invalid or do not belong to the user",
+            );
+        }
+
+        await this.prisma.$transaction([
+            this.prisma.providerSelectionApiKeysManager.deleteMany({
+                where: { providerSelectionId: providerSelection.id },
+            }),
+            this.prisma.providerSelectionApiKeysManager.createMany({
+                data: apiKeysManagerIds.map((apiKeysManagerId) => ({
+                    providerSelectionId: providerSelection.id,
+                    apiKeysManagerId,
+                })),
+            }),
+        ]);
+
+        return {
+            message: "Provider selection vault keys updated",
+            data: {
+                id: providerSelection.id,
+                apiKeysManagerIds,
+            },
+        };
+    }
+
+    async testApiKeySelection(
+        apiKeyId: string,
+        selectionId: string,
+        payload: TestProviderSelectionDto,
+        user: UserPayload,
+    ) {
+        await this.ensureOwnedApiKey(apiKeyId, user.id);
+
+        const selection = await this.prisma.providerSelection.findFirst({
+            where: {
+                id: selectionId,
+                apiKeyId,
+                apiKey: { userId: user.id },
+            },
+            include: {
+                provider: true,
+                userProvider: true,
+                apiKeysManagers: {
+                    include: { apiKeysManager: true },
+                },
+                modelSelections: {
+                    include: { model: true, userModel: true },
+                },
+            },
+        });
+
+        if (!selection) {
+            throw new ApiError(
+                HttpStatus.NOT_FOUND,
+                "Provider selection not found",
+            );
+        }
+
+        const provider = selection.provider ?? selection.userProvider;
+        if (!provider) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+
+        const activeVaultKeys = (selection.apiKeysManagers ?? [])
+            .map((entry) => entry.apiKeysManager)
+            .filter((km): km is NonNullable<typeof km> =>
+                Boolean(km && km.active),
+            );
+
+        if (activeVaultKeys.length === 0) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "No active vault keys attached to this provider selection",
+            );
+        }
+
+        const vaultKey =
+            activeVaultKeys[Math.floor(Math.random() * activeVaultKeys.length)];
+
+        let targetModel: { id: string; name: string; code: string } | null =
+            null;
+
+        if (payload.modelId) {
+            const matchedSelection = selection.modelSelections.find(
+                (ms) =>
+                    ms.modelId === payload.modelId ||
+                    ms.userModelId === payload.modelId,
+            );
+            const matched =
+                matchedSelection?.model ?? matchedSelection?.userModel;
+            if (matched) {
+                targetModel = {
+                    id: matched.id,
+                    name: matched.name,
+                    code: matched.code,
+                };
+            } else if (selection.provider) {
+                const m = await this.prisma.model.findFirst({
+                    where: {
+                        id: payload.modelId,
+                        provider: selection.provider.code,
+                    },
+                    select: { id: true, name: true, code: true },
+                });
+                if (m) targetModel = m;
+            } else if (selection.userProvider) {
+                const m = await this.prisma.userModel.findFirst({
+                    where: {
+                        id: payload.modelId,
+                        provider: selection.userProvider.code,
+                        userId: user.id,
+                    },
+                    select: { id: true, name: true, code: true },
+                });
+                if (m) targetModel = m;
+            }
+
+            if (!targetModel) {
+                throw new ApiError(
+                    HttpStatus.NOT_FOUND,
+                    "Model not found for this provider",
+                );
+            }
+        } else {
+            const activeModels = selection.modelSelections
+                .filter((ms) => ms.active)
+                .map((ms) => ms.model ?? ms.userModel)
+                .filter(
+                    (m): m is NonNullable<typeof m> =>
+                        Boolean(m && m.status === ContentStatus.ACTIVE),
+                );
+
+            if (activeModels.length === 0) {
+                throw new ApiError(
+                    HttpStatus.BAD_REQUEST,
+                    "No active models available in this provider selection to test",
+                );
+            }
+
+            const picked =
+                activeModels[Math.floor(Math.random() * activeModels.length)];
+            targetModel = {
+                id: picked.id,
+                name: picked.name,
+                code: picked.code,
+            };
+        }
+
+        const result = await executeModelTest({
+            provider: {
+                id: provider.id,
+                name: provider.name,
+                code: provider.code,
+                type: provider.type,
+                baseApi: provider.baseApi,
+            },
+            model: targetModel,
+            vaultKey: {
+                id: vaultKey.id,
+                name: vaultKey.name,
+                key: vaultKey.key,
+            },
+        });
+
+        return {
+            message: result.success
+                ? "Model test succeeded"
+                : "Model test failed",
+            data: result,
+        };
     }
 
     async selectApiKeyProviderModels(
@@ -814,6 +1054,8 @@ export class ApikeysService {
                             this.formatApiKeysManager(
                                 entry.apiKeysManager as {
                                     id: string;
+                                    name: string;
+                                    provider: string | null;
                                     key: string;
                                     active: boolean;
                                     successCount: number;
@@ -832,6 +1074,8 @@ export class ApikeysService {
 
     private formatApiKeysManager(apiKeysManager: {
         id: string;
+        name: string;
+        provider: string | null;
         key: string;
         active: boolean;
         successCount: number;
@@ -840,7 +1084,11 @@ export class ApikeysService {
     }) {
         return {
             id: apiKeysManager.id,
-            maskedKey: this.maskApiKeysManagerKey(apiKeysManager.key),
+            name: apiKeysManager.name,
+            provider: apiKeysManager.provider,
+            maskedKey: this.maskApiKeysManagerKey(
+                decryptVaultKey(apiKeysManager.key),
+            ),
             active: apiKeysManager.active,
             successCount: apiKeysManager.successCount,
             createdAt: apiKeysManager.createdAt,
@@ -880,10 +1128,14 @@ export class ApikeysService {
 
     private async fetchProviderModelIds(
         providerEntity: Awaited<ReturnType<typeof this.resolveProviderEntity>>,
+        userId: string,
     ) {
         if (providerEntity.kind === "global") {
             const models = await this.prisma.model.findMany({
-                where: { provider: providerEntity.code },
+                where: {
+                    provider: providerEntity.code,
+                    status: ContentStatus.ACTIVE,
+                },
                 select: { id: true },
             });
             return models.map((model) => model.id);
@@ -892,6 +1144,8 @@ export class ApikeysService {
         const models = await this.prisma.userModel.findMany({
             where: {
                 provider: providerEntity.code,
+                userId,
+                status: ContentStatus.ACTIVE,
             },
             select: { id: true },
         });

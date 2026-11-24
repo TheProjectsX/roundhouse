@@ -18,6 +18,14 @@ export class UpdateApiKeysManagerDto {
     name?: string;
 
     @IsOptional()
+    @IsString()
+    provider?: string;
+
+    @IsOptional()
+    @IsString()
+    key?: string;
+
+    @IsOptional()
     @IsBoolean()
     active?: boolean;
 }

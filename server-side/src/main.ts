@@ -10,7 +10,23 @@ import config from "./config";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { getLocalIP } from "./common/utils/localIp";
 
-async function bootstrap() {
+function getAllowedOrigins(): string[] {
+    const defaults = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://roundhouse-api.vercel.app",
+    ];
+    const extra = [
+        config.url.frontend,
+        ...(config.cors?.origins ? config.cors.origins.split(",") : []),
+    ]
+        .filter((origin): origin is string => Boolean(origin && origin.trim()))
+        .map((origin) => origin.trim().replace(/\/+$/, ""));
+
+    return Array.from(new Set([...defaults, ...extra]));
+}
+
+export async function createApp(): Promise<NestExpressApplication> {
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
         logger: new ConsoleLogger({
             prefix: "roundhouse",
@@ -32,13 +48,32 @@ async function bootstrap() {
     });
 
     // --- CORS ---
+    const allowedOrigins = getAllowedOrigins();
+    const vercelPreviewPattern =
+        /^https:\/\/roundhouse-api(-[a-z0-9-]+)?\.vercel\.app$/;
+
     app.enableCors({
-        origin: ["http://localhost:3000", "http://localhost:3001"], // Set specific origins in prod
+        origin: (origin, callback) => {
+            if (!origin) {
+                return callback(null, true);
+            }
+            const normalized = origin.replace(/\/+$/, "");
+            if (
+                allowedOrigins.includes(normalized) ||
+                vercelPreviewPattern.test(normalized)
+            ) {
+                return callback(null, true);
+            }
+            return callback(new Error(`Origin ${origin} not allowed by CORS`));
+        },
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allowedHeaders: [
             "Content-Type",
             "Authorization",
+            "Accept",
+            "Origin",
+            "X-Requested-With",
             "Access-Control-Allow-Origin",
         ],
     });
@@ -91,9 +126,16 @@ async function bootstrap() {
         SwaggerModule.setup("api/v1", app, document);
     }
 
+    await app.init();
+    return app;
+}
+
+async function bootstrap() {
+    const app = await createApp();
+
     // --- Server Listen ---
-    const port = config.port || 5000;
-    await app.listen(port);
+    const port = Number(config.port) || 5000;
+    await app.listen(port, "0.0.0.0");
 
     console.log(`\n🚀 Application is running on:`);
     console.log(`📡 Local:    http://localhost:${port}`);

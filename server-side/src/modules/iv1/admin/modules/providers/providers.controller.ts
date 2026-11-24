@@ -22,12 +22,39 @@ import {
     UpdateProviderStatusDto,
 } from "./dto/body.dto";
 import { AdminProvidersService } from "./providers.service";
+import { CatalogSyncService } from "@/modules/iv1/providers/catalog-sync.service";
 
 @ApiTags("Admin - Providers")
 @Controller("providers")
 @UseGuards()
 export class AdminProvidersController {
-    constructor(private adminProvidersService: AdminProvidersService) {}
+    constructor(
+        private adminProvidersService: AdminProvidersService,
+        private catalogSyncService: CatalogSyncService,
+    ) {}
+
+    @Roles("ADMIN")
+    @Get("sync-status")
+    @ApiOperation({ summary: "Get global catalog auto-sync status (admin)" })
+    getCatalogSyncStatus() {
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: "Catalog sync status fetched",
+            data: this.catalogSyncService.getStatus(),
+        });
+    }
+
+    @Roles("ADMIN")
+    @Post("sync-all")
+    @ApiOperation({ summary: "Trigger full global catalog sync (admin)" })
+    async syncAllCatalogs() {
+        const status = await this.catalogSyncService.syncAllCatalogs();
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: "Global catalog synced",
+            data: status,
+        });
+    }
 
     @Roles("ADMIN")
     @Get()
@@ -120,6 +147,24 @@ export class AdminProvidersController {
             message: result.message,
             data: result.data,
             pagination: result.pagination,
+        });
+    }
+
+    @Roles("ADMIN")
+    @Post(":id/sync-models")
+    @ApiOperation({ summary: "Sync global provider models from upstream (admin)" })
+    async syncProviderModels(
+        @Param("id") id: string,
+        @Body() payload?: { apiKey?: string; freeOnly?: boolean },
+    ) {
+        const result = await this.adminProvidersService.syncProviderModels(
+            id,
+            payload,
+        );
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
         });
     }
 

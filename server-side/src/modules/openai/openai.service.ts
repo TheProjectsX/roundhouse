@@ -1,8 +1,11 @@
 import {
     createChatCompletion,
-    createChatCompletionStreamWithUsage,
     createResponse,
 } from "@/core/api-wrapper/service";
+import {
+    openChatCompletionStream,
+    type PreparedChatStream,
+} from "@/core/api-wrapper/stream";
 import {
     type BoundRoundhouseExecutor,
     createRoundhouseExecutor,
@@ -16,6 +19,12 @@ import { ModelSelectionService } from "@/common/services/modelSelection/model-se
 import { background } from "@/common/utils/background";
 import { createDevLogger } from "@/common/utils/logger";
 import { toOpenAIError } from "@/core/utils/openaiError.util";
+import {
+    estimateRequestTokens,
+    requestHasImages,
+    requestRequiresTools,
+} from "@/core/utils/preflight.util";
+import { deriveSessionKey } from "@/core/utils/stickySession.util";
 import {
     resolveRoundhouseFilters,
     resolveApiKey,
@@ -170,20 +179,37 @@ export class OpenaiService {
                 body.model,
                 modelKeys,
             );
+            const estimatedTokens = estimateRequestTokens(
+                body.messages,
+                body.tools,
+                typeof body.max_tokens === "number"
+                    ? body.max_tokens
+                    : undefined,
+            );
+            const requireVision = requestHasImages(body.messages);
+            const requireTools = requestRequiresTools(
+                body.tools,
+                body.tool_choice,
+            );
+            const stickySessionKey = deriveSessionKey(
+                apiKey,
+                body.messages,
+                req.headers,
+            );
             this.logger.log("chatCompletions filters resolved", {
                 provider: provider ?? null,
                 maxIterations: maxIterations ?? null,
                 strategy,
                 mergedModelKeysCount: mergedModelKeys?.size ?? 0,
                 requestedModel: body.model ?? null,
+                estimatedTokens,
+                requireVision,
+                requireTools,
             });
 
             if (body.stream) {
                 const streamSelectionStartedAt = Date.now();
-                const streamedResult = await this.executor<{
-                    chunks: string[];
-                    usage?: { total_tokens: number };
-                }>(
+                const streamedResult = await this.executor<PreparedChatStream>(
                     apiKey,
                     async (candidate, apiKeysManager) => {
                         const providerCallStartedAt = Date.now();
@@ -201,8 +227,8 @@ export class OpenaiService {
                                     apiKeysManagerId: apiKeysManager.id,
                                 },
                             );
-                            const streamResponse =
-                                await createChatCompletionStreamWithUsage(
+                            const preparedStream =
+                                await openChatCompletionStream(
                                     {
                                         ...body,
                                         model: `${candidate.model.provider.type.toLowerCase()}/${candidate.model.code}`,
@@ -215,7 +241,7 @@ export class OpenaiService {
                                     },
                                 );
                             this.logger.log(
-                                "chatCompletions stream provider call succeeded",
+                                "chatCompletions stream first chunk received",
                                 {
                                     durationMs:
                                         Date.now() - providerCallStartedAt,
@@ -223,13 +249,12 @@ export class OpenaiService {
                                         candidate.providerSelectionId,
                                     modelSelectionId:
                                         candidate.modelSelectionId,
-                                    chunkCount: streamResponse.chunks.length,
                                 },
                             );
 
                             return {
                                 success: true as const,
-                                data: streamResponse,
+                                data: preparedStream,
                             };
                         } catch (error) {
                             console.error(error);
@@ -251,6 +276,7 @@ export class OpenaiService {
                             );
                             return {
                                 success: false as const,
+                                error,
                             };
                         }
                     },
@@ -259,6 +285,10 @@ export class OpenaiService {
                         provider,
                         modelKeys: mergedModelKeys,
                         strategy,
+                        estimatedTokens,
+                        requireVision,
+                        requireTools,
+                        stickySessionKey,
                     },
                 );
                 this.logger.log("chatCompletions stream selection finished", {
@@ -282,22 +312,24 @@ export class OpenaiService {
                     );
                 }
 
-                const tokenUsage = streamedResult.data.usage?.total_tokens ?? 0;
-
-                this.queueModelSelectionStats(
-                    streamedResult.candidate.modelSelectionId,
-                    tokenUsage,
-                );
-
-                this.logger.log("chatCompletions stream request succeeded", {
-                    totalDurationMs: Date.now() - startedAt,
-                    chunkCount: streamedResult.data.chunks.length,
-                    tokenUsage,
-                });
                 return {
                     statusCode: HttpStatus.OK,
-                    stream: true,
-                    chunks: streamedResult.data.chunks,
+                    stream: true as const,
+                    preparedStream: streamedResult.data,
+                    onComplete: (usage?: { total_tokens: number }) => {
+                        const tokenUsage = usage?.total_tokens ?? 0;
+                        this.queueModelSelectionStats(
+                            streamedResult.candidate.modelSelectionId,
+                            tokenUsage,
+                        );
+                        this.logger.log(
+                            "chatCompletions stream request succeeded",
+                            {
+                                totalDurationMs: Date.now() - startedAt,
+                                tokenUsage,
+                            },
+                        );
+                    },
                 };
             }
 
@@ -373,6 +405,7 @@ export class OpenaiService {
                         );
                         return {
                             success: false as const,
+                            error,
                         };
                     }
                 },
@@ -381,6 +414,10 @@ export class OpenaiService {
                     provider,
                     modelKeys: mergedModelKeys,
                     strategy,
+                    estimatedTokens,
+                    requireVision,
+                    requireTools,
+                    stickySessionKey,
                 },
             );
             this.logger.log("chatCompletions selection finished", {
@@ -473,12 +510,34 @@ export class OpenaiService {
                 body.model,
                 modelKeys,
             );
+            const estimatedTokens = estimateRequestTokens(
+                body.messages,
+                body.tools,
+                typeof body.max_output_tokens === "number"
+                    ? body.max_output_tokens
+                    : typeof body.max_tokens === "number"
+                      ? body.max_tokens
+                      : undefined,
+            );
+            const requireVision = requestHasImages(body.messages);
+            const requireTools = requestRequiresTools(
+                body.tools,
+                body.tool_choice,
+            );
+            const stickySessionKey = deriveSessionKey(
+                apiKey,
+                body.messages,
+                req.headers,
+            );
             this.logger.log("responses filters resolved", {
                 provider: provider ?? null,
                 maxIterations: maxIterations ?? null,
                 strategy,
                 mergedModelKeysCount: mergedModelKeys?.size ?? 0,
                 requestedModel: body.model ?? null,
+                estimatedTokens,
+                requireVision,
+                requireTools,
             });
 
             const selectionStartedAt = Date.now();
@@ -530,6 +589,7 @@ export class OpenaiService {
                         });
                         return {
                             success: false as const,
+                            error,
                         };
                     }
                 },
@@ -538,6 +598,10 @@ export class OpenaiService {
                     provider,
                     modelKeys: mergedModelKeys,
                     strategy,
+                    estimatedTokens,
+                    requireVision,
+                    requireTools,
+                    stickySessionKey,
                 },
             );
             this.logger.log("responses selection finished", {

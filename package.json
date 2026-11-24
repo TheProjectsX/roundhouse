@@ -1,0 +1,10 @@
+{
+    "name": "roundhouse",
+    "private": true,
+    "scripts": {
+        "dev": "node dev.mjs",
+        "build": "node dev.mjs --build",
+        "start": "node dev.mjs --prod",
+        "serve": "node dev.mjs --prod --skip-build"
+    }
+}

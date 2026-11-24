@@ -4,6 +4,8 @@ import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
+import { executeModelTest } from "@/core/utils/modelTest.util";
+import { TestProviderDto } from "./dto/body.dto";
 
 type ProviderListSelection = {
     id: true;
@@ -154,6 +156,182 @@ export class ProvidersService {
         return {
             message: "Provider models fetched",
             data: models,
+        };
+    }
+
+    async testProvider(
+        id: string,
+        payload: TestProviderDto,
+        user: UserPayload,
+    ) {
+        const globalProvider = await this.prisma.provider.findFirst({
+            where: { id, status: { not: ContentStatus.INACTIVE } },
+        });
+        const customProvider = globalProvider
+            ? null
+            : await this.prisma.userProvider.findFirst({
+                  where: { id, userId: user.id },
+              });
+
+        const provider = globalProvider ?? customProvider;
+        if (!provider) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+
+        let targetModel: { id: string; name: string; code: string } | null =
+            null;
+
+        if (payload.modelId) {
+            targetModel = globalProvider
+                ? await this.prisma.model.findFirst({
+                      where: {
+                          id: payload.modelId,
+                          provider: globalProvider.code,
+                      },
+                      select: { id: true, name: true, code: true },
+                  })
+                : await this.prisma.userModel.findFirst({
+                      where: {
+                          id: payload.modelId,
+                          provider: customProvider!.code,
+                          userId: user.id,
+                      },
+                      select: { id: true, name: true, code: true },
+                  });
+
+            if (!targetModel) {
+                throw new ApiError(
+                    HttpStatus.NOT_FOUND,
+                    "Model not found for this provider",
+                );
+            }
+        } else {
+            const activeModels = globalProvider
+                ? await this.prisma.model.findMany({
+                      where: {
+                          provider: globalProvider.code,
+                          status: ContentStatus.ACTIVE,
+                      },
+                      select: { id: true, name: true, code: true },
+                  })
+                : await this.prisma.userModel.findMany({
+                      where: {
+                          provider: customProvider!.code,
+                          userId: user.id,
+                          status: ContentStatus.ACTIVE,
+                      },
+                      select: { id: true, name: true, code: true },
+                  });
+
+            if (activeModels.length === 0) {
+                throw new ApiError(
+                    HttpStatus.BAD_REQUEST,
+                    "No active models available for this provider to test",
+                );
+            }
+
+            targetModel =
+                activeModels[Math.floor(Math.random() * activeModels.length)];
+        }
+
+        let vaultKey: { id: string; name: string; key: string } | null = null;
+
+        if (payload.apiKeyId) {
+            vaultKey = await this.prisma.apiKeysManager.findFirst({
+                where: { id: payload.apiKeyId, userId: user.id },
+                select: { id: true, name: true, key: true },
+            });
+        } else {
+            // 1. Prefer a vault key already linked to this provider via a ProviderSelection
+            const selectionWithKey =
+                await this.prisma.providerSelection.findFirst({
+                    where: {
+                        userId: user.id,
+                        ...(globalProvider
+                            ? { providerId: provider.id }
+                            : { userProviderId: provider.id }),
+                        apiKeysManagers: {
+                            some: {
+                                apiKeysManager: { active: true },
+                            },
+                        },
+                    },
+                    include: {
+                        apiKeysManagers: {
+                            where: { apiKeysManager: { active: true } },
+                            include: {
+                                apiKeysManager: {
+                                    select: { id: true, name: true, key: true },
+                                },
+                            },
+                        },
+                    },
+                });
+
+            vaultKey =
+                selectionWithKey?.apiKeysManagers[0]?.apiKeysManager ?? null;
+
+            // 2. Otherwise match case-insensitively against provider code, type, or name
+            if (!vaultKey) {
+                const activeKeys = await this.prisma.apiKeysManager.findMany({
+                    where: { userId: user.id, active: true },
+                    select: {
+                        id: true,
+                        name: true,
+                        key: true,
+                        provider: true,
+                    },
+                });
+
+                const targets = new Set([
+                    provider.code.toLowerCase(),
+                    provider.type.toLowerCase(),
+                    provider.name.toLowerCase(),
+                ]);
+
+                const matched =
+                    activeKeys.find(
+                        (k) =>
+                            k.provider &&
+                            targets.has(k.provider.trim().toLowerCase()),
+                    ) ??
+                    activeKeys.find((k) => !k.provider?.trim()) ??
+                    null;
+
+                if (matched) {
+                    vaultKey = {
+                        id: matched.id,
+                        name: matched.name,
+                        key: matched.key,
+                    };
+                }
+            }
+        }
+
+        if (!vaultKey) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "No active Vault Key found for this provider. Add one in Key Vault or select a key.",
+            );
+        }
+
+        const result = await executeModelTest({
+            provider: {
+                id: provider.id,
+                name: provider.name,
+                code: provider.code,
+                type: provider.type,
+                baseApi: provider.baseApi,
+            },
+            model: targetModel,
+            vaultKey,
+        });
+
+        return {
+            message: result.success
+                ? "Provider test succeeded"
+                : "Provider test failed",
+            data: result,
         };
     }
 

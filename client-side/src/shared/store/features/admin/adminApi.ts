@@ -19,6 +19,43 @@ export const adminApi = roundhouseApi.injectEndpoints({
             }),
             providesTags: ["Admin", "Providers"],
         }),
+        getAdminCatalogSyncStatus: builder.query<
+            {
+                syncing: boolean;
+                lastSyncedAt: string | null;
+                syncIntervalHours: number;
+                lastSummary: {
+                    createdCount: number;
+                    updatedCount: number;
+                    deprecatedCount: number;
+                    providersSynced: number;
+                } | null;
+            },
+            void
+        >({
+            query: () => "/api/iv1/admin/providers/sync-status",
+            providesTags: ["Admin", "Providers"],
+        }),
+        syncAllAdminCatalogs: builder.mutation<
+            {
+                syncing: boolean;
+                lastSyncedAt: string | null;
+                syncIntervalHours: number;
+                lastSummary: {
+                    createdCount: number;
+                    updatedCount: number;
+                    deprecatedCount: number;
+                    providersSynced: number;
+                } | null;
+            },
+            void
+        >({
+            query: () => ({
+                url: "/api/iv1/admin/providers/sync-all",
+                method: "POST",
+            }),
+            invalidatesTags: ["Admin", "Providers", "Models"],
+        }),
         createAdminProvider: builder.mutation<ProviderListItem, { name: string; code?: string; description?: string; baseApi: string; free?: boolean; type?: string; status?: ContentStatus }>({
             query: (body) => ({ url: "/api/iv1/admin/providers", method: "POST", body }),
             invalidatesTags: ["Admin", "Providers"],
@@ -69,6 +106,8 @@ export const {
     useGetAdminAnalyticsQuery,
     useGetAdminUsersQuery,
     useGetAdminProvidersQuery,
+    useGetAdminCatalogSyncStatusQuery,
+    useSyncAllAdminCatalogsMutation,
     useCreateAdminProviderMutation,
     useUpdateAdminProviderStatusMutation,
     useDeleteAdminProviderMutation,

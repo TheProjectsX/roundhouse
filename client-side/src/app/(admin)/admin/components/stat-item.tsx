@@ -18,7 +18,7 @@ export function StatItem({
         <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-(--color-text-muted)">
                 {icon}
-                <span className="text-[10px] font-medium uppercase tracking-wider">
+                <span className="text-[11px] font-medium uppercase tracking-wider">
                     {label}
                 </span>
             </div>

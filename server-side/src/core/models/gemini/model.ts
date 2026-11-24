@@ -1,3 +1,4 @@
+import { createProviderHttpError } from "@/core/utils/providerError.util";
 import type { ProviderCallParams, ProviderModelRecord } from "../types";
 import type { GeminiResponse, RequestPayload } from "./types";
 
@@ -165,7 +166,10 @@ export const callModel = async (
     const data = (await response.json()) as GeminiResponse;
 
     if (!response.ok) {
-        throw new Error(data.error?.message || "Gemini API request failed");
+        throw createProviderHttpError(
+            response,
+            data.error?.message || "Gemini API request failed",
+        );
     }
 
     return data;

@@ -4,9 +4,12 @@ import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
+import { listProviderModels } from "@/core/models";
+import { decryptVaultKey } from "@/common/utils/vault-crypto";
 import {
     CreateProviderDto,
     CreateProviderModelDto,
+    FetchProviderModelsDto,
     UpdateProviderDto,
     UpdateProviderModelDto,
     UpdateProviderModelStatusDto,
@@ -257,6 +260,128 @@ export class MeProvidersService {
         ]);
 
         return { message: "Models fetched", data, pagination };
+    }
+
+    async fetchUpstreamModels(
+        providerId: string,
+        payload: FetchProviderModelsDto,
+        user: UserPayload,
+    ) {
+        const provider = await this.prisma.userProvider.findFirst({
+            where: {
+                id: providerId,
+                userId: user.id,
+            },
+        });
+
+        if (!provider) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+
+        let apiKey = payload.apiKey?.trim() || undefined;
+
+        if (!apiKey && payload.apiKeyId) {
+            const vaultKey = await this.prisma.apiKeysManager.findFirst({
+                where: {
+                    id: payload.apiKeyId,
+                    userId: user.id,
+                },
+                select: { key: true },
+            });
+
+            if (!vaultKey) {
+                throw new ApiError(HttpStatus.NOT_FOUND, "Vault key not found");
+            }
+
+            apiKey = decryptVaultKey(vaultKey.key);
+        }
+
+        if (!apiKey) {
+            const matchingKey = await this.prisma.apiKeysManager.findFirst({
+                where: {
+                    userId: user.id,
+                    active: true,
+                    OR: [
+                        { provider: provider.code },
+                        { provider: provider.type },
+                        { provider: provider.type.toLowerCase() },
+                    ],
+                },
+                select: { key: true },
+            });
+
+            apiKey = matchingKey?.key
+                ? decryptVaultKey(matchingKey.key)
+                : undefined;
+        }
+
+        const defaultBaseApis: Record<Exclude<ProviderType, "CUSTOM">, string> = {
+            OPENAI: "https://api.openai.com/v1",
+            ANTHROPIC: "https://api.anthropic.com",
+            GEMINI: "https://generativelanguage.googleapis.com/v1beta",
+        };
+
+        let baseApi = provider.baseApi?.trim() || "";
+        if (!baseApi && provider.type !== ProviderType.CUSTOM) {
+            baseApi = defaultBaseApis[provider.type];
+        }
+
+        if (!baseApi) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Provider baseApi is required to fetch models",
+            );
+        }
+
+        if (provider.type === ProviderType.CUSTOM) {
+            baseApi = baseApi
+                .replace(/\/+$/, "")
+                .replace(/\/(chat\/completions|responses)$/i, "");
+        }
+
+        let upstreamModels;
+        try {
+            upstreamModels = await listProviderModels(provider.type, {
+                baseApi,
+                apiKey,
+                headers: {},
+                request: {
+                    model: "",
+                    messages: [],
+                    stream: false,
+                    params: {},
+                    rawBody: {},
+                },
+            });
+        } catch (error) {
+            throw new ApiError(
+                HttpStatus.BAD_GATEWAY,
+                error instanceof Error
+                    ? error.message
+                    : "Failed to fetch models from provider",
+            );
+        }
+
+        const existingModels = await this.prisma.userModel.findMany({
+            where: {
+                provider: provider.code,
+                userId: user.id,
+            },
+            select: { code: true },
+        });
+        const existingCodes = new Set(existingModels.map((item) => item.code));
+
+        return {
+            message: "Available models fetched",
+            data: upstreamModels.map((model) => ({
+                id: model.id,
+                name: model.id,
+                code: model.id,
+                ownedBy: model.ownedBy ?? null,
+                created: model.created ?? null,
+                alreadyAdded: existingCodes.has(model.id),
+            })),
+        };
     }
 
     async createProviderModel(

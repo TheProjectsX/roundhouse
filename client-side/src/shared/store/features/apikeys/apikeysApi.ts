@@ -3,6 +3,7 @@ import type {
     ApiKeyDetail,
     ApiKeyListItem,
     ApiKeyModelSelectionListItem,
+    ModelTestResult,
 } from "@/shared/types/entities";
 import { RoundhouseMethod } from "@/shared/types/enums";
 
@@ -52,6 +53,14 @@ export const apikeysApi = roundhouseApi.injectEndpoints({
             query: ({ apiKeyId, selectionId }) => ({ url: `/api/iv1/apikeys/${apiKeyId}/selections/${selectionId}`, method: "DELETE" }),
             invalidatesTags: (_result, _error, { apiKeyId }) => ["ApiKeys", "Providers", { type: "ApiKeys", id: apiKeyId }],
         }),
+        updateApiKeySelectionKeys: builder.mutation<{ id: string; apiKeysManagerIds: string[] }, { apiKeyId: string; selectionId: string; apiKeysManagerIds: string[] }>({
+            query: ({ apiKeyId, selectionId, apiKeysManagerIds }) => ({
+                url: `/api/iv1/apikeys/${apiKeyId}/selections/${selectionId}/keys`,
+                method: "PATCH",
+                body: { apiKeysManagerIds },
+            }),
+            invalidatesTags: (_result, _error, { apiKeyId }) => ["ApiKeys", "Providers", { type: "ApiKeys", id: apiKeyId }],
+        }),
         selectApiKeyProviderModels: builder.mutation<void, { apiKeyId: string; providerId: string; modelIds: string[] }>({
             query: ({ apiKeyId, providerId, modelIds }) => ({
                 url: `/api/iv1/apikeys/${apiKeyId}/providers/${providerId}/models`,
@@ -74,7 +83,7 @@ export const apikeysApi = roundhouseApi.injectEndpoints({
                 method: "PATCH",
                 body: { active },
             }),
-            invalidatesTags: (_result, _error, { apiKeyId }) => ["ApiKeys", { type: "ApiKeys", id: apiKeyId }],
+            invalidatesTags: (_result, _error, { apiKeyId }) => ["ApiKeys", "Providers", { type: "ApiKeys", id: apiKeyId }],
         }),
         updateApiKeyModelStatus: builder.mutation<void, { apiKeyId: string; modelId: string; active: boolean }>({
             query: ({ apiKeyId, modelId, active }) => ({ url: `/api/iv1/apikeys/${apiKeyId}/models/${modelId}/status`, method: "PATCH", body: { active } }),
@@ -83,6 +92,13 @@ export const apikeysApi = roundhouseApi.injectEndpoints({
         reorderApiKeyModelSelections: builder.mutation<void, { apiKeyId: string; items: { modelSelectionId: string; priority: number }[] }>({
             query: ({ apiKeyId, items }) => ({ url: `/api/iv1/apikeys/${apiKeyId}/models/priority`, method: "PATCH", body: { items } }),
             invalidatesTags: (_result, _error, { apiKeyId }) => ["ApiKeys", { type: "ApiKeys", id: apiKeyId }],
+        }),
+        testApiKeyProviderSelection: builder.mutation<ModelTestResult, { apiKeyId: string; selectionId: string; modelId?: string }>({
+            query: ({ apiKeyId, selectionId, modelId }) => ({
+                url: `/api/iv1/apikeys/${apiKeyId}/selections/${selectionId}/test`,
+                method: "POST",
+                body: modelId ? { modelId } : {},
+            }),
         }),
     }),
     overrideExisting: false,
@@ -99,9 +115,11 @@ export const {
     useDeleteApiKeyMutation,
     useSelectApiKeyProviderMutation,
     useRemoveApiKeyProviderSelectionMutation,
+    useUpdateApiKeySelectionKeysMutation,
     useSelectApiKeyProviderModelsMutation,
     useDeselectApiKeyProviderModelsMutation,
     useUpdateApiKeyProviderStatusMutation,
     useUpdateApiKeyModelStatusMutation,
     useReorderApiKeyModelSelectionsMutation,
+    useTestApiKeyProviderSelectionMutation,
 } = apikeysApi;

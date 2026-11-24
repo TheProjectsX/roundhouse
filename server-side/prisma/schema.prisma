@@ -122,6 +122,13 @@ model Model {
     code               String
     maxTokens          Int?
     tokenResetInterval Int?
+    contextWindow      Int?
+    supportsTools      Boolean?
+    supportsVision     Boolean?
+    rpmLimit           Int?
+    rpdLimit           Int?
+    tpmLimit           Int?
+    tpdLimit           Int?
     provider           String
 
     efficiencyScore Float?
@@ -172,6 +179,13 @@ model UserModel {
     code               String
     maxTokens          Int?
     tokenResetInterval Int?
+    contextWindow      Int?
+    supportsTools      Boolean?
+    supportsVision     Boolean?
+    rpmLimit           Int?
+    rpdLimit           Int?
+    tpmLimit           Int?
+    tpdLimit           Int?
     provider           String
 
     efficiencyScore Float?

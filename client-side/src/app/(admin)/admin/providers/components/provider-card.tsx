@@ -58,25 +58,25 @@ export function ProviderCard({
     return (
         <Card
             className={cn(
-                "overflow-hidden transition-all",
+                "overflow-hidden transition-colors",
                 isExpanded
-                    ? "ring-2 ring-(--color-accent-primary) ring-offset-0"
-                    : "hover:border-(--color-accent-primary)",
+                    ? "border-(--color-border-focused)"
+                    : "hover:border-(--color-border-focused)",
             )}
         >
-            <CardContent className="flex flex-col gap-6 p-6">
+            <CardContent className="flex flex-col gap-5 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="grid size-12 place-items-center rounded-xl border border-[color-mix(in_srgb,var(--color-accent-secondary)_20%,transparent)] bg-[color-mix(in_srgb,var(--color-accent-secondary)_8%,transparent)] text-(--color-accent-secondary)">
-                            <StackIcon size={26} weight="duotone" />
+                    <div className="flex items-center gap-3.5">
+                        <div className="grid size-10 place-items-center rounded-sm border border-(--color-border-primary) bg-(--color-bg-secondary) text-(--color-text-secondary)">
+                            <StackIcon size={18} />
                         </div>
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
-                                <h2 className="text-lg font-bold tracking-tight text-(--color-text-primary)">
+                                <h2 className="text-base font-semibold tracking-tight text-(--color-text-primary)">
                                     {provider.name}
                                 </h2>
                                 <StatusBadge status={provider.status} />
-                                <Badge>{provider.type}</Badge>
+                                <Badge className="font-mono text-[11px]">{provider.type}</Badge>
                             </div>
                             <p className="mt-1 text-sm text-(--color-text-secondary)">
                                 {provider.description}
@@ -84,30 +84,29 @@ export function ProviderCard({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <Button
                             variant="secondary"
                             size="sm"
-                            className="h-9 gap-2 px-3"
                             onClick={onToggleExpand}
                         >
                             {isExpanded ? (
                                 <>
-                                    <CaretUpIcon size={16} />
+                                    <CaretUpIcon size={14} />
                                     Hide Models
                                 </>
                             ) : (
                                 <>
-                                    <CaretDownIcon size={16} />
+                                    <CaretDownIcon size={14} />
                                     View Models
                                 </>
                             )}
                         </Button>
-                        <div className="h-6 w-px bg-(--color-border-subtle) mx-1" />
                         <select
                             value={provider.status}
+                            aria-label={`Status for ${provider.name}`}
                             disabled={isUpdatingStatus}
-                            className="h-9 rounded-md border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-xs font-medium text-(--color-text-primary) outline-none transition-colors hover:border-(--color-accent-primary) focus:border-(--color-accent-primary)"
+                            className="h-8 rounded-sm border border-(--color-border-primary) bg-(--color-bg-input) px-2.5 text-xs font-medium text-(--color-text-primary) outline-none focus:border-(--color-border-focused)"
                             onChange={(event) =>
                                 onStatusChange(provider.id, event.target.value as ContentStatus)
                             }
@@ -119,28 +118,30 @@ export function ProviderCard({
                             ))}
                         </select>
                         <Button
-                            variant="primary:outline"
+                            variant="secondary"
                             size="icon"
                             aria-label="Edit provider"
                             disabled={isUpdatingStatus}
                             onClick={onEdit}
                         >
-                            <PenIcon size={18} />
+                            <PenIcon size={15} />
                         </Button>
 
-                        <Button
-                            variant="danger:outline"
-                            size="icon"
-                            aria-label="Delete provider"
-                            disabled={isDeleting}
-                            onClick={() => onDelete(provider.id, provider.name)}
-                        >
-                            <TrashIcon size={18} />
-                        </Button>
+                        <div className="ml-1 border-l border-(--color-border-subtle) pl-2">
+                            <Button
+                                variant="danger:outline"
+                                size="icon"
+                                aria-label="Delete provider"
+                                disabled={isDeleting}
+                                onClick={() => onDelete(provider.id, provider.name)}
+                            >
+                                <TrashIcon size={15} />
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-y-6 gap-x-4 border-t border-(--color-border-subtle) pt-6 sm:grid-cols-3 lg:grid-cols-6">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-(--color-border-subtle) pt-5 sm:grid-cols-3 lg:grid-cols-6">
                     <StatItem
                         icon={<UsersIcon size={14} />}
                         label="Unique Users"

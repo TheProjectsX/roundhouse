@@ -9,15 +9,15 @@ export const keysManagerApi = roundhouseApi.injectEndpoints({
         }),
         createKeysManager: builder.mutation<ApiKeysManagerItem, { name: string; provider?: string; key: string }>({
             query: (body) => ({ url: "/api/iv1/me/apikeys", method: "POST", body }),
-            invalidatesTags: ["KeysManager"],
+            invalidatesTags: ["KeysManager", "Providers", "ApiKeys"],
         }),
-        updateKeysManager: builder.mutation<ApiKeysManagerItem, { id: string; body: { name?: string; active?: boolean } }>({
+        updateKeysManager: builder.mutation<ApiKeysManagerItem, { id: string; body: { name?: string; provider?: string; key?: string; active?: boolean } }>({
             query: ({ id, body }) => ({ url: `/api/iv1/me/apikeys/${id}`, method: "PATCH", body }),
-            invalidatesTags: ["KeysManager", "Providers"],
+            invalidatesTags: ["KeysManager", "Providers", "ApiKeys"],
         }),
         deleteKeysManager: builder.mutation<void, string>({
             query: (id) => ({ url: `/api/iv1/me/apikeys/${id}`, method: "DELETE" }),
-            invalidatesTags: ["KeysManager", "Providers"],
+            invalidatesTags: ["KeysManager", "Providers", "ApiKeys"],
         }),
         unlockKeys: builder.mutation<UnlockedKey[], { password: string }>({
             query: (body) => ({ url: "/api/iv1/me/apikeys/unlock", method: "POST", body }),

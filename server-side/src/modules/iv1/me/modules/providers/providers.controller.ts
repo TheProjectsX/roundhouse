@@ -16,6 +16,7 @@ import { UserPayload } from "@/common/guards/auth.guard";
 import {
     CreateProviderDto,
     CreateProviderModelDto,
+    FetchProviderModelsDto,
     UpdateProviderDto,
     UpdateProviderModelDto,
     UpdateProviderModelStatusDto,
@@ -157,6 +158,26 @@ export class MeProvidersController {
             message: result.message,
             data: result.data,
             pagination: result.pagination,
+        });
+    }
+
+    @Post(":id/models/fetch")
+    @ApiOperation({ summary: "Fetch available models from upstream provider" })
+    async fetchUpstreamModels(
+        @Param("id") id: string,
+        @Body() payload: FetchProviderModelsDto,
+        @ReqField("user") user: UserPayload,
+    ) {
+        const result = await this.meProvidersService.fetchUpstreamModels(
+            id,
+            payload,
+            user,
+        );
+
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
         });
     }
 

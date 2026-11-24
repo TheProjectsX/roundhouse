@@ -1,18 +1,20 @@
-import React, { useMemo } from "react";
-import { CheckCircleIcon, PowerIcon } from "@phosphor-icons/react";
+import React, { useMemo, useState } from "react";
+import { CheckCircleIcon, PlayIcon, PowerIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
-    useDeselectApiKeyProviderModelsMutation,
     useSelectApiKeyProviderModelsMutation,
+    useTestApiKeyProviderSelectionMutation,
 } from "@/shared/store/features/apikeys/apikeysApi";
 import { useGetProviderModelsQuery } from "@/shared/store/features/providers/providersApi";
+import type { ModelTestResult } from "@/shared/types/entities";
 
 interface ProviderModelConfiguratorProps {
     apiKeyId: string;
+    selectionId: string;
     providerId: string;
     selectedModels: any[];
     updateModelStatus: any;
@@ -22,6 +24,7 @@ interface ProviderModelConfiguratorProps {
 
 export function ProviderModelConfigurator({
     apiKeyId,
+    selectionId,
     providerId,
     selectedModels,
     updateModelStatus,
@@ -32,9 +35,12 @@ export function ProviderModelConfigurator({
         useGetProviderModelsQuery(providerId);
     const [selectModels, selectModelsState] =
         useSelectApiKeyProviderModelsMutation();
-    const [deselectModels, deselectModelsState] =
-        useDeselectApiKeyProviderModelsMutation();
-    
+    const [testSelection] = useTestApiKeyProviderSelectionMutation();
+    const [testingModelId, setTestingModelId] = useState<string | null>(null);
+    const [testResults, setTestResults] = useState<
+        Record<string, ModelTestResult>
+    >({});
+
     const selectedById = useMemo(
         () => new Map(selectedModels.map((model) => [model.id, model])),
         [selectedModels],
@@ -65,13 +71,15 @@ export function ProviderModelConfigurator({
                 const selected = selectedById.get(model.id);
                 const active = selected?.active ?? false;
                 const rowKey = `${providerId}:${model.id}`;
-                
+                const modelTest = testResults[model.id];
+                const isTesting = testingModelId === model.id;
+
                 return (
                     <div
                         key={model.id}
                         className="grid gap-3 rounded-md bg-(--color-bg-input) p-3"
                     >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
                                 <h4 className="truncate font-medium">
                                     {model.name}
@@ -80,48 +88,104 @@ export function ProviderModelConfigurator({
                                     {model.code}
                                 </p>
                             </div>
-                            <Button
-                                type="button"
-                                variant={active ? "danger" : "success"}
-                                size="sm"
-                                title={active ? "Disable model" : "Enable model"}
-                                disabled={
-                                    selectModelsState.isLoading ||
-                                    deselectModelsState.isLoading ||
-                                    pendingModelStatusKey === rowKey
-                                }
-                                onClick={async () => {
-                                    onPendingModelStatusKeyChange(rowKey);
-                                    try {
-                                        if (!selected) {
-                                            await selectModels({
+                            <div className="flex shrink-0 items-center gap-1.5">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled={testingModelId !== null}
+                                    onClick={async () => {
+                                        setTestingModelId(model.id);
+                                        try {
+                                            const res = await testSelection({
                                                 apiKeyId,
-                                                providerId,
-                                                modelIds: [model.id],
-                                            }).unwrap();
-                                        } else {
-                                            await updateModelStatus({
-                                                apiKeyId,
+                                                selectionId,
                                                 modelId: model.id,
-                                                active: !active,
                                             }).unwrap();
+                                            setTestResults((prev) => ({
+                                                ...prev,
+                                                [model.id]: res,
+                                            }));
+                                            if (res.success) {
+                                                toast.success(
+                                                    `${model.code} OK (${res.latencyMs}ms)`,
+                                                );
+                                            } else {
+                                                toast.error(
+                                                    res.error ||
+                                                        `${model.code} test failed`,
+                                                );
+                                            }
+                                        } catch (err: any) {
+                                            toast.error(
+                                                err?.data?.message ||
+                                                    "Could not test model",
+                                            );
+                                        } finally {
+                                            setTestingModelId(null);
                                         }
-                                        toast.success("Model selection updated");
-                                    } catch {
-                                        toast.error("Could not update model selection");
-                                    } finally {
-                                        onPendingModelStatusKeyChange(null);
+                                    }}
+                                >
+                                    <PlayIcon size={13} weight="fill" />
+                                    {isTesting ? "..." : "Test"}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={active ? "danger" : "success"}
+                                    size="sm"
+                                    title={
+                                        active
+                                            ? "Disable model"
+                                            : "Enable model"
                                     }
-                                }}
-                                aria-label={active ? "Disable model" : "Enable model"}
-                            >
-                                {active ? (
-                                    <CheckCircleIcon size={16} weight="fill" />
-                                ) : (
-                                    <PowerIcon size={16} />
-                                )}{" "}
-                                {active ? "Disable" : "Enable"}
-                            </Button>
+                                    disabled={
+                                        selectModelsState.isLoading ||
+                                        pendingModelStatusKey === rowKey
+                                    }
+                                    onClick={async () => {
+                                        onPendingModelStatusKeyChange(rowKey);
+                                        try {
+                                            if (!selected) {
+                                                await selectModels({
+                                                    apiKeyId,
+                                                    providerId,
+                                                    modelIds: [model.id],
+                                                }).unwrap();
+                                            } else {
+                                                await updateModelStatus({
+                                                    apiKeyId,
+                                                    modelId: model.id,
+                                                    active: !active,
+                                                }).unwrap();
+                                            }
+                                            toast.success(
+                                                "Model routing updated",
+                                            );
+                                        } catch {
+                                            toast.error(
+                                                "Could not update model routing",
+                                            );
+                                        } finally {
+                                            onPendingModelStatusKeyChange(null);
+                                        }
+                                    }}
+                                    aria-label={
+                                        active
+                                            ? "Disable model"
+                                            : "Enable model"
+                                    }
+                                >
+                                    {active ? (
+                                        <CheckCircleIcon
+                                            size={16}
+                                            weight="fill"
+                                        />
+                                    ) : (
+                                        <PowerIcon size={16} />
+                                    )}{" "}
+                                    {active ? "Disable" : "Enable"}
+                                </Button>
+                            </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {(model.bestFor?.length
@@ -132,26 +196,23 @@ export function ProviderModelConfigurator({
                             ))}
                             {model.thinking ? <Badge>Thinking</Badge> : null}
                         </div>
-                        {selected && (
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                disabled={deselectModelsState.isLoading}
-                                onClick={async () => {
-                                    try {
-                                        await deselectModels({
-                                            apiKeyId,
-                                            providerId,
-                                            modelIds: [model.id],
-                                        }).unwrap();
-                                        toast.success("Model deselected");
-                                    } catch {
-                                        toast.error("Could not deselect model");
-                                    }
-                                }}
+                        {modelTest && (
+                            <p
+                                className={`truncate font-mono text-xs ${
+                                    modelTest.success
+                                        ? "text-(--color-status-success)"
+                                        : "text-(--color-status-error)"
+                                }`}
+                                title={
+                                    modelTest.success
+                                        ? modelTest.reply
+                                        : modelTest.error
+                                }
                             >
-                                Remove from Routing
-                            </Button>
+                                {modelTest.success
+                                    ? `OK • ${modelTest.latencyMs}ms${modelTest.reply ? ` • ${modelTest.reply}` : ""}`
+                                    : `Failed (${modelTest.latencyMs}ms): ${modelTest.error}`}
+                            </p>
                         )}
                     </div>
                 );

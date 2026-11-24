@@ -173,7 +173,7 @@ export const docsNavigation: DocNavItem[] = [
         slug: "api-reference",
         href: "/docs/api-reference",
         title: "API Reference",
-        description: "Endpoint-by-endpoint guide to the OpenAI-compatible `/v1` runtime surface.",
+        description: "Endpoint-by-endpoint guide to the OpenAI-compatible /v1 runtime surface.",
         category: "Reference",
         icon: "brackets",
         sections: [
