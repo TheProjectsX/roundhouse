@@ -18,6 +18,7 @@ import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { ModelSelectionService } from "@/common/services/modelSelection/model-selection.service";
 import { background } from "@/common/utils/background";
 import { createDevLogger } from "@/common/utils/logger";
+import { notDeletedWhere } from "@/common/utils/softDelete";
 import { toOpenAIError } from "@/core/utils/openaiError.util";
 import {
     estimateRequestTokens,
@@ -685,6 +686,7 @@ export class OpenaiService {
         const providers = await this.prisma.provider.findMany({
             where: {
                 status: ContentStatus.ACTIVE,
+                AND: [notDeletedWhere()],
                 ...(provider ? { type: provider } : {}),
             },
             select: {
@@ -700,6 +702,7 @@ export class OpenaiService {
         const models = await this.prisma.model.findMany({
             where: {
                 status: ContentStatus.ACTIVE,
+                AND: [notDeletedWhere()],
                 provider: {
                     in: providers.map((item) => item.code),
                 },

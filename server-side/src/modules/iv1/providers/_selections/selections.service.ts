@@ -16,11 +16,34 @@ export class ProviderSelectionsService {
             user.id,
         );
 
-        const deleted = await this.prisma.providerSelection.delete({
-            where: { id: providerSelection.id },
+        await this.prisma.$transaction(async (tx) => {
+            const modelSelections = await tx.modelSelection.findMany({
+                where: { providerSelectionId: providerSelection.id },
+                select: { id: true },
+            });
+            const modelSelectionIds = modelSelections.map((ms) => ms.id);
+
+            if (modelSelectionIds.length > 0) {
+                await tx.lastError.deleteMany({
+                    where: { modelId: { in: modelSelectionIds } },
+                });
+            }
+
+            await tx.providerSelectionApiKeysManager.deleteMany({
+                where: { providerSelectionId: providerSelection.id },
+            });
+            await tx.modelSelection.deleteMany({
+                where: { providerSelectionId: providerSelection.id },
+            });
+            await tx.providerSelection.delete({
+                where: { id: providerSelection.id },
+            });
         });
 
-        return { message: "Provider deselected", data: { id: deleted.id } };
+        return {
+            message: "Provider deselected",
+            data: { id: providerSelection.id },
+        };
     }
 
     async updateProviderSelectionStatusById(

@@ -8,16 +8,40 @@ export const adminApi = roundhouseApi.injectEndpoints({
             query: () => "/api/iv1/admin/analytics",
             providesTags: ["Admin"],
         }),
-        getAdminUsers: builder.query<AdminUserListItem[], void>({
-            query: () => "/api/iv1/admin/users",
+        getAdminUsers: builder.query<AdminUserListItem[], { limit?: number; page?: number; search?: string } | void>({
+            query: (params) => ({
+                url: "/api/iv1/admin/users",
+                params: { limit: 100, ...(params || {}) },
+            }),
             providesTags: ["Admin"],
         }),
-        getAdminProviders: builder.query<ProviderListItem[], { customOnly?: boolean } | void>({
+        getAdminUserBin: builder.query<AdminUserListItem[], { limit?: number; page?: number } | void>({
+            query: (params) => ({
+                url: "/api/iv1/admin/users/bin",
+                params: { limit: 100, ...(params || {}) },
+            }),
+            providesTags: ["Admin"],
+        }),
+        getAdminProviders: builder.query<ProviderListItem[], { customOnly?: boolean; limit?: number; page?: number; search?: string } | void>({
             query: (params) => ({
                 url: "/api/iv1/admin/providers",
-                params: params || {},
+                params: { limit: 100, ...(params || {}) },
             }),
             providesTags: ["Admin", "Providers"],
+        }),
+        getAdminProviderBin: builder.query<ProviderListItem[], { limit?: number; page?: number } | void>({
+            query: (params) => ({
+                url: "/api/iv1/admin/providers/bin",
+                params: { limit: 100, ...(params || {}) },
+            }),
+            providesTags: ["Admin", "Providers"],
+        }),
+        getAdminModelBin: builder.query<any[], { provider?: string; limit?: number; page?: number } | void>({
+            query: (params) => ({
+                url: "/api/iv1/admin/providers/models/bin",
+                params: { limit: 200, ...(params || {}) },
+            }),
+            providesTags: ["Admin", "Models"],
         }),
         getAdminCatalogSyncStatus: builder.query<
             {
@@ -66,11 +90,22 @@ export const adminApi = roundhouseApi.injectEndpoints({
         }),
         deleteAdminProvider: builder.mutation<void, string>({
             query: (id) => ({ url: `/api/iv1/admin/providers/${id}`, method: "DELETE" }),
-            invalidatesTags: ["Admin", "Providers"],
+            invalidatesTags: ["Admin", "Providers", "Models"],
+        }),
+        restoreAdminProvider: builder.mutation<void, string>({
+            query: (id) => ({ url: `/api/iv1/admin/providers/${id}/restore`, method: "PATCH" }),
+            invalidatesTags: ["Admin", "Providers", "Models"],
+        }),
+        permanentDeleteAdminProvider: builder.mutation<void, string>({
+            query: (id) => ({ url: `/api/iv1/admin/providers/${id}/permanent`, method: "DELETE" }),
+            invalidatesTags: ["Admin", "Providers", "Models", "ApiKeys"],
         }),
 
         getAdminProviderModels: builder.query<ProviderModelListItem[], string>({
-            query: (id) => `/api/iv1/admin/providers/${id}/models`,
+            query: (id) => ({
+                url: `/api/iv1/admin/providers/${id}/models`,
+                params: { limit: 500 },
+            }),
             providesTags: ["Admin", "Models"],
         }),
         createAdminProviderModel: builder.mutation<ProviderModelListItem, { providerId: string; body: any }>({
@@ -89,6 +124,14 @@ export const adminApi = roundhouseApi.injectEndpoints({
             query: (modelId) => ({ url: `/api/iv1/admin/providers/models/${modelId}`, method: "DELETE" }),
             invalidatesTags: ["Admin", "Models", "Providers"],
         }),
+        restoreAdminProviderModel: builder.mutation<void, string>({
+            query: (modelId) => ({ url: `/api/iv1/admin/providers/models/${modelId}/restore`, method: "PATCH" }),
+            invalidatesTags: ["Admin", "Models", "Providers"],
+        }),
+        permanentDeleteAdminProviderModel: builder.mutation<void, string>({
+            query: (modelId) => ({ url: `/api/iv1/admin/providers/models/${modelId}/permanent`, method: "DELETE" }),
+            invalidatesTags: ["Admin", "Models", "Providers", "ApiKeys"],
+        }),
 
         updateAdminUserStatus: builder.mutation<AdminUserListItem, { id: string; status: UserStatus }>({
             query: ({ id, status }) => ({ url: `/api/iv1/admin/users/${id}/status`, method: "PATCH", body: { status } }),
@@ -98,6 +141,14 @@ export const adminApi = roundhouseApi.injectEndpoints({
             query: (id) => ({ url: `/api/iv1/admin/users/${id}`, method: "DELETE" }),
             invalidatesTags: ["Admin"],
         }),
+        restoreAdminUser: builder.mutation<void, string>({
+            query: (id) => ({ url: `/api/iv1/admin/users/${id}/restore`, method: "PATCH" }),
+            invalidatesTags: ["Admin"],
+        }),
+        permanentDeleteAdminUser: builder.mutation<void, string>({
+            query: (id) => ({ url: `/api/iv1/admin/users/${id}/permanent`, method: "DELETE" }),
+            invalidatesTags: ["Admin"],
+        }),
     }),
     overrideExisting: false,
 });
@@ -105,17 +156,26 @@ export const adminApi = roundhouseApi.injectEndpoints({
 export const {
     useGetAdminAnalyticsQuery,
     useGetAdminUsersQuery,
+    useGetAdminUserBinQuery,
     useGetAdminProvidersQuery,
+    useGetAdminProviderBinQuery,
+    useGetAdminModelBinQuery,
     useGetAdminCatalogSyncStatusQuery,
     useSyncAllAdminCatalogsMutation,
     useCreateAdminProviderMutation,
     useUpdateAdminProviderStatusMutation,
     useDeleteAdminProviderMutation,
+    useRestoreAdminProviderMutation,
+    usePermanentDeleteAdminProviderMutation,
     useGetAdminProviderModelsQuery,
     useCreateAdminProviderModelMutation,
     useUpdateAdminProviderModelMutation,
     useUpdateAdminProviderModelStatusMutation,
     useDeleteAdminProviderModelMutation,
+    useRestoreAdminProviderModelMutation,
+    usePermanentDeleteAdminProviderModelMutation,
     useUpdateAdminUserStatusMutation,
     useDeleteAdminUserMutation,
+    useRestoreAdminUserMutation,
+    usePermanentDeleteAdminUserMutation,
 } = adminApi;

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { PlusIcon } from "@phosphor-icons/react";
+import React, { useMemo, useState } from "react";
+import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Button } from "@/shared/components/ui/button";
 import { ConfirmModal } from "@/shared/components/ui/confirm-modal";
+import { Input } from "@/shared/components/ui/input";
 import { toast } from "sonner";
 import { ContentStatus } from "@/shared/types/enums";
 import {
@@ -33,11 +34,22 @@ export function ModelsList({ providerId }: ModelsListProps) {
         useDeleteAdminProviderModelMutation();
 
     const [showCreate, setShowCreate] = useState(false);
+    const [modelSearch, setModelSearch] = useState("");
     const [editingModel, setEditingModel] = useState<any>(null);
     const [confirmDelete, setConfirmDelete] = useState<{
         id: string;
         name: string;
     } | null>(null);
+
+    const filteredModels = useMemo(() => {
+        const term = modelSearch.trim().toLowerCase();
+        if (!term) return models;
+        return models.filter(
+            (m: any) =>
+                m.name.toLowerCase().includes(term) ||
+                m.code.toLowerCase().includes(term),
+        );
+    }, [models, modelSearch]);
 
     if (isLoading) {
         return (
@@ -69,23 +81,40 @@ export function ModelsList({ providerId }: ModelsListProps) {
         if (!confirmDelete) return;
         try {
             await deleteModel(confirmDelete.id).unwrap();
-            toast.success("Model deleted");
+            toast.success("Model moved to bin");
             setConfirmDelete(null);
         } catch (err: any) {
-            toast.error(err?.data?.message || "Could not delete model");
+            toast.error(err?.data?.message || "Could not move model to bin");
         }
     };
 
     return (
         <div className="border-t border-(--color-border-subtle) bg-(--color-bg-secondary)">
-            <div className="flex items-center justify-between px-5 py-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
                 <h3 className="font-mono text-[11px] font-semibold uppercase tracking-widest text-(--color-text-muted)">
-                    Models Catalog ({models.length})
+                    Models Catalog ({filteredModels.length}/{models.length})
                 </h3>
-                <Button size="sm" onClick={() => setShowCreate(true)}>
-                    <PlusIcon size={14} weight="bold" />
-                    Add Model
-                </Button>
+                <div className="flex items-center gap-2">
+                    {models.length > 0 ? (
+                        <div className="relative w-52">
+                            <MagnifyingGlassIcon
+                                size={14}
+                                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-(--color-text-muted)"
+                            />
+                            <Input
+                                value={modelSearch}
+                                onChange={(e) => setModelSearch(e.target.value)}
+                                placeholder="Filter models..."
+                                aria-label="Filter provider models"
+                                className="h-8 pl-8 text-xs"
+                            />
+                        </div>
+                    ) : null}
+                    <Button size="sm" onClick={() => setShowCreate(true)}>
+                        <PlusIcon size={14} weight="bold" />
+                        Add Model
+                    </Button>
+                </div>
             </div>
 
             <div className="px-5 pb-5">
@@ -103,19 +132,27 @@ export function ModelsList({ providerId }: ModelsListProps) {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-(--color-border-subtle)">
-                            {models.length === 0 ? (
+                            {filteredModels.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-4 py-6">
                                         <EmptyState
                                             compact
-                                            title="No models found"
-                                            description="Add a model to this provider to start exposing it in the global catalog."
+                                            title={
+                                                modelSearch
+                                                    ? "No matching models"
+                                                    : "No models found"
+                                            }
+                                            description={
+                                                modelSearch
+                                                    ? "Try clearing your model filter."
+                                                    : "Add a model to this provider to start exposing it in the global catalog."
+                                            }
                                             className="border-none bg-transparent"
                                         />
                                     </td>
                                 </tr>
                             ) : (
-                                models.map((model: any) => (
+                                filteredModels.map((model: any) => (
                                     <ModelRow
                                         key={model.id}
                                         model={model}
@@ -154,8 +191,9 @@ export function ModelsList({ providerId }: ModelsListProps) {
 
             {confirmDelete && (
                 <ConfirmModal
-                    title="Delete Global Model"
-                    description={`Delete "${confirmDelete.name}" from this global provider catalog?`}
+                    title="Move Global Model to Bin"
+                    description={`Move "${confirmDelete.name}" to the bin? It will become unusable across routing and tests while keeping all usage analytics. You can restore it anytime from the Bin.`}
+                    confirmLabel="Move to Bin"
                     isLoading={deleteModelState.isLoading}
                     onConfirm={confirmDeleteModel}
                     onCancel={() => setConfirmDelete(null)}

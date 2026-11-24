@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
+import { notDeletedWhere } from "@/common/utils/softDelete";
 
 @Injectable()
 export class AdminAnalyticsService {
@@ -25,11 +26,13 @@ export class AdminAnalyticsService {
             topModels,
         ] = await Promise.all([
             Promise.all([
-                this.prisma.user.count({ where: { role: "USER" } }),
+                this.prisma.user.count({
+                    where: { role: "USER", AND: [notDeletedWhere()] },
+                }),
                 this.prisma.apiKey.count(),
-                this.prisma.provider.count(),
+                this.prisma.provider.count({ where: notDeletedWhere() }),
                 this.prisma.userProvider.count(),
-                this.prisma.model.count(),
+                this.prisma.model.count({ where: notDeletedWhere() }),
                 this.prisma.userModel.count(),
             ]),
 
@@ -92,6 +95,7 @@ export class AdminAnalyticsService {
             }),
 
             this.prisma.model.findMany({
+                where: notDeletedWhere(),
                 take: 5,
                 include: {
                     _count: {

@@ -127,8 +127,9 @@ export default function ApiKeysPage() {
             )}
             {confirmDelete && (
                 <ConfirmModal
-                    title="Delete API Key"
-                    description={`Are you sure you want to delete "${confirmDelete.name}"? Any applications using this Roundhouse key will stop working.`}
+                    title="Permanently Delete API Key"
+                    description={`This action is permanent and cannot be undone. Deleting "${confirmDelete.name}" will erase the API key along with all its connected provider selections, model configurations, routing priorities, usage stats, and error history. Any applications using this key will immediately stop working.`}
+                    confirmLabel="Delete Everything"
                     isLoading={deleteState.isLoading}
                     onConfirm={confirmDeleteApiKey}
                     onCancel={() => setConfirmDelete(null)}

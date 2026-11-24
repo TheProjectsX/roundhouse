@@ -17,6 +17,7 @@ import { PageHeader } from "@/shared/components/layout/page-header";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
+import { summarizeErrorMessage } from "@/shared/lib/utils";
 import {
     useGetCatalogStatusQuery,
     useGetProvidersQuery,
@@ -120,11 +121,16 @@ export default function ProvidersPage() {
                 );
             } else {
                 toast.error(
-                    `${provider.name} failed (${res.model.code}): ${res.error || "Unknown error"}`,
+                    `${provider.name} failed (${res.model.code}): ${summarizeErrorMessage(res.error, "Unknown error")}`,
                 );
             }
         } catch (err: any) {
-            toast.error(err?.data?.message || "Could not test provider");
+            toast.error(
+                summarizeErrorMessage(
+                    err?.data?.message,
+                    "Could not test provider",
+                ),
+            );
         } finally {
             setTestingProviderId(null);
         }

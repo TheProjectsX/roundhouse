@@ -149,6 +149,7 @@ export interface ProviderListItem {
     connectedApiCount: number;
     active: boolean;
     isCustom: boolean;
+    deletedAt?: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -173,6 +174,14 @@ export interface ProviderModelListItem {
     thinking: boolean;
     status: ContentStatus;
     isCustom: boolean;
+    deletedAt?: string | null;
+    provider?: string;
+    providerRef?: {
+        id: string;
+        name: string;
+        code: string;
+        deletedAt?: string | null;
+    } | null;
 }
 
 export interface FetchedProviderModelItem {
@@ -255,6 +264,7 @@ export interface AdminUserListItem {
     email: string;
     avatar: string | null;
     status: UserStatus;
+    deletedAt?: string | null;
     stats: {
         apiKeyCount: number;
         activeApiKeyCount: number;

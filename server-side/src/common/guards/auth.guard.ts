@@ -56,10 +56,11 @@ export class AuthGuard implements CanActivate {
                     email: true,
                     status: true,
                     role: true,
+                    deletedAt: true,
                 },
             });
 
-            if (!user) {
+            if (!user || user.deletedAt) {
                 throw new UnauthorizedException("Unauthorized Request");
             }
 

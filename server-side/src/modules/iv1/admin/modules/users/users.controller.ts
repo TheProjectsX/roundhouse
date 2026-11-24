@@ -32,6 +32,18 @@ export class AdminUsersController {
         });
     }
 
+    @Get("bin")
+    @ApiOperation({ summary: "List soft-deleted users in bin (admin)" })
+    async fetchDeletedUsers(@Query() query: Record<string, string>) {
+        const result = await this.svc.fetchDeletedUsers(query);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+            pagination: result.pagination,
+        });
+    }
+
     @Get(":id")
     @ApiOperation({ summary: "Get user details (admin)" })
     async fetchSingleUser(@Param("id") id: string) {
@@ -69,12 +81,41 @@ export class AdminUsersController {
     }
 
     @Delete(":id")
-    @ApiOperation({ summary: "Delete user (admin)" })
-    async deleteUser(@Param("id") id: string) {
-        const result = await this.svc.deleteUser(id);
+    @ApiOperation({ summary: "Soft delete user to bin, or permanently delete when permanent=true (admin)" })
+    async deleteUser(
+        @Param("id") id: string,
+        @Query("permanent") permanent?: string,
+    ) {
+        const result =
+            permanent === "true"
+                ? await this.svc.permanentDeleteUser(id)
+                : await this.svc.deleteUser(id);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Patch(":id/restore")
+    @ApiOperation({ summary: "Restore user from bin (admin)" })
+    async restoreUser(@Param("id") id: string) {
+        const result = await this.svc.restoreUser(id);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Delete(":id/permanent")
+    @ApiOperation({ summary: "Permanently delete user and all owned data (admin)" })
+    async permanentDeleteUser(@Param("id") id: string) {
+        const result = await this.svc.permanentDeleteUser(id);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
         });
     }
 }

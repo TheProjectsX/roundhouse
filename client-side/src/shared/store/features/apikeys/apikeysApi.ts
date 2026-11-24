@@ -10,7 +10,10 @@ import { RoundhouseMethod } from "@/shared/types/enums";
 export const apikeysApi = roundhouseApi.injectEndpoints({
     endpoints: (builder) => ({
         getApiKeys: builder.query<ApiKeyListItem[], void>({
-            query: () => "/api/iv1/apikeys",
+            query: () => ({
+                url: "/api/iv1/apikeys",
+                params: { limit: 100 },
+            }),
             providesTags: ["ApiKeys"],
         }),
         createApiKey: builder.mutation<ApiKeyListItem, { name: string; maxIterations?: number; roundhouseMethod?: RoundhouseMethod }>({

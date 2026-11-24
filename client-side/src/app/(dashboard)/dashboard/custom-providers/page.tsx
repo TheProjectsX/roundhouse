@@ -17,6 +17,7 @@ import {
 } from "@/shared/store/features/providers/providersApi";
 import { useGetKeysManagerQuery } from "@/shared/store/features/keysManager/keysManagerApi";
 import { ContentStatus } from "@/shared/types/enums";
+import { summarizeErrorMessage } from "@/shared/lib/utils";
 import type { ProviderListItem } from "@/shared/types/entities";
 import { CreateProviderModal } from "../providers/components/create-provider-modal";
 import { ProviderSkeletons } from "../providers/components/provider-skeletons";
@@ -111,11 +112,16 @@ export default function CustomProvidersPage() {
                 );
             } else {
                 toast.error(
-                    `${provider.name} failed (${res.model.code}): ${res.error || "Unknown error"}`,
+                    `${provider.name} failed (${res.model.code}): ${summarizeErrorMessage(res.error, "Unknown error")}`,
                 );
             }
         } catch (err: any) {
-            toast.error(err?.data?.message || "Could not test provider");
+            toast.error(
+                summarizeErrorMessage(
+                    err?.data?.message,
+                    "Could not test provider",
+                ),
+            );
         } finally {
             setTestingProviderId(null);
         }
@@ -260,8 +266,9 @@ export default function CustomProvidersPage() {
             )}
             {confirmDelete && (
                 <ConfirmModal
-                    title="Delete Custom Provider"
-                    description={`Are you sure you want to delete "${confirmDelete.name}"?`}
+                    title="Permanently Delete Custom Provider"
+                    description={`This action is permanent and cannot be undone. Deleting "${confirmDelete.name}" will permanently delete all of its custom models, disconnect it from every Roundhouse API key, and erase its routing statistics.`}
+                    confirmLabel="Permanently Delete"
                     isLoading={deleteState.isLoading}
                     onConfirm={confirmDeleteProvider}
                     onCancel={() => setConfirmDelete(null)}

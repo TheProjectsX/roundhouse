@@ -3,8 +3,11 @@ import type { ApiKeysManagerItem, UnlockedKey } from "@/shared/types/entities";
 
 export const keysManagerApi = roundhouseApi.injectEndpoints({
     endpoints: (builder) => ({
-        getKeysManager: builder.query<ApiKeysManagerItem[], void>({
-            query: () => "/api/iv1/me/apikeys",
+        getKeysManager: builder.query<ApiKeysManagerItem[], { order?: string; limit?: number } | void>({
+            query: (params) => ({
+                url: "/api/iv1/me/apikeys",
+                params: { limit: 100, ...(params || {}) },
+            }),
             providesTags: ["KeysManager"],
         }),
         createKeysManager: builder.mutation<ApiKeysManagerItem, { name: string; provider?: string; key: string }>({

@@ -17,6 +17,7 @@ import {
 } from "./dto/body.dto";
 import { generateApiKey } from "./apikeys.util";
 import { decryptVaultKey } from "@/common/utils/vault-crypto";
+import { isSoftDeleted, notDeletedWhere } from "@/common/utils/softDelete";
 import { executeModelTest } from "@/core/utils/modelTest.util";
 
 type ApiKeyDetails = Prisma.ApiKeyGetPayload<{
@@ -349,10 +350,51 @@ export class ApikeysService {
     async deleteApiKey(id: string, user: UserPayload) {
         const apiKey = await this.ensureOwnedApiKey(id, user.id);
 
-        const deleted = await this.prisma.apiKey.delete({
-            where: { id: apiKey.id },
+        await this.prisma.$transaction(async (tx) => {
+            const selections = await tx.providerSelection.findMany({
+                where: { apiKeyId: apiKey.id },
+                select: { id: true },
+            });
+            const selectionIds = selections.map((s) => s.id);
+
+            let modelSelectionIds: string[] = [];
+            if (selectionIds.length > 0) {
+                const modelSelections = await tx.modelSelection.findMany({
+                    where: { providerSelectionId: { in: selectionIds } },
+                    select: { id: true },
+                });
+                modelSelectionIds = modelSelections.map((ms) => ms.id);
+            }
+
+            await tx.lastError.deleteMany({
+                where: {
+                    OR: [
+                        { apiKeyId: apiKey.id },
+                        ...(modelSelectionIds.length > 0
+                            ? [{ modelId: { in: modelSelectionIds } }]
+                            : []),
+                    ],
+                },
+            });
+
+            if (selectionIds.length > 0) {
+                await tx.providerSelectionApiKeysManager.deleteMany({
+                    where: { providerSelectionId: { in: selectionIds } },
+                });
+                await tx.modelSelection.deleteMany({
+                    where: { providerSelectionId: { in: selectionIds } },
+                });
+                await tx.providerSelection.deleteMany({
+                    where: { id: { in: selectionIds } },
+                });
+            }
+
+            await tx.apiKey.delete({
+                where: { id: apiKey.id },
+            });
         });
-        return { message: "API key deleted", data: { id: deleted.id } };
+
+        return { message: "API key deleted", data: { id: apiKey.id } };
     }
 
     async createApiKeyProvider(
@@ -511,11 +553,34 @@ export class ApikeysService {
             user.id,
         );
 
-        const deleted = await this.prisma.providerSelection.delete({
-            where: { id: providerSelection.id },
+        await this.prisma.$transaction(async (tx) => {
+            const modelSelections = await tx.modelSelection.findMany({
+                where: { providerSelectionId: providerSelection.id },
+                select: { id: true },
+            });
+            const modelSelectionIds = modelSelections.map((ms) => ms.id);
+
+            if (modelSelectionIds.length > 0) {
+                await tx.lastError.deleteMany({
+                    where: { modelId: { in: modelSelectionIds } },
+                });
+            }
+
+            await tx.providerSelectionApiKeysManager.deleteMany({
+                where: { providerSelectionId: providerSelection.id },
+            });
+            await tx.modelSelection.deleteMany({
+                where: { providerSelectionId: providerSelection.id },
+            });
+            await tx.providerSelection.delete({
+                where: { id: providerSelection.id },
+            });
         });
 
-        return { message: "Provider deselected", data: { id: deleted.id } };
+        return {
+            message: "Provider deselected",
+            data: { id: providerSelection.id },
+        };
     }
 
     async updateApiKeySelectionKeys(
@@ -614,7 +679,10 @@ export class ApikeysService {
         }
 
         const provider = selection.provider ?? selection.userProvider;
-        if (!provider) {
+        if (
+            !provider ||
+            (selection.provider && isSoftDeleted(selection.provider))
+        ) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
         }
 
@@ -645,7 +713,10 @@ export class ApikeysService {
             );
             const matched =
                 matchedSelection?.model ?? matchedSelection?.userModel;
-            if (matched) {
+            if (
+                matched &&
+                !("deletedAt" in matched && isSoftDeleted(matched))
+            ) {
                 targetModel = {
                     id: matched.id,
                     name: matched.name,
@@ -656,6 +727,7 @@ export class ApikeysService {
                     where: {
                         id: payload.modelId,
                         provider: selection.provider.code,
+                        AND: [notDeletedWhere()],
                     },
                     select: { id: true, name: true, code: true },
                 });
@@ -684,7 +756,11 @@ export class ApikeysService {
                 .map((ms) => ms.model ?? ms.userModel)
                 .filter(
                     (m): m is NonNullable<typeof m> =>
-                        Boolean(m && m.status === ContentStatus.ACTIVE),
+                        Boolean(
+                            m &&
+                                m.status === ContentStatus.ACTIVE &&
+                                !("deletedAt" in m && isSoftDeleted(m)),
+                        ),
                 );
 
             if (activeModels.length === 0) {
@@ -958,6 +1034,7 @@ export class ApikeysService {
                 where: {
                     id: { in: uniqueModelIds },
                     provider: providerCode,
+                    AND: [notDeletedWhere()],
                 },
                 select: { id: true },
             });
@@ -1049,8 +1126,9 @@ export class ApikeysService {
                     status: provider?.status,
                     active: selection.active,
                     isCustom: Boolean(selection.userProviderId),
-                    apiKeysManagers: (selection.apiKeysManagers ?? []).map(
-                        (entry) =>
+                    apiKeysManagers: (selection.apiKeysManagers ?? [])
+                        .filter((entry) => Boolean(entry.apiKeysManager))
+                        .map((entry) =>
                             this.formatApiKeysManager(
                                 entry.apiKeysManager as {
                                     id: string;
@@ -1063,7 +1141,7 @@ export class ApikeysService {
                                     updatedAt: Date;
                                 },
                             ),
-                    ),
+                        ),
                     models,
                     createdAt: selection.createdAt,
                     updatedAt: selection.updatedAt,
@@ -1105,8 +1183,11 @@ export class ApikeysService {
     }
 
     private async resolveProviderEntity(providerId: string, userId: string) {
-        const global = await this.prisma.provider.findUnique({
-            where: { id: providerId },
+        const global = await this.prisma.provider.findFirst({
+            where: {
+                id: providerId,
+                AND: [notDeletedWhere()],
+            },
             select: { id: true, code: true },
         });
 
@@ -1135,6 +1216,7 @@ export class ApikeysService {
                 where: {
                     provider: providerEntity.code,
                     status: ContentStatus.ACTIVE,
+                    AND: [notDeletedWhere()],
                 },
                 select: { id: true },
             });

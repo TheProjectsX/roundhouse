@@ -60,9 +60,13 @@ export class ApikeysManagerService {
     }
 
     async fetchAllApiKeys(query: Record<string, string>, user: UserPayload) {
+        const effectiveQuery =
+            !query.order && !query.sort
+                ? { ...query, order: "-updatedAt" }
+                : query;
         const queryBuilder = new QueryBuilder(
             this.prisma.apiKeysManager,
-            query,
+            effectiveQuery,
         );
 
         const data = await queryBuilder
@@ -167,10 +171,39 @@ export class ApikeysManagerService {
             throw new ApiError(HttpStatus.NOT_FOUND, "Api Key not found");
         }
 
-        const deleted = await this.prisma.apiKeysManager.delete({
-            where: { id: entity.id },
+        await this.prisma.$transaction(async (tx) => {
+            const links = await tx.providerSelectionApiKeysManager.findMany({
+                where: { apiKeysManagerId: entity.id },
+                select: { providerSelectionId: true },
+            });
+            const affectedSelectionIds = Array.from(
+                new Set(links.map((l) => l.providerSelectionId)),
+            );
+
+            await tx.lastError.deleteMany({
+                where: { apiKeysManagerId: entity.id },
+            });
+            await tx.providerSelectionApiKeysManager.deleteMany({
+                where: { apiKeysManagerId: entity.id },
+            });
+            await tx.apiKeysManager.delete({
+                where: { id: entity.id },
+            });
+
+            for (const providerSelectionId of affectedSelectionIds) {
+                const remainingCount =
+                    await tx.providerSelectionApiKeysManager.count({
+                        where: { providerSelectionId },
+                    });
+                if (remainingCount === 0) {
+                    await tx.providerSelection.update({
+                        where: { id: providerSelectionId },
+                        data: { active: false },
+                    });
+                }
+            }
         });
 
-        return { message: "Api Key deleted", data: { id: deleted.id } };
+        return { message: "Api Key deleted", data: { id: entity.id } };
     }
 }

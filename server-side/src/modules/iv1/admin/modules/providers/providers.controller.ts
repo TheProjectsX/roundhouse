@@ -70,6 +70,32 @@ export class AdminProvidersController {
     }
 
     @Roles("ADMIN")
+    @Get("bin")
+    @ApiOperation({ summary: "List soft-deleted global providers in bin (admin)" })
+    async fetchDeletedProviders(@Query() query: Record<string, string>) {
+        const result = await this.adminProvidersService.fetchDeletedProviders(query);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+            pagination: result.pagination,
+        });
+    }
+
+    @Roles("ADMIN")
+    @Get("models/bin")
+    @ApiOperation({ summary: "List soft-deleted global models in bin (admin)" })
+    async fetchDeletedModels(@Query() query: Record<string, string>) {
+        const result = await this.adminProvidersService.fetchDeletedModels(query);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+            pagination: result.pagination,
+        });
+    }
+
+    @Roles("ADMIN")
     @Get(":id")
     @ApiOperation({ summary: "Get provider details (admin)" })
     async fetchSingleProvider(@Param("id") id: string) {
@@ -125,12 +151,37 @@ export class AdminProvidersController {
 
     @Roles("ADMIN")
     @Delete(":id")
-    @ApiOperation({ summary: "Delete provider (admin)" })
+    @ApiOperation({ summary: "Move global provider to bin (soft delete, admin)" })
     async deleteProvider(@Param("id") id: string) {
         const result = await this.adminProvidersService.deleteProvider(id);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Roles("ADMIN")
+    @Patch(":id/restore")
+    @ApiOperation({ summary: "Restore global provider from bin (admin)" })
+    async restoreProvider(@Param("id") id: string) {
+        const result = await this.adminProvidersService.restoreProvider(id);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Roles("ADMIN")
+    @Delete(":id/permanent")
+    @ApiOperation({ summary: "Permanently delete global provider (admin)" })
+    async permanentDeleteProvider(@Param("id") id: string) {
+        const result = await this.adminProvidersService.permanentDeleteProvider(id);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
         });
     }
 
@@ -219,12 +270,37 @@ export class AdminProvidersController {
 
     @Roles("ADMIN")
     @Delete("models/:modelId")
-    @ApiOperation({ summary: "Delete model (admin)" })
+    @ApiOperation({ summary: "Move global model to bin (soft delete, admin)" })
     async deleteProviderModel(@Param("modelId") modelId: string) {
         const result = await this.adminProvidersService.deleteProviderModel(modelId);
         return ResponseService.formatResponse({
             statusCode: HttpStatus.OK,
             message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Roles("ADMIN")
+    @Patch("models/:modelId/restore")
+    @ApiOperation({ summary: "Restore global model from bin (admin)" })
+    async restoreProviderModel(@Param("modelId") modelId: string) {
+        const result = await this.adminProvidersService.restoreProviderModel(modelId);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
+        });
+    }
+
+    @Roles("ADMIN")
+    @Delete("models/:modelId/permanent")
+    @ApiOperation({ summary: "Permanently delete global model (admin)" })
+    async permanentDeleteProviderModel(@Param("modelId") modelId: string) {
+        const result = await this.adminProvidersService.permanentDeleteProviderModel(modelId);
+        return ResponseService.formatResponse({
+            statusCode: HttpStatus.OK,
+            message: result.message,
+            data: result.data,
         });
     }
 }

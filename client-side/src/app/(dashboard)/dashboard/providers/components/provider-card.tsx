@@ -232,7 +232,7 @@ export function ProviderCard({
                         {provider.connected ? (
                             <span className="inline-flex items-center gap-1 text-(--color-status-success)">
                                 <CheckCircleIcon size={14} weight="fill" />
-                                Connected ({provider.connectedApiCount})
+                                Connected ({provider.connectedApiCount ?? 0})
                             </span>
                         ) : (
                             <span className="inline-flex items-center gap-1 text-(--color-text-muted)">

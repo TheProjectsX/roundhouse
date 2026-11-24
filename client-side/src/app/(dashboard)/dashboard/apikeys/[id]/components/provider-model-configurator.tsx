@@ -5,6 +5,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { summarizeErrorMessage } from "@/shared/lib/utils";
 import {
     useSelectApiKeyProviderModelsMutation,
     useTestApiKeyProviderSelectionMutation,
@@ -39,6 +40,9 @@ export function ProviderModelConfigurator({
     const [testingModelId, setTestingModelId] = useState<string | null>(null);
     const [testResults, setTestResults] = useState<
         Record<string, ModelTestResult>
+    >({});
+    const [expandedErrors, setExpandedErrors] = useState<
+        Record<string, boolean>
     >({});
 
     const selectedById = useMemo(
@@ -77,7 +81,7 @@ export function ProviderModelConfigurator({
                 return (
                     <div
                         key={model.id}
-                        className="grid gap-3 rounded-md bg-(--color-bg-input) p-3"
+                        className="grid min-w-0 gap-3 rounded-md bg-(--color-bg-input) p-3"
                     >
                         <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
@@ -112,14 +116,15 @@ export function ProviderModelConfigurator({
                                                 );
                                             } else {
                                                 toast.error(
-                                                    res.error ||
-                                                        `${model.code} test failed`,
+                                                    `${model.code} failed: ${summarizeErrorMessage(res.error, "Test failed")}`,
                                                 );
                                             }
                                         } catch (err: any) {
                                             toast.error(
-                                                err?.data?.message ||
+                                                summarizeErrorMessage(
+                                                    err?.data?.message,
                                                     "Could not test model",
+                                                ),
                                             );
                                         } finally {
                                             setTestingModelId(null);
@@ -197,22 +202,51 @@ export function ProviderModelConfigurator({
                             {model.thinking ? <Badge>Thinking</Badge> : null}
                         </div>
                         {modelTest && (
-                            <p
-                                className={`truncate font-mono text-xs ${
-                                    modelTest.success
-                                        ? "text-(--color-status-success)"
-                                        : "text-(--color-status-error)"
-                                }`}
-                                title={
-                                    modelTest.success
-                                        ? modelTest.reply
-                                        : modelTest.error
-                                }
-                            >
-                                {modelTest.success
-                                    ? `OK • ${modelTest.latencyMs}ms${modelTest.reply ? ` • ${modelTest.reply}` : ""}`
-                                    : `Failed (${modelTest.latencyMs}ms): ${modelTest.error}`}
-                            </p>
+                            <div className="min-w-0 space-y-1">
+                                <div className="flex items-center justify-between gap-2">
+                                    <p
+                                        className={`min-w-0 truncate font-mono text-xs ${
+                                            modelTest.success
+                                                ? "text-(--color-status-success)"
+                                                : "text-(--color-status-error)"
+                                        }`}
+                                        title={
+                                            modelTest.success
+                                                ? modelTest.reply
+                                                : modelTest.error
+                                        }
+                                    >
+                                        {modelTest.success
+                                            ? `OK • ${modelTest.latencyMs}ms${modelTest.reply ? ` • ${modelTest.reply}` : ""}`
+                                            : `Failed (${modelTest.latencyMs}ms): ${summarizeErrorMessage(modelTest.error, "Unknown error", 100)}`}
+                                    </p>
+                                    {!modelTest.success &&
+                                    modelTest.error &&
+                                    modelTest.error.length > 100 ? (
+                                        <button
+                                            type="button"
+                                            className="shrink-0 font-mono text-[11px] text-(--color-text-muted) underline hover:text-(--color-text-primary)"
+                                            onClick={() =>
+                                                setExpandedErrors((prev) => ({
+                                                    ...prev,
+                                                    [model.id]: !prev[model.id],
+                                                }))
+                                            }
+                                        >
+                                            {expandedErrors[model.id]
+                                                ? "Hide"
+                                                : "Details"}
+                                        </button>
+                                    ) : null}
+                                </div>
+                                {!modelTest.success &&
+                                expandedErrors[model.id] &&
+                                modelTest.error ? (
+                                    <p className="max-h-28 overflow-y-auto rounded-sm border border-(--color-border-subtle) bg-(--color-bg-card) p-2 font-mono text-[11px] break-words text-(--color-status-error)">
+                                        {modelTest.error}
+                                    </p>
+                                ) : null}
+                            </div>
                         )}
                     </div>
                 );

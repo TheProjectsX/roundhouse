@@ -17,10 +17,10 @@ export class AdminAuthService {
     async createAdminSession(payload: AdminLoginDto) {
         const user = await this.prisma.user.findFirst({
             where: { email: payload.email, role: "ADMIN" },
-            select: { id: true, email: true, password: true, name: true, avatar: true, role: true, status: true },
+            select: { id: true, email: true, password: true, name: true, avatar: true, role: true, status: true, deletedAt: true },
         });
 
-        if (!user || !user.password) {
+        if (!user || !user.password || user.deletedAt) {
             throw new ApiError(HttpStatus.UNAUTHORIZED, "Invalid Credentials");
         }
 

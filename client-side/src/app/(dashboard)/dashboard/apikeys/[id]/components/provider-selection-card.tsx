@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
-import { formatNumber } from "@/shared/lib/utils";
+import { formatNumber, summarizeErrorMessage } from "@/shared/lib/utils";
 import {
     useTestApiKeyProviderSelectionMutation,
     useUpdateApiKeySelectionKeysMutation,
@@ -115,13 +115,17 @@ export function ProviderSelectionCard({
                                     );
                                 } else {
                                     toast.error(
-                                        res.error || "Provider test failed",
+                                        summarizeErrorMessage(
+                                            res.error,
+                                            "Provider test failed",
+                                        ),
                                     );
                                 }
                             } catch (err: any) {
-                                const msg =
-                                    err?.data?.message ||
-                                    "Could not run provider test";
+                                const msg = summarizeErrorMessage(
+                                    err?.data?.message,
+                                    "Could not run provider test",
+                                );
                                 toast.error(msg);
                             }
                         }}
@@ -204,8 +208,15 @@ export function ProviderSelectionCard({
                             </span>
                         ) : null}
                         {!testResult.success && testResult.error ? (
-                            <span className="ml-2 text-(--color-status-error)">
-                                {testResult.error}
+                            <span
+                                className="ml-2 text-(--color-status-error)"
+                                title={testResult.error}
+                            >
+                                {summarizeErrorMessage(
+                                    testResult.error,
+                                    "Unknown error",
+                                    160,
+                                )}
                             </span>
                         ) : null}
                     </div>
@@ -268,22 +279,28 @@ export function ProviderSelectionCard({
                         </div>
 
                         {!editingKeys ? (
-                            <div className="flex flex-wrap gap-2">
-                                {selection.apiKeysManagers.map((km: any) => (
-                                    <div
-                                        key={km.id}
-                                        className="flex items-center gap-2 rounded-md border border-(--color-border-primary) bg-(--color-bg-card) px-3 py-1.5 text-xs"
-                                    >
-                                        <span className="font-medium">
-                                            {km.name ?? "Vault Key"}
-                                        </span>
-                                        <code className="font-mono text-(--color-text-muted)">
-                                            {km.maskedKey}
-                                        </code>
-                                        <StatusBadge status={km.active} />
-                                    </div>
-                                ))}
-                            </div>
+                            selection.apiKeysManagers.length === 0 ? (
+                                <p className="rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_10%,transparent)] px-3 py-2 text-xs text-(--color-status-warning)">
+                                    No vault keys attached — this provider selection was deactivated. Click Manage Vault Keys to attach a key and re-enable routing.
+                                </p>
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {selection.apiKeysManagers.map((km: any) => (
+                                        <div
+                                            key={km.id}
+                                            className="flex items-center gap-2 rounded-md border border-(--color-border-primary) bg-(--color-bg-card) px-3 py-1.5 text-xs"
+                                        >
+                                            <span className="font-medium">
+                                                {km.name ?? "Vault Key"}
+                                            </span>
+                                            <code className="font-mono text-(--color-text-muted)">
+                                                {km.maskedKey}
+                                            </code>
+                                            <StatusBadge status={km.active} />
+                                        </div>
+                                    ))}
+                                </div>
+                            )
                         ) : (
                             <div className="grid gap-3">
                                 <div className="grid max-h-52 gap-2 overflow-y-auto sm:grid-cols-2">

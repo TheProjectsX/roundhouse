@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, TrashIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { PageHeader } from "@/shared/components/layout/page-header";
@@ -12,7 +12,10 @@ import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
     useDeleteAdminUserMutation,
+    useGetAdminUserBinQuery,
     useGetAdminUsersQuery,
+    usePermanentDeleteAdminUserMutation,
+    useRestoreAdminUserMutation,
     useUpdateAdminUserStatusMutation,
 } from "@/shared/store/features/admin/adminApi";
 import { userStatusLabels } from "@/shared/lib/enum-labels";
@@ -26,9 +29,17 @@ export default function AdminUsersPage() {
         isError,
         refetch,
     } = useGetAdminUsersQuery();
+    const {
+        data: binnedUsers = [],
+        isLoading: isBinLoading,
+        isError: isBinError,
+        refetch: refetchBin,
+    } = useGetAdminUserBinQuery();
+    const [viewMode, setViewMode] = useState<"active" | "bin">("active");
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("ALL");
     const [confirmDelete, setConfirmDelete] = useState<{
+        mode: "soft" | "permanent";
         id: string;
         name: string;
     } | null>(null);
@@ -39,10 +50,15 @@ export default function AdminUsersPage() {
     } | null>(null);
     const [updateStatus, updateState] = useUpdateAdminUserStatusMutation();
     const [deleteUser, deleteState] = useDeleteAdminUserMutation();
+    const [restoreUser, restoreState] = useRestoreAdminUserMutation();
+    const [permanentDeleteUser, permanentDeleteState] =
+        usePermanentDeleteAdminUserMutation();
+
+    const activeSource = viewMode === "bin" ? binnedUsers : users;
 
     const filteredUsers = useMemo(() => {
         const term = search.trim().toLowerCase();
-        return users.filter((u) => {
+        return activeSource.filter((u) => {
             if (statusFilter !== "ALL" && u.status !== statusFilter)
                 return false;
             if (!term) return true;
@@ -51,7 +67,7 @@ export default function AdminUsersPage() {
                 u.email.toLowerCase().includes(term)
             );
         });
-    }, [users, search, statusFilter]);
+    }, [activeSource, search, statusFilter]);
 
     const applyStatusUpdate = async (id: string, status: UserStatus) => {
         try {
@@ -75,15 +91,25 @@ export default function AdminUsersPage() {
         await applyStatusUpdate(id, status);
     };
 
-    const handleDeleteUser = async (id: string, name: string) => {
-        setConfirmDelete({ id, name });
+    const handleRestoreUser = async (id: string, name: string) => {
+        try {
+            await restoreUser(id).unwrap();
+            toast.success(`"${name}" restored`);
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Could not restore user");
+        }
     };
 
     const confirmDeleteUser = async () => {
         if (!confirmDelete) return;
         try {
-            await deleteUser(confirmDelete.id).unwrap();
-            toast.success("User deleted");
+            if (confirmDelete.mode === "permanent") {
+                await permanentDeleteUser(confirmDelete.id).unwrap();
+                toast.success("User permanently deleted");
+            } else {
+                await deleteUser(confirmDelete.id).unwrap();
+                toast.success("User moved to bin");
+            }
             setConfirmDelete(null);
         } catch (err: any) {
             toast.error(err?.data?.message || "Could not delete user");
@@ -95,6 +121,27 @@ export default function AdminUsersPage() {
             <PageHeader
                 title="Users"
                 description="Inspect accounts, manage status, and audit API key and model usage."
+                actions={
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                            variant={
+                                viewMode === "active" ? "primary" : "secondary"
+                            }
+                            onClick={() => setViewMode("active")}
+                        >
+                            Users ({users.length})
+                        </Button>
+                        <Button
+                            variant={
+                                viewMode === "bin" ? "primary" : "secondary"
+                            }
+                            onClick={() => setViewMode("bin")}
+                        >
+                            <TrashIcon size={15} />
+                            Bin ({binnedUsers.length})
+                        </Button>
+                    </div>
+                }
             />
 
             <div className="flex flex-col gap-3 rounded-md border border-(--color-border-primary) bg-(--color-bg-card) p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -126,17 +173,22 @@ export default function AdminUsersPage() {
                         ))}
                     </select>
                     <span className="font-mono text-xs text-(--color-text-muted)">
-                        {filteredUsers.length}/{users.length}
+                        {filteredUsers.length}/{activeSource.length}
                     </span>
                 </div>
             </div>
 
-            {isError ? (
+            {(viewMode === "bin" ? isBinError : isError) ? (
                 <EmptyState
                     title="Could not load users"
                     description="Check your admin session and retry."
                     action={
-                        <Button variant="secondary" onClick={() => refetch()}>
+                        <Button
+                            variant="secondary"
+                            onClick={() =>
+                                viewMode === "bin" ? refetchBin() : refetch()
+                            }
+                        >
                             Retry
                         </Button>
                     }
@@ -157,7 +209,7 @@ export default function AdminUsersPage() {
                                     </th>
                                     <th className="pb-3 font-medium">Models</th>
                                     <th className="pb-3 font-medium">
-                                        Created
+                                        {viewMode === "bin" ? "Deleted" : "Created"}
                                     </th>
                                     <th className="pb-3 text-right font-medium">
                                         Actions
@@ -165,7 +217,7 @@ export default function AdminUsersPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {isLoading ? (
+                                {(viewMode === "bin" ? isBinLoading : isLoading) ? (
                                     Array.from({ length: 5 }).map(
                                         (_, index) => (
                                             <tr key={index}>
@@ -187,13 +239,17 @@ export default function AdminUsersPage() {
                                                     search ||
                                                     statusFilter !== "ALL"
                                                         ? "No matching users"
-                                                        : "No users found"
+                                                        : viewMode === "bin"
+                                                          ? "Bin is empty"
+                                                          : "No users found"
                                                 }
                                                 description={
                                                     search ||
                                                     statusFilter !== "ALL"
                                                         ? "Try clearing your search or status filter."
-                                                        : "User accounts will appear here once people start signing up."
+                                                        : viewMode === "bin"
+                                                          ? "Soft-deleted user accounts will appear here."
+                                                          : "User accounts will appear here once people start signing up."
                                                 }
                                                 className="border-none bg-transparent"
                                             />
@@ -204,6 +260,7 @@ export default function AdminUsersPage() {
                                         <UserRow
                                             key={user.id}
                                             user={user}
+                                            isBin={viewMode === "bin"}
                                             onUpdateStatus={(id, status) =>
                                                 handleUpdateStatus(
                                                     id,
@@ -211,9 +268,27 @@ export default function AdminUsersPage() {
                                                     status,
                                                 )
                                             }
-                                            onDelete={handleDeleteUser}
+                                            onSoftDelete={async (id, name) =>
+                                                setConfirmDelete({
+                                                    mode: "soft",
+                                                    id,
+                                                    name,
+                                                })
+                                            }
+                                            onRestore={handleRestoreUser}
+                                            onPermanentDelete={async (id, name) =>
+                                                setConfirmDelete({
+                                                    mode: "permanent",
+                                                    id,
+                                                    name,
+                                                })
+                                            }
                                             isUpdating={updateState.isLoading}
-                                            isDeleting={deleteState.isLoading}
+                                            isDeleting={
+                                                deleteState.isLoading ||
+                                                restoreState.isLoading ||
+                                                permanentDeleteState.isLoading
+                                            }
                                         />
                                     ))
                                 )}
@@ -241,9 +316,24 @@ export default function AdminUsersPage() {
 
             {confirmDelete && (
                 <ConfirmModal
-                    title="Delete User Account"
-                    description={`Permanently delete "${confirmDelete.name}" and all of their API keys and vault secrets?`}
-                    isLoading={deleteState.isLoading}
+                    title={
+                        confirmDelete.mode === "permanent"
+                            ? "Permanently Delete User Account"
+                            : "Move User to Bin"
+                    }
+                    description={
+                        confirmDelete.mode === "permanent"
+                            ? `This action cannot be undone. Permanently delete "${confirmDelete.name}" along with all of their API keys, vault secrets, custom providers, models, selections, and usage analytics?`
+                            : `Move "${confirmDelete.name}" to the bin? Their dashboard and API access will be disabled while preserving usage analytics, and you can restore them anytime.`
+                    }
+                    confirmLabel={
+                        confirmDelete.mode === "permanent"
+                            ? "Permanently Delete"
+                            : "Move to Bin"
+                    }
+                    isLoading={
+                        deleteState.isLoading || permanentDeleteState.isLoading
+                    }
                     onConfirm={confirmDeleteUser}
                     onCancel={() => setConfirmDelete(null)}
                 />

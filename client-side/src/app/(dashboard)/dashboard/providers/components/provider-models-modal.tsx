@@ -15,6 +15,7 @@ import { ConfirmModal } from "@/shared/components/ui/confirm-modal";
 import { Badge, StatusBadge } from "@/shared/components/ui/badge";
 import { EmptyState } from "@/shared/components/data-display/empty-state";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { summarizeErrorMessage } from "@/shared/lib/utils";
 import {
     useDeleteProviderModelMutation,
     useGetProviderModelsQuery,
@@ -186,7 +187,7 @@ export function ProviderModelsModal({
                           return (
                           <div
                               key={model.id}
-                              className="grid gap-3 rounded-md bg-(--color-bg-input) p-3"
+                              className="grid min-w-0 gap-3 rounded-md bg-(--color-bg-input) p-3"
                           >
                               <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">
@@ -223,14 +224,15 @@ export function ProviderModelsModal({
                                                       );
                                                   } else {
                                                       toast.error(
-                                                          res.error ||
-                                                              `${model.code} test failed`,
+                                                          `${model.code} failed: ${summarizeErrorMessage(res.error, "Test failed")}`,
                                                       );
                                                   }
                                               } catch (err: any) {
                                                   toast.error(
-                                                      err?.data?.message ||
+                                                      summarizeErrorMessage(
+                                                          err?.data?.message,
                                                           "Could not test model",
+                                                      ),
                                                   );
                                               } finally {
                                                   setTestingModelId(null);
@@ -372,7 +374,7 @@ export function ProviderModelsModal({
                                   >
                                       {testResults[model.id].success
                                           ? `OK • ${testResults[model.id].latencyMs}ms${testResults[model.id].reply ? ` • ${testResults[model.id].reply}` : ""}`
-                                          : `Failed (${testResults[model.id].latencyMs}ms): ${testResults[model.id].error}`}
+                                          : `Failed (${testResults[model.id].latencyMs}ms): ${summarizeErrorMessage(testResults[model.id].error, "Unknown error", 110)}`}
                                   </p>
                               ) : null}
                           </div>
@@ -404,8 +406,9 @@ export function ProviderModelsModal({
             ) : null}
             {confirmDeleteModel ? (
                 <ConfirmModal
-                    title="Delete Model"
-                    description={`Are you sure you want to delete "${confirmDeleteModel.name}"?`}
+                    title="Permanently Delete Custom Model"
+                    description={`This action is permanent and cannot be undone. Deleting "${confirmDeleteModel.name}" will permanently remove it from this provider, detach it from all connected Roundhouse API keys, and erase its usage statistics.`}
+                    confirmLabel="Permanently Delete"
                     isLoading={deleteModelState.isLoading}
                     onConfirm={async () => {
                         try {

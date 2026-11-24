@@ -6,6 +6,7 @@ import {
 import { ContentStatus, ProviderType } from "@prisma/client";
 import { PrismaService } from "@/common/services/prisma/prisma.service";
 import { createDevLogger } from "@/common/utils/logger";
+import { isSoftDeleted, notDeletedWhere } from "@/common/utils/softDelete";
 import { listProviderModels } from "@/core/models";
 
 type ProviderPreset = {
@@ -24,6 +25,7 @@ type SyncedModelEntry = {
     maxTokens?: number;
     supportsTools?: boolean;
     supportsVision?: boolean;
+    thinking?: boolean;
     rpmLimit?: number;
     rpdLimit?: number;
 };
@@ -93,6 +95,33 @@ const DEFAULT_GLOBAL_PROVIDERS: ProviderPreset[] = [
         free: true,
     },
     {
+        code: "ollama",
+        name: "Ollama Cloud",
+        description:
+            "Cloud-hosted open-weight models via Ollama's OpenAI-compatible API.",
+        baseApi: "https://ollama.com/v1",
+        type: ProviderType.OPENAI,
+        free: true,
+    },
+    {
+        code: "opencode",
+        name: "OpenCode Zen",
+        description:
+            "OpenCode inference gateway with free and frontier coding models.",
+        baseApi: "https://opencode.ai/inference/openai/v1",
+        type: ProviderType.OPENAI,
+        free: true,
+    },
+    {
+        code: "sambanova",
+        name: "SambaNova",
+        description:
+            "High-speed SambaNova Cloud inference with free-tier Llama and Qwen models.",
+        baseApi: "https://api.sambanova.ai/v1",
+        type: ProviderType.OPENAI,
+        free: true,
+    },
+    {
         code: "deepseek",
         name: "DeepSeek",
         description:
@@ -121,7 +150,26 @@ const DEFAULT_GLOBAL_PROVIDERS: ProviderPreset[] = [
 
 const LITELLM_CATALOG_URL =
     "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
+const MODELS_DEV_CATALOG_URL = "https://models.dev/api.json";
 const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
+const PUBLIC_OPENAI_MODELS_URLS: Record<string, string> = {
+    huggingface: "https://router.huggingface.co/v1/models",
+    nvidia: "https://integrate.api.nvidia.com/v1/models",
+};
+const MODELS_DEV_PROVIDER_MAP: Record<string, string> = {
+    groq: "groq",
+    cerebras: "cerebras",
+    gemini: "google",
+    nvidia: "nvidia",
+    mistral: "mistral",
+    huggingface: "huggingface",
+    ollama: "ollama-cloud",
+    opencode: "opencode",
+    sambanova: "sambanova",
+    deepseek: "deepseek",
+    openai: "openai",
+    anthropic: "anthropic",
+};
 const SYNC_INTERVAL_MS = 6 * 60 * 60 * 1000; // every 6 hours
 const BOOT_SYNC_DELAY_MS = 5 * 1000;
 
@@ -347,6 +395,154 @@ export class CatalogSyncService implements OnModuleInit, OnModuleDestroy {
         return byProvider;
     }
 
+    private async fetchModelsDevCatalog(): Promise<
+        Map<string, SyncedModelEntry[]>
+    > {
+        const byProvider = new Map<string, SyncedModelEntry[]>();
+        const res = await fetch(MODELS_DEV_CATALOG_URL);
+        if (!res.ok) {
+            return byProvider;
+        }
+
+        const data = (await res.json()) as Record<
+            string,
+            {
+                models?: Record<
+                    string,
+                    {
+                        id?: string;
+                        name?: string;
+                        status?: string;
+                        reasoning?: boolean;
+                        tool_call?: boolean;
+                        modalities?: {
+                            input?: string[];
+                            output?: string[];
+                        };
+                        limit?: {
+                            context?: number;
+                            output?: number;
+                        };
+                    }
+                >;
+            }
+        >;
+
+        for (const [providerCode, modelsDevKey] of Object.entries(
+            MODELS_DEV_PROVIDER_MAP,
+        )) {
+            const rawModels = data[modelsDevKey]?.models;
+            if (!rawModels || typeof rawModels !== "object") continue;
+
+            const entries: SyncedModelEntry[] = [];
+            for (const [modelKey, meta] of Object.entries(rawModels)) {
+                if (!meta || typeof meta !== "object") continue;
+                if (meta.status === "deprecated") continue;
+
+                const outputModalities = meta.modalities?.output;
+                if (
+                    Array.isArray(outputModalities) &&
+                    outputModalities.length > 0 &&
+                    !outputModalities.includes("text")
+                ) {
+                    continue;
+                }
+
+                const code = meta.id || modelKey;
+                if (!code) continue;
+
+                const inputModalities = meta.modalities?.input ?? [];
+                entries.push({
+                    code,
+                    name: meta.name || code,
+                    contextWindow:
+                        typeof meta.limit?.context === "number" &&
+                        meta.limit.context > 0
+                            ? meta.limit.context
+                            : undefined,
+                    maxTokens:
+                        typeof meta.limit?.output === "number" &&
+                        meta.limit.output > 0
+                            ? meta.limit.output
+                            : undefined,
+                    supportsTools:
+                        typeof meta.tool_call === "boolean"
+                            ? meta.tool_call
+                            : undefined,
+                    supportsVision: Array.isArray(meta.modalities?.input)
+                        ? inputModalities.includes("image")
+                        : undefined,
+                    thinking:
+                        typeof meta.reasoning === "boolean"
+                            ? meta.reasoning
+                            : undefined,
+                });
+            }
+
+            if (entries.length > 0) {
+                byProvider.set(providerCode, entries);
+            }
+        }
+
+        return byProvider;
+    }
+
+    private async fetchPublicOpenAiModels(
+        url: string,
+    ): Promise<SyncedModelEntry[]> {
+        const res = await fetch(url);
+        if (!res.ok) {
+            return [];
+        }
+
+        const payload = (await res.json()) as {
+            data?: Array<{ id?: string }>;
+        };
+        const rows = Array.isArray(payload.data) ? payload.data : [];
+
+        return rows
+            .filter((row): row is { id: string } => Boolean(row?.id))
+            .map((row) => ({
+                code: row.id,
+                name: row.id,
+            }));
+    }
+
+    private mergeEntries(
+        primary: SyncedModelEntry[],
+        secondary: SyncedModelEntry[],
+    ): SyncedModelEntry[] {
+        const merged = new Map<string, SyncedModelEntry>();
+
+        for (const item of secondary) {
+            merged.set(item.code, item);
+        }
+
+        for (const item of primary) {
+            const fallback = merged.get(item.code);
+            if (!fallback) {
+                merged.set(item.code, item);
+                continue;
+            }
+            merged.set(item.code, {
+                code: item.code,
+                name:
+                    item.name && item.name !== item.code
+                        ? item.name
+                        : fallback.name,
+                contextWindow: item.contextWindow ?? fallback.contextWindow,
+                maxTokens: item.maxTokens ?? fallback.maxTokens,
+                supportsTools: item.supportsTools ?? fallback.supportsTools,
+                supportsVision: item.supportsVision ?? fallback.supportsVision,
+                thinking: item.thinking ?? fallback.thinking,
+                rpmLimit: item.rpmLimit ?? fallback.rpmLimit,
+                rpdLimit: item.rpdLimit ?? fallback.rpdLimit,
+            });
+        }
+
+        return Array.from(merged.values());
+    }
+
     private async upsertProviderModels(
         providerCode: string,
         entries: SyncedModelEntry[],
@@ -369,10 +565,13 @@ export class CatalogSyncService implements OnModuleInit, OnModuleDestroy {
                         provider: providerCode,
                     },
                 },
-                select: { id: true, status: true },
+                select: { id: true, status: true, deletedAt: true },
             });
 
             if (existing) {
+                if (isSoftDeleted(existing)) {
+                    continue;
+                }
                 await this.prisma.model.update({
                     where: { id: existing.id },
                     data: {
@@ -393,6 +592,9 @@ export class CatalogSyncService implements OnModuleInit, OnModuleDestroy {
                         ...(entry.supportsVision !== undefined
                             ? { supportsVision: entry.supportsVision }
                             : {}),
+                        ...(entry.thinking !== undefined
+                            ? { thinking: entry.thinking }
+                            : {}),
                     },
                 });
                 updatedCount += 1;
@@ -406,6 +608,7 @@ export class CatalogSyncService implements OnModuleInit, OnModuleDestroy {
                         maxTokens: entry.maxTokens,
                         supportsTools: entry.supportsTools,
                         supportsVision: entry.supportsVision,
+                        thinking: entry.thinking ?? false,
                         rpmLimit: entry.rpmLimit,
                         rpdLimit: entry.rpdLimit,
                         status: ContentStatus.ACTIVE,
@@ -421,6 +624,7 @@ export class CatalogSyncService implements OnModuleInit, OnModuleDestroy {
                     provider: providerCode,
                     status: ContentStatus.ACTIVE,
                     code: { notIn: Array.from(seenCodes) },
+                    AND: [notDeletedWhere()],
                 },
                 select: { id: true },
             });
@@ -451,17 +655,32 @@ export class CatalogSyncService implements OnModuleInit, OnModuleDestroy {
         try {
             await this.bootstrapDefaultProviders();
             const providers = await this.prisma.provider.findMany({
-                where: { status: ContentStatus.ACTIVE },
+                where: {
+                    status: ContentStatus.ACTIVE,
+                    AND: [notDeletedWhere()],
+                },
             });
 
-            const liteLlmByProvider = await this.fetchLiteLlmCatalog().catch(
-                () => new Map<string, SyncedModelEntry[]>(),
-            );
+            const [liteLlmByProvider, modelsDevByProvider] = await Promise.all([
+                this.fetchLiteLlmCatalog().catch(
+                    () => new Map<string, SyncedModelEntry[]>(),
+                ),
+                this.fetchModelsDevCatalog().catch(
+                    () => new Map<string, SyncedModelEntry[]>(),
+                ),
+            ]);
 
             for (const provider of providers) {
                 const code = provider.code.toLowerCase();
                 let entries: SyncedModelEntry[] = [];
                 let authoritative = false;
+
+                const modelsDevEntries = modelsDevByProvider.get(code) ?? [];
+                const liteLlmEntries = liteLlmByProvider.get(code) ?? [];
+                const combinedMetadata = this.mergeEntries(
+                    modelsDevEntries,
+                    liteLlmEntries,
+                );
 
                 if (code === "openrouter") {
                     entries = await this.fetchOpenRouterModels().catch(
@@ -490,22 +709,36 @@ export class CatalogSyncService implements OnModuleInit, OnModuleDestroy {
 
                         if (liveModels.length > 0) {
                             const metaMap = new Map(
-                                (liteLlmByProvider.get(code) ?? []).map((m) => [
-                                    m.code,
-                                    m,
-                                ]),
+                                combinedMetadata.map((m) => [m.code, m]),
                             );
                             entries = liveModels.map((m) => ({
                                 ...(metaMap.get(m.id) ?? {}),
                                 code: m.id,
-                                name: m.id,
+                                name: metaMap.get(m.id)?.name || m.id,
+                            }));
+                            authoritative = true;
+                        }
+                    }
+
+                    if (entries.length === 0 && PUBLIC_OPENAI_MODELS_URLS[code]) {
+                        const publicLive = await this.fetchPublicOpenAiModels(
+                            PUBLIC_OPENAI_MODELS_URLS[code],
+                        ).catch(() => []);
+                        if (publicLive.length > 0) {
+                            const metaMap = new Map(
+                                combinedMetadata.map((m) => [m.code, m]),
+                            );
+                            entries = publicLive.map((m) => ({
+                                ...(metaMap.get(m.code) ?? {}),
+                                code: m.code,
+                                name: metaMap.get(m.code)?.name || m.name,
                             }));
                             authoritative = true;
                         }
                     }
 
                     if (entries.length === 0) {
-                        entries = liteLlmByProvider.get(code) ?? [];
+                        entries = combinedMetadata;
                     }
                 }
 

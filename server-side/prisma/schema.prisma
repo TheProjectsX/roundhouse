@@ -19,6 +19,8 @@ model User {
     status UserStatus @default(ACTIVE)
     role   UserRole   @default(USER)
 
+    deletedAt DateTime?
+
     apiKeys            ApiKey[]
     userProviders      UserProvider[]
     userModels         UserModel[]
@@ -80,7 +82,7 @@ model LastError {
     id String @id @default(auto()) @map("_id") @db.ObjectId
 
     apiKeyId String @db.ObjectId
-    apiKey   ApiKey @relation(fields: [apiKeyId], references: [id])
+    apiKey   ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
 
     modelId String
 
@@ -107,6 +109,9 @@ model Provider {
 
     status ContentStatus @default(ACTIVE)
 
+    deletedAt DateTime?
+
+    models             Model[]
     providerSelections ProviderSelection[]
 
     createdAt DateTime @default(now())
@@ -130,12 +135,14 @@ model Model {
     tpmLimit           Int?
     tpdLimit           Int?
     provider           String
+    providerRef        Provider @relation(fields: [provider], references: [code], onUpdate: Cascade, onDelete: Cascade)
 
     efficiencyScore Float?
     bestFor         String[]
     thinking        Boolean  @default(false)
 
-    status ContentStatus @default(ACTIVE)
+    status    ContentStatus @default(ACTIVE)
+    deletedAt DateTime?
 
     modelSelections ModelSelection[] @relation("ModelSelections")
 

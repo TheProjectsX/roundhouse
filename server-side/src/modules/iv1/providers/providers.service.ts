@@ -5,6 +5,7 @@ import { ApiError } from "@/common/errors/api_error";
 import { UserPayload } from "@/common/guards/auth.guard";
 import QueryBuilder from "@/common/utils/queryBuilder";
 import { executeModelTest } from "@/core/utils/modelTest.util";
+import { notDeletedWhere } from "@/common/utils/softDelete";
 import { TestProviderDto } from "./dto/body.dto";
 
 type ProviderListSelection = {
@@ -43,6 +44,7 @@ export class ProvidersService {
             .sort()
             .rawFilter({
                 status: { notIn: ["INACTIVE", "TESTING", "DEPRECATED"] },
+                AND: [notDeletedWhere()],
             })
             .execute();
 
@@ -80,6 +82,7 @@ export class ProvidersService {
             where: {
                 id,
                 status: { not: ContentStatus.INACTIVE },
+                AND: [notDeletedWhere()],
             },
         });
 
@@ -115,6 +118,7 @@ export class ProvidersService {
             where: {
                 id,
                 status: { not: ContentStatus.INACTIVE },
+                AND: [notDeletedWhere()],
             },
         });
 
@@ -136,6 +140,7 @@ export class ProvidersService {
                           where: {
                               provider: globalProvider.code,
                               status: ContentStatus.ACTIVE,
+                              AND: [notDeletedWhere()],
                           },
                       })
                   ).map((model) => ({ ...model, isCustom: false }))
@@ -165,7 +170,11 @@ export class ProvidersService {
         user: UserPayload,
     ) {
         const globalProvider = await this.prisma.provider.findFirst({
-            where: { id, status: { not: ContentStatus.INACTIVE } },
+            where: {
+                id,
+                status: { not: ContentStatus.INACTIVE },
+                AND: [notDeletedWhere()],
+            },
         });
         const customProvider = globalProvider
             ? null
@@ -187,6 +196,7 @@ export class ProvidersService {
                       where: {
                           id: payload.modelId,
                           provider: globalProvider.code,
+                          AND: [notDeletedWhere()],
                       },
                       select: { id: true, name: true, code: true },
                   })
@@ -211,6 +221,7 @@ export class ProvidersService {
                       where: {
                           provider: globalProvider.code,
                           status: ContentStatus.ACTIVE,
+                          AND: [notDeletedWhere()],
                       },
                       select: { id: true, name: true, code: true },
                   })
@@ -362,7 +373,10 @@ export class ProvidersService {
                           },
                       })
                     : this.prisma.model.count({
-                          where: { provider: provider.code },
+                          where: {
+                              provider: provider.code,
+                              AND: [notDeletedWhere()],
+                          },
                       }),
                 isCustom
                     ? this.prisma.userModel.count({
@@ -376,6 +390,7 @@ export class ProvidersService {
                           where: {
                               provider: provider.code,
                               status: ContentStatus.ACTIVE,
+                              AND: [notDeletedWhere()],
                           },
                       }),
                 this.prisma.providerSelection.findMany({
@@ -412,6 +427,7 @@ export class ProvidersService {
             activeModelsCount,
             apiKeys: providerSelections?.[0]?.apiKey,
             connected: providerSelections.length > 0,
+            connectedApiCount: providerSelections.length,
             active: providerSelections?.[0]?.active ?? false,
             isCustom,
             createdAt: provider.createdAt,
@@ -435,6 +451,7 @@ export class ProvidersService {
                   where: {
                       provider: provider.code,
                       status: ContentStatus.ACTIVE,
+                      AND: [notDeletedWhere()],
                   },
               });
 

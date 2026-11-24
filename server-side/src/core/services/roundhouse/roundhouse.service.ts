@@ -68,6 +68,7 @@ type RoundhouseModel = {
     tpmLimit?: number | null;
     tpdLimit?: number | null;
     efficiencyScore: number | null;
+    deletedAt?: Date | null;
     provider: RoundhouseProvider;
 };
 
@@ -158,6 +159,7 @@ const buildProviderRecord = (providerSelection: {
         name: string;
         type: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
         baseApi: string;
+        deletedAt?: Date | null;
     } | null;
     userProvider: {
         id: string;
@@ -167,6 +169,9 @@ const buildProviderRecord = (providerSelection: {
         baseApi: string;
     } | null;
 }) => {
+    if (providerSelection.provider?.deletedAt) {
+        return undefined;
+    }
     const provider =
         providerSelection.provider ?? providerSelection.userProvider;
     if (!provider) {
@@ -196,6 +201,7 @@ const buildCandidates = (
             name: string;
             type: "OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
             baseApi: string;
+            deletedAt?: Date | null;
         } | null;
         userProvider: {
             id: string;
@@ -249,9 +255,9 @@ const buildCandidates = (
         }
 
         const selectedModels = (providerSelection.modelSelections ?? [])
-            .filter((ms) => ms.active)
+            .filter((ms) => ms.active && Boolean(ms.model ?? ms.userModel))
             .map((ms) => {
-                const model = ms.model ?? ms.userModel;
+                const model = (ms.model ?? ms.userModel)!;
                 return {
                     modelSelectionId: ms.id,
                     priority: ms.priority,
@@ -266,7 +272,7 @@ const buildCandidates = (
 
         for (const entry of selectedModels) {
             const model = entry.model;
-            if (model.status !== "ACTIVE") {
+            if (model.status !== "ACTIVE" || model.deletedAt) {
                 continue;
             }
 
@@ -422,6 +428,9 @@ const getApiKeyWithSelections = async (
     return prisma.apiKey.findUnique({
         where: { key: apiKey },
         include: {
+            user: {
+                select: { id: true, status: true, deletedAt: true },
+            },
             lastErrors: true,
             providerSelections: {
                 where: { active: true },
@@ -469,7 +478,7 @@ const getCandidatePool = async (
         };
     }
 
-    if (!apiKeyData) {
+    if (!apiKeyData || apiKeyData.user?.deletedAt) {
         return {
             success: false,
             error: {

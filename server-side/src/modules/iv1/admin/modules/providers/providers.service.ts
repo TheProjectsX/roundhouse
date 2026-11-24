@@ -11,6 +11,11 @@ import { ApiError } from "@/common/errors/api_error";
 import QueryBuilder from "@/common/utils/queryBuilder";
 import { listProviderModels } from "@/core/models";
 import {
+    deletedOnlyWhere,
+    isSoftDeleted,
+    notDeletedWhere,
+} from "@/common/utils/softDelete";
+import {
     CreateProviderDto,
     CreateProviderModelDto,
     UpdateProviderDto,
@@ -92,8 +97,89 @@ export class AdminProvidersService {
         };
     }
 
+    async fetchDeletedProviders(query: Record<string, string>) {
+        const builder = new QueryBuilder<
+            typeof this.prisma.provider,
+            Prisma.$ProviderPayload
+        >(this.prisma.provider, query)
+            .search(["name", "description", "code"])
+            .filter({ exacts: ["status", "type"], booleans: ["free"] })
+            .rawFilter(deletedOnlyWhere())
+            .sort()
+            .paginate();
+
+        const [data, pagination] = await Promise.all([
+            builder.execute(),
+            builder.countTotal(),
+        ]);
+
+        const formatted = await Promise.all(
+            data.map((provider) => this.formatProviderSummary(provider, false)),
+        );
+
+        return {
+            message: "Deleted providers fetched",
+            data: formatted,
+            pagination,
+        };
+    }
+
+    async fetchDeletedModels(query: Record<string, string>) {
+        const rawFilter: Prisma.ModelWhereInput = {
+            ...deletedOnlyWhere(),
+            ...(query.provider ? { provider: query.provider } : {}),
+        };
+
+        const builder = new QueryBuilder<
+            typeof this.prisma.model,
+            Prisma.$ModelPayload
+        >(this.prisma.model, query)
+            .search(["name", "code", "provider"])
+            .filter({ exacts: ["status"], exclude: ["provider", "providerId"] })
+            .rawFilter(rawFilter)
+            .include({
+                providerRef: {
+                    select: { id: true, name: true, code: true, deletedAt: true },
+                },
+            })
+            .sort()
+            .paginate();
+
+        const [data, pagination] = await Promise.all([
+            builder.execute(),
+            builder.countTotal(),
+        ]);
+
+        const formatted = await Promise.all(
+            data.map((model) => this.formatModelSummary(model, false)),
+        );
+
+        return {
+            message: "Deleted models fetched",
+            data: formatted,
+            pagination,
+        };
+    }
+
     async createProvider(payload: CreateProviderDto) {
         const code = this.buildProviderCode(payload.name, payload.code);
+        const existing = await this.prisma.provider.findUnique({
+            where: { code },
+            select: { id: true, deletedAt: true },
+        });
+        if (existing) {
+            if (isSoftDeleted(existing)) {
+                throw new ApiError(
+                    HttpStatus.CONFLICT,
+                    "A deleted provider with this code is in the bin. Restore or permanently delete it first.",
+                );
+            }
+            throw new ApiError(
+                HttpStatus.CONFLICT,
+                "A provider with this code already exists.",
+            );
+        }
+
         const created = await this.prisma.provider.create({
             data: {
                 name: payload.name,
@@ -116,6 +202,12 @@ export class AdminProvidersService {
 
         if (!provider) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+        if (isSoftDeleted(provider)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Provider is in the bin. Restore it before updating.",
+            );
         }
 
         const updated = await this.prisma.provider.update({
@@ -143,6 +235,12 @@ export class AdminProvidersService {
         if (!provider) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
         }
+        if (isSoftDeleted(provider)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Provider is in the bin. Restore it before updating status.",
+            );
+        }
 
         const updated = await this.prisma.provider.update({
             where: { id },
@@ -160,11 +258,112 @@ export class AdminProvidersService {
         if (!provider) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
         }
+        if (isSoftDeleted(provider)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Provider is already in the bin",
+            );
+        }
 
-        const deleted = await this.prisma.provider.delete({
+        const deleted = await this.prisma.provider.update({
+            where: { id },
+            data: { deletedAt: new Date() },
+        });
+        return { message: "Provider moved to bin", data: { id: deleted.id } };
+    }
+
+    async restoreProvider(id: string) {
+        const provider = await this.prisma.provider.findUnique({
             where: { id },
         });
-        return { message: "Provider deleted", data: { id: deleted.id } };
+
+        if (!provider) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+        if (!isSoftDeleted(provider)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Provider is not in the bin",
+            );
+        }
+
+        const restored = await this.prisma.provider.update({
+            where: { id },
+            data: { deletedAt: null },
+        });
+        return { message: "Provider restored", data: { id: restored.id } };
+    }
+
+    async permanentDeleteProvider(id: string) {
+        const provider = await this.prisma.provider.findUnique({
+            where: { id },
+        });
+
+        if (!provider) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+
+        await this.prisma.$transaction(async (tx) => {
+            const models = await tx.model.findMany({
+                where: { provider: provider.code },
+                select: { id: true },
+            });
+            const modelIds = models.map((m) => m.id);
+
+            const selections = await tx.providerSelection.findMany({
+                where: { providerId: id },
+                select: { id: true },
+            });
+            const selectionIds = selections.map((s) => s.id);
+
+            const modelSelectionFilter: Prisma.ModelSelectionWhereInput[] = [];
+            if (selectionIds.length > 0) {
+                modelSelectionFilter.push({
+                    providerSelectionId: { in: selectionIds },
+                });
+            }
+            if (modelIds.length > 0) {
+                modelSelectionFilter.push({ modelId: { in: modelIds } });
+            }
+
+            if (modelSelectionFilter.length > 0) {
+                const modelSelections = await tx.modelSelection.findMany({
+                    where: { OR: modelSelectionFilter },
+                    select: { id: true },
+                });
+                const modelSelectionIds = modelSelections.map((ms) => ms.id);
+
+                if (modelSelectionIds.length > 0) {
+                    await tx.lastError.deleteMany({
+                        where: { modelId: { in: modelSelectionIds } },
+                    });
+                    await tx.modelSelection.deleteMany({
+                        where: { id: { in: modelSelectionIds } },
+                    });
+                }
+            }
+
+            if (selectionIds.length > 0) {
+                await tx.providerSelectionApiKeysManager.deleteMany({
+                    where: { providerSelectionId: { in: selectionIds } },
+                });
+                await tx.providerSelection.deleteMany({
+                    where: { id: { in: selectionIds } },
+                });
+            }
+
+            if (modelIds.length > 0) {
+                await tx.model.deleteMany({
+                    where: { id: { in: modelIds } },
+                });
+            }
+
+            await tx.provider.delete({
+                where: { id },
+            });
+        });
+
+        return { message: "Provider permanently deleted", data: { id } };
     }
 
     async fetchAllProviderModels(
@@ -180,7 +379,10 @@ export class AdminProvidersService {
             >(this.prisma.model, query)
                 .search(["name", "code"])
                 .filter({ exacts: ["status"] })
-                .rawFilter({ provider: provider.record.code })
+                .rawFilter({
+                    provider: provider.record.code,
+                    AND: [notDeletedWhere()],
+                })
                 .sort()
                 .paginate();
 
@@ -260,6 +462,34 @@ export class AdminProvidersService {
         if (!provider) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
         }
+        if (isSoftDeleted(provider)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Provider is in the bin. Restore it before adding models.",
+            );
+        }
+
+        const existingModel = await this.prisma.model.findUnique({
+            where: {
+                code_provider: {
+                    code: payload.code,
+                    provider: provider.code,
+                },
+            },
+            select: { id: true, deletedAt: true },
+        });
+        if (existingModel) {
+            if (isSoftDeleted(existingModel)) {
+                throw new ApiError(
+                    HttpStatus.CONFLICT,
+                    "A deleted model with this code is in the bin. Restore or permanently delete it first.",
+                );
+            }
+            throw new ApiError(
+                HttpStatus.CONFLICT,
+                "A model with this code already exists for this provider.",
+            );
+        }
 
         const created = await this.prisma.model.create({
             data: {
@@ -289,6 +519,12 @@ export class AdminProvidersService {
         if (!model) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
         }
+        if (isSoftDeleted(model)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Model is in the bin. Restore it before updating.",
+            );
+        }
 
         const updated = await this.prisma.model.update({
             where: { id: modelId },
@@ -309,6 +545,12 @@ export class AdminProvidersService {
         if (!model) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
         }
+        if (isSoftDeleted(model)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Model is in the bin. Restore it before updating status.",
+            );
+        }
 
         const updated = await this.prisma.model.update({
             where: { id: modelId },
@@ -326,12 +568,86 @@ export class AdminProvidersService {
         if (!model) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
         }
+        if (isSoftDeleted(model)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Model is already in the bin",
+            );
+        }
 
-        const deleted = await this.prisma.model.delete({
+        const deleted = await this.prisma.model.update({
+            where: { id: modelId },
+            data: { deletedAt: new Date() },
+        });
+
+        return { message: "Model moved to bin", data: { id: deleted.id } };
+    }
+
+    async restoreProviderModel(modelId: string) {
+        const model = await this.prisma.model.findUnique({
+            where: { id: modelId },
+            include: {
+                providerRef: {
+                    select: { id: true, name: true, deletedAt: true },
+                },
+            },
+        });
+
+        if (!model) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
+        }
+        if (!isSoftDeleted(model)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Model is not in the bin",
+            );
+        }
+        if (isSoftDeleted(model.providerRef)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                `Restore provider "${model.providerRef.name}" before restoring this model.`,
+            );
+        }
+
+        const restored = await this.prisma.model.update({
+            where: { id: modelId },
+            data: { deletedAt: null },
+        });
+
+        return { message: "Model restored", data: { id: restored.id } };
+    }
+
+    async permanentDeleteProviderModel(modelId: string) {
+        const model = await this.prisma.model.findUnique({
             where: { id: modelId },
         });
 
-        return { message: "Model deleted", data: { id: deleted.id } };
+        if (!model) {
+            throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
+        }
+
+        await this.prisma.$transaction(async (tx) => {
+            const selections = await tx.modelSelection.findMany({
+                where: { modelId },
+                select: { id: true },
+            });
+            const selectionIds = selections.map((s) => s.id);
+
+            if (selectionIds.length > 0) {
+                await tx.lastError.deleteMany({
+                    where: { modelId: { in: selectionIds } },
+                });
+                await tx.modelSelection.deleteMany({
+                    where: { id: { in: selectionIds } },
+                });
+            }
+
+            await tx.model.delete({
+                where: { id: modelId },
+            });
+        });
+
+        return { message: "Model permanently deleted", data: { id: modelId } };
     }
 
     private buildGlobalProviderQuery(query: Record<string, string>) {
@@ -341,6 +657,7 @@ export class AdminProvidersService {
         >(this.prisma.provider, query)
             .search(["name", "description", "code"])
             .filter({ exacts: ["status", "type"], booleans: ["free"] })
+            .rawFilter({ AND: [notDeletedWhere()] })
             .sort()
             .paginate();
     }
@@ -396,7 +713,10 @@ export class AdminProvidersService {
     ) {
         if (provider.kind === "global") {
             return this.prisma.model.findMany({
-                where: { provider: provider.record.code },
+                where: {
+                    provider: provider.record.code,
+                    AND: [notDeletedWhere()],
+                },
             });
         }
 
@@ -427,7 +747,10 @@ export class AdminProvidersService {
                       },
                   })
                 : this.prisma.model.count({
-                      where: { provider: provider.code },
+                      where: {
+                          provider: provider.code,
+                          AND: [notDeletedWhere()],
+                      },
                   }),
             isCustom
                 ? this.prisma.userModel.count({
@@ -441,6 +764,7 @@ export class AdminProvidersService {
                       where: {
                           provider: provider.code,
                           status: ContentStatus.ACTIVE,
+                          AND: [notDeletedWhere()],
                       },
                   }),
             this.prisma.providerSelection.count({
@@ -496,6 +820,7 @@ export class AdminProvidersService {
             uniqueUsersCount: uniqueUsers.length,
             lastUsedAt: stats._max.lastUsedAt,
             isCustom,
+            deletedAt: !isCustom ? ((provider as Provider).deletedAt ?? null) : null,
             createdAt: provider.createdAt,
             updatedAt: provider.updatedAt,
         };
@@ -511,6 +836,12 @@ export class AdminProvidersService {
 
         if (!provider) {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
+        }
+        if (isSoftDeleted(provider)) {
+            throw new ApiError(
+                HttpStatus.BAD_REQUEST,
+                "Provider is in the bin. Restore it before syncing models.",
+            );
         }
 
         const isOpenRouter =
@@ -624,10 +955,13 @@ export class AdminProvidersService {
                         provider: provider.code,
                     },
                 },
-                select: { id: true },
+                select: { id: true, deletedAt: true },
             });
 
             if (existing) {
+                if (isSoftDeleted(existing)) {
+                    continue;
+                }
                 await this.prisma.model.update({
                     where: { id: existing.id },
                     data: {

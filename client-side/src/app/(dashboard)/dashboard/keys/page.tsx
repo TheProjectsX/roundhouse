@@ -32,10 +32,20 @@ import { VaultKeyCard } from "./components/vault-key-card";
 
 const AUTO_LOCK_MS = 5 * 60 * 1000;
 
+type VaultSortOption =
+    | "-updatedAt"
+    | "updatedAt"
+    | "-createdAt"
+    | "createdAt"
+    | "name"
+    | "-name"
+    | "-active";
+
 export default function KeysPage() {
     const dispatch = useAppDispatch();
+    const [sortBy, setSortBy] = useState<VaultSortOption>("-updatedAt");
     const { data: keys = [], isLoading, isError, refetch } =
-        useGetKeysManagerQuery();
+        useGetKeysManagerQuery({ order: sortBy });
     const [search, setSearch] = useState("");
     const [showCreate, setShowCreate] = useState(false);
     const [editingKey, setEditingKey] = useState<any>(null);
@@ -83,13 +93,50 @@ export default function KeysPage() {
 
     const filteredKeys = useMemo(() => {
         const term = search.trim().toLowerCase();
-        if (!term) return keys;
-        return keys.filter(
-            (k) =>
-                k.name.toLowerCase().includes(term) ||
-                (k.provider ?? "").toLowerCase().includes(term),
-        );
-    }, [keys, search]);
+        const filtered = !term
+            ? keys
+            : keys.filter(
+                  (k) =>
+                      k.name.toLowerCase().includes(term) ||
+                      (k.provider ?? "").toLowerCase().includes(term),
+              );
+
+        return [...filtered].sort((a, b) => {
+            switch (sortBy) {
+                case "updatedAt":
+                    return (
+                        new Date(a.updatedAt).getTime() -
+                        new Date(b.updatedAt).getTime()
+                    );
+                case "-createdAt":
+                    return (
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
+                case "createdAt":
+                    return (
+                        new Date(a.createdAt).getTime() -
+                        new Date(b.createdAt).getTime()
+                    );
+                case "name":
+                    return a.name.localeCompare(b.name);
+                case "-name":
+                    return b.name.localeCompare(a.name);
+                case "-active":
+                    if (a.active !== b.active) return a.active ? -1 : 1;
+                    return (
+                        new Date(b.updatedAt).getTime() -
+                        new Date(a.updatedAt).getTime()
+                    );
+                case "-updatedAt":
+                default:
+                    return (
+                        new Date(b.updatedAt).getTime() -
+                        new Date(a.updatedAt).getTime()
+                    );
+            }
+        });
+    }, [keys, search, sortBy]);
 
     const handleUnlockSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -211,7 +258,7 @@ export default function KeysPage() {
             </Card>
 
             {keys.length > 0 ? (
-                <div className="flex items-center justify-between gap-3 rounded-md border border-(--color-border-primary) bg-(--color-bg-card) p-3">
+                <div className="flex flex-col gap-3 rounded-md border border-(--color-border-primary) bg-(--color-bg-card) p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative w-full sm:max-w-sm">
                         <MagnifyingGlassIcon
                             size={15}
@@ -225,9 +272,35 @@ export default function KeysPage() {
                             className="pl-9"
                         />
                     </div>
-                    <span className="font-mono text-xs text-(--color-text-muted)">
-                        {filteredKeys.length}/{keys.length}
-                    </span>
+                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                        <select
+                            value={sortBy}
+                            onChange={(e) =>
+                                setSortBy(e.target.value as VaultSortOption)
+                            }
+                            aria-label="Sort vault keys"
+                            className="min-h-9 rounded-sm border border-(--color-border-primary) bg-(--color-bg-input) px-3 text-xs text-(--color-text-primary) outline-none focus:border-(--color-border-focused)"
+                        >
+                            <option value="-updatedAt">
+                                Updated (Newest first)
+                            </option>
+                            <option value="updatedAt">
+                                Updated (Oldest first)
+                            </option>
+                            <option value="-createdAt">
+                                Created (Newest first)
+                            </option>
+                            <option value="createdAt">
+                                Created (Oldest first)
+                            </option>
+                            <option value="-active">Active first</option>
+                            <option value="name">Name (A-Z)</option>
+                            <option value="-name">Name (Z-A)</option>
+                        </select>
+                        <span className="font-mono text-xs text-(--color-text-muted)">
+                            {filteredKeys.length}/{keys.length}
+                        </span>
+                    </div>
                 </div>
             ) : null}
 
@@ -249,7 +322,7 @@ export default function KeysPage() {
             {confirmDelete && (
                 <ConfirmModal
                     title="Delete Vault Key"
-                    description={`Are you sure you want to delete "${confirmDelete.name}"? Any provider selections relying on it may stop routing.`}
+                    description={`Are you sure you want to delete "${confirmDelete.name}"? It will be unlinked from all provider selections, and any provider selection left with no remaining vault keys will be automatically deactivated.`}
                     isLoading={deleteState.isLoading}
                     onConfirm={confirmDeleteKey}
                     onCancel={() => setConfirmDelete(null)}

@@ -218,11 +218,71 @@ export class MeProvidersService {
             throw new ApiError(HttpStatus.NOT_FOUND, "Provider not found");
         }
 
-        const deleted = await this.prisma.userProvider.delete({
-            where: { id },
+        await this.prisma.$transaction(async (tx) => {
+            const userModels = await tx.userModel.findMany({
+                where: {
+                    provider: provider.code,
+                    userId: user.id,
+                },
+                select: { id: true },
+            });
+            const userModelIds = userModels.map((m) => m.id);
+
+            const selections = await tx.providerSelection.findMany({
+                where: {
+                    userProviderId: provider.id,
+                    userId: user.id,
+                },
+                select: { id: true },
+            });
+            const selectionIds = selections.map((s) => s.id);
+
+            const msFilters: Prisma.ModelSelectionWhereInput[] = [];
+            if (selectionIds.length > 0) {
+                msFilters.push({ providerSelectionId: { in: selectionIds } });
+            }
+            if (userModelIds.length > 0) {
+                msFilters.push({ userModelId: { in: userModelIds } });
+            }
+
+            if (msFilters.length > 0) {
+                const modelSelections = await tx.modelSelection.findMany({
+                    where: { OR: msFilters },
+                    select: { id: true },
+                });
+                const modelSelectionIds = modelSelections.map((ms) => ms.id);
+
+                if (modelSelectionIds.length > 0) {
+                    await tx.lastError.deleteMany({
+                        where: { modelId: { in: modelSelectionIds } },
+                    });
+                    await tx.modelSelection.deleteMany({
+                        where: { id: { in: modelSelectionIds } },
+                    });
+                }
+            }
+
+            if (selectionIds.length > 0) {
+                await tx.providerSelectionApiKeysManager.deleteMany({
+                    where: { providerSelectionId: { in: selectionIds } },
+                });
+                await tx.providerSelection.deleteMany({
+                    where: { id: { in: selectionIds } },
+                });
+            }
+
+            if (userModelIds.length > 0) {
+                await tx.userModel.deleteMany({
+                    where: { id: { in: userModelIds } },
+                });
+            }
+
+            await tx.userProvider.delete({
+                where: { id: provider.id },
+            });
         });
 
-        return { message: "Provider deleted", data: { id: deleted.id } };
+        return { message: "Provider deleted", data: { id: provider.id } };
     }
 
     async fetchAllProviderModels(
@@ -467,10 +527,28 @@ export class MeProvidersService {
             throw new ApiError(HttpStatus.NOT_FOUND, "Model not found");
         }
 
-        const deleted = await this.prisma.userModel.delete({
-            where: { id: model.id },
+        await this.prisma.$transaction(async (tx) => {
+            const selections = await tx.modelSelection.findMany({
+                where: { userModelId: model.id },
+                select: { id: true },
+            });
+            const selectionIds = selections.map((s) => s.id);
+
+            if (selectionIds.length > 0) {
+                await tx.lastError.deleteMany({
+                    where: { modelId: { in: selectionIds } },
+                });
+                await tx.modelSelection.deleteMany({
+                    where: { id: { in: selectionIds } },
+                });
+            }
+
+            await tx.userModel.delete({
+                where: { id: model.id },
+            });
         });
-        return { message: "Model deleted", data: { id: deleted.id } };
+
+        return { message: "Model deleted", data: { id: model.id } };
     }
 
     private buildProviderCode(name: string, code?: string) {

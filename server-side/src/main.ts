@@ -132,6 +132,7 @@ export async function createApp(): Promise<NestExpressApplication> {
 
 async function bootstrap() {
     const app = await createApp();
+    app.enableShutdownHooks();
 
     // --- Server Listen ---
     const port = Number(config.port) || 5000;

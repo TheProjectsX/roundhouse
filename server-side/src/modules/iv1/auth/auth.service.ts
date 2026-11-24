@@ -64,7 +64,7 @@ export class AuthService {
                 email: payload.email,
             },
         });
-        if (!userData) {
+        if (!userData || userData.deletedAt) {
             throw new ApiError(HttpStatus.UNAUTHORIZED, "Invalid Credentials");
         }
 
@@ -283,7 +283,7 @@ export class AuthService {
             where: { id: decrypted.id },
         });
 
-        if (!userData) {
+        if (!userData || userData.deletedAt) {
             throw new ApiError(
                 HttpStatus.UNAUTHORIZED,
                 "Unauthenticated Request",
